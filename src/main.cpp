@@ -1,12 +1,13 @@
 #include <GLEW/glew.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
+#include <iomanip> // Include this header for std::setw, std::fixed, std::setprecision, and std::showpos
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <cstdlib>
 #include <ctime>
-
+#include <sstream>
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <winsock2.h>
@@ -15,6 +16,7 @@
 #else
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <fcntl.h>
 #endif
 
 #define SERVER_PORT 8080
@@ -68,7 +70,12 @@ void processInputAndSendToServer(GLFWwindow* window, SOCKET& sock, sockaddr_in& 
     {
         char buffer[BUFFER_SIZE];
         snprintf(buffer, BUFFER_SIZE, "%d %.2f %.2f", clientId, xPos, yPos);
-        sendto(sock, buffer, strlen(buffer), 0, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
+        sendto(sock, buffer, (int)strlen(buffer), 0, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
+
+        // Output client position with formatting
+        std::cout << "Client " << clientId << " position: ("
+            << std::showpos << std::fixed << std::setw(6) << std::setprecision(2) << xPos << ", "
+            << std::setw(6) << std::setprecision(2) << yPos << std::noshowpos << ")" << std::endl;
     }
 }
 
@@ -89,6 +96,15 @@ void setupUDPClient(SOCKET& sock, struct sockaddr_in& serv_addr)
         exit(EXIT_FAILURE);
     }
 
+    // Set the socket to non-blocking mode
+#ifdef _WIN32
+    u_long mode = 1;
+    ioctlsocket(sock, FIONBIO, &mode);
+#else
+    int flags = fcntl(sock, F_GETFL, 0);
+    fcntl(sock, F_SETFL, flags | O_NONBLOCK);
+#endif
+
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons(SERVER_PORT);
 
@@ -102,8 +118,10 @@ void setupUDPClient(SOCKET& sock, struct sockaddr_in& serv_addr)
 int main(int argc, char** argv)
 {
     SOCKET sock;
-    struct sockaddr_in serv_addr;
+    struct sockaddr_in serv_addr, client_addr;
     setupUDPClient(sock, serv_addr);
+    char buffer[BUFFER_SIZE];
+    int client_addr_len = sizeof(client_addr);
 
     float xPos = 0.0f, yPos = 0.0f;
 
@@ -196,6 +214,29 @@ int main(int argc, char** argv)
         /* Process input and send updated position to server */
         processInputAndSendToServer(window, sock, serv_addr, clientId, xPos, yPos);
 
+        /* Receive updated positions from server */
+        int bytesReceived = recvfrom(sock, buffer, BUFFER_SIZE - 1, 0, (struct sockaddr*)&client_addr, &client_addr_len);
+        if (bytesReceived > 0) {
+            buffer[bytesReceived] = '\0'; // Null-terminate the buffer
+            std::cout << "Received: " << buffer << std::endl;
+
+            // Process the received data (e.g., update positions on the client-side)
+            std::istringstream iss(buffer);
+            int receivedClientId;
+            float receivedXPos, receivedYPos;
+            if (!(iss >> receivedClientId >> receivedXPos >> receivedYPos)) {
+                std::cerr << "Error parsing received data." << std::endl;
+                continue;
+            }
+
+            // Output received position with formatting
+            std::cout << "Received Client " << receivedClientId << " position: ("
+                << std::showpos << std::fixed << std::setw(6) << std::setprecision(2) << receivedXPos << ", "
+                << std::setw(6) << std::setprecision(2) << receivedYPos << std::noshowpos << ")" << std::endl;
+
+            // Handle the position data as needed, e.g., updating a game object's position
+        }
+
         /* Render here */
         glClear(GL_COLOR_BUFFER_BIT);
 
@@ -231,5 +272,5 @@ int main(int argc, char** argv)
     close(sock);
 #endif
 
-    return 0;
+    return 0; // Ensure the main function returns 0
 }
