@@ -1,7 +1,7 @@
 #include <GLEW/glew.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
-#include <iomanip> // Include this header for std::setw, std::fixed, std::setprecision, and std::showpos
+#include <iomanip>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -13,14 +13,38 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #pragma comment(lib, "Ws2_32.lib")
-#else
-#include <arpa/inet.h>
-#include <unistd.h>
-#include <fcntl.h>
 #endif
+
+#undef APIENTRY
+#define GLFW_INCLUDE_NONE
+#include <GLFW/glfw3.h>
+#include <GLEW/glew.h>
 
 #define SERVER_PORT 8080
 #define BUFFER_SIZE 256
+
+enum MessageType {
+    PlayerMovement = 0,
+    PlayerAttack = 1,
+    ChatMessage = 2,
+};
+
+struct Packet {
+    MessageType type;
+    int clientId;
+    union {
+        struct {
+            float x, y;
+        } movementData;
+        struct {
+            int targetId;
+            int attackPower;
+        } attackData;
+        struct {
+            char message[BUFFER_SIZE - sizeof(MessageType) - sizeof(int)];
+        } chatData;
+    };
+};
 
 // Vertex Shader source code
 const char* vertexShaderSource = "#version 330 core\n"
@@ -31,13 +55,32 @@ const char* vertexShaderSource = "#version 330 core\n"
 "   gl_Position = transform * vec4(aPos, 1.0);\n"
 "}\0";
 
-// Fragment Shader source code
+// Fragment Shader source code for the first square
 const char* fragmentShaderSource = "#version 330 core\n"
 "out vec4 FragColor;\n"
 "void main()\n"
 "{\n"
 "   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
 "}\0";
+
+// Fragment Shader source code for the red square
+const char* redFragmentShaderSource = "#version 330 core\n"
+"out vec4 FragColor;\n"
+"void main()\n"
+"{\n"
+"   FragColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);\n"
+"}\0";
+
+// Function to send a chat message to the server
+void sendChatMessage(SOCKET& sock, sockaddr_in& serv_addr, int clientId, const char* message) {
+    Packet packet;
+    packet.type = ChatMessage;
+    packet.clientId = clientId;
+    strncpy_s(packet.chatData.message, message, sizeof(packet.chatData.message) - 1);
+    packet.chatData.message[sizeof(packet.chatData.message) - 1] = '\0';
+
+    sendto(sock, (char*)&packet, sizeof(Packet), 0, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
+}
 
 // Function to handle key input, update position, and send it to the server
 void processInputAndSendToServer(GLFWwindow* window, SOCKET& sock, sockaddr_in& serv_addr, int clientId, float& xPos, float& yPos)
@@ -68,14 +111,13 @@ void processInputAndSendToServer(GLFWwindow* window, SOCKET& sock, sockaddr_in& 
 
     if (positionUpdated)
     {
-        char buffer[BUFFER_SIZE];
-        snprintf(buffer, BUFFER_SIZE, "%d %.2f %.2f", clientId, xPos, yPos);
-        sendto(sock, buffer, (int)strlen(buffer), 0, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
+        Packet packet;
+        packet.type = PlayerMovement;
+        packet.clientId = clientId;
+        packet.movementData.x = xPos;
+        packet.movementData.y = yPos;
 
-        // Output client position with formatting
-        std::cout << "Client " << clientId << " position: ("
-            << std::showpos << std::fixed << std::setw(6) << std::setprecision(2) << xPos << ", "
-            << std::setw(6) << std::setprecision(2) << yPos << std::noshowpos << ")" << std::endl;
+        sendto(sock, (char*)&packet, sizeof(Packet), 0, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
     }
 }
 
@@ -124,15 +166,13 @@ int main(int argc, char** argv)
     int client_addr_len = sizeof(client_addr);
 
     float xPos = 0.0f, yPos = 0.0f;
+    float xRedPos = 0.5f, yRedPos = 0.5f; // Initial position of the red square
 
-    // Generate a random client ID
     std::srand(static_cast<unsigned int>(std::time(0)));
     int clientId = std::rand();
 
-    // Initialize GLFW for rendering
     GLFWwindow* window;
 
-    /* Initialize the library */
     if (!glfwInit())
         return -1;
 
@@ -140,7 +180,6 @@ int main(int argc, char** argv)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    /* Create a windowed mode window and its OpenGL context */
     window = glfwCreateWindow(800, 800, "Moving Square", NULL, NULL);
     if (!window)
     {
@@ -148,10 +187,8 @@ int main(int argc, char** argv)
         return -1;
     }
 
-    /* Make the window's context current */
     glfwMakeContextCurrent(window);
 
-    /* Initialize GLEW */
     if (glewInit() != GLEW_OK)
     {
         std::cout << "Error initializing GLEW!" << std::endl;
@@ -159,68 +196,87 @@ int main(int argc, char** argv)
         return -1;
     }
 
-    // Define vertices for a square (two triangles)
     GLfloat vertices[] = {
-        // First triangle
         -0.1f, -0.1f, 0.0f,
          0.1f, -0.1f, 0.0f,
          0.1f,  0.1f, 0.0f,
-         // Second triangle
           0.1f,  0.1f, 0.0f,
          -0.1f,  0.1f, 0.0f,
          -0.1f, -0.1f, 0.0f
     };
 
-    GLuint VBO, VAO;
+    GLfloat redSquareVertices[] = {
+        -0.1f, -0.1f, 0.0f,
+         0.1f, -0.1f, 0.0f,
+         0.1f,  0.1f, 0.0f,
+          0.1f,  0.1f, 0.0f,
+         -0.1f,  0.1f, 0.0f,
+         -0.1f, -0.1f, 0.0f
+    };
+
+    GLuint VBO, VAO, redVBO, redVAO;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
+    glGenVertexArrays(1, &redVAO);
+    glGenBuffers(1, &redVBO);
 
-    // Bind the Vertex Array Object
+    // Setup for the first square
     glBindVertexArray(VAO);
-
-    // Bind VBO and load data into vertex buffer
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    // Configure vertex attributes
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
-    // Unbind VBO and VAO
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
-    // Create and compile shaders
+    // Setup for the red square
+    glBindVertexArray(redVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, redVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(redSquareVertices), redSquareVertices, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+
     GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
     glCompileShader(vertexShader);
+
     GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
     glCompileShader(fragmentShader);
 
-    // Link shaders to create a program
+    GLuint redFragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(redFragmentShader, 1, &redFragmentShaderSource, NULL);
+    glCompileShader(redFragmentShader);
+
     GLuint shaderProgram = glCreateProgram();
     glAttachShader(shaderProgram, vertexShader);
     glAttachShader(shaderProgram, fragmentShader);
     glLinkProgram(shaderProgram);
 
-    // Delete shaders as they're linked into our program now and no longer necessary
+    GLuint redShaderProgram = glCreateProgram();
+    glAttachShader(redShaderProgram, vertexShader);
+    glAttachShader(redShaderProgram, redFragmentShader);
+    glLinkProgram(redShaderProgram);
+
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
+    glDeleteShader(redFragmentShader);
 
-    /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
-        /* Process input and send updated position to server */
         processInputAndSendToServer(window, sock, serv_addr, clientId, xPos, yPos);
 
-        /* Receive updated positions from server */
         int bytesReceived = recvfrom(sock, buffer, BUFFER_SIZE - 1, 0, (struct sockaddr*)&client_addr, &client_addr_len);
-        if (bytesReceived > 0) {
-            buffer[bytesReceived] = '\0'; // Null-terminate the buffer
-            std::cout << "Received: " << buffer << std::endl;
 
-            // Process the received data (e.g., update positions on the client-side)
+        if (bytesReceived > 0) {
+            buffer[bytesReceived] = '\0';
+
             std::istringstream iss(buffer);
             int receivedClientId;
             float receivedXPos, receivedYPos;
@@ -229,40 +285,44 @@ int main(int argc, char** argv)
                 continue;
             }
 
-            // Output received position with formatting
             std::cout << "Received Client " << receivedClientId << " position: ("
                 << std::showpos << std::fixed << std::setw(6) << std::setprecision(2) << receivedXPos << ", "
                 << std::setw(6) << std::setprecision(2) << receivedYPos << std::noshowpos << ")" << std::endl;
 
-            // Handle the position data as needed, e.g., updating a game object's position
+            xRedPos = receivedXPos;
+            yRedPos = receivedYPos;
         }
 
-        /* Render here */
         glClear(GL_COLOR_BUFFER_BIT);
 
-        // Draw the square
+        // Draw the first square
         glUseProgram(shaderProgram);
         glBindVertexArray(VAO);
-
-        // Update the position of the square based on offset
         GLuint transformLoc = glGetUniformLocation(shaderProgram, "transform");
         glm::mat4 transform = glm::translate(glm::mat4(1.0f), glm::vec3(xPos, yPos, 0.0f));
         glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));
-
         glDrawArrays(GL_TRIANGLES, 0, 6);
+
+        // Draw the red square
+        glUseProgram(redShaderProgram);
+        glBindVertexArray(redVAO);
+        transform = glm::translate(glm::mat4(1.0f), glm::vec3(xRedPos, yRedPos, 0.0f));
+        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+
         glBindVertexArray(0);
 
-        /* Swap front and back buffers */
         glfwSwapBuffers(window);
-
-        /* Poll for and process events */
         glfwPollEvents();
     }
 
     // Cleanup
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
+    glDeleteVertexArrays(1, &redVAO);
+    glDeleteBuffers(1, &redVBO);
     glDeleteProgram(shaderProgram);
+    glDeleteProgram(redShaderProgram);
     glfwTerminate();
 
 #ifdef _WIN32
@@ -272,5 +332,5 @@ int main(int argc, char** argv)
     close(sock);
 #endif
 
-    return 0; // Ensure the main function returns 0
+    return 0;
 }
