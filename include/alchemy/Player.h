@@ -22,4 +22,4 @@ private:
     glm::vec2 position;
 };
 
-#endif // PLAYER_H
+#endif
