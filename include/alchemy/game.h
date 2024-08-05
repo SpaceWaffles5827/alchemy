@@ -34,4 +34,4 @@ private:
     double tickRate;
 };
 
-#endif // GAME_H
+#endif

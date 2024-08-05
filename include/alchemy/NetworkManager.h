@@ -25,7 +25,7 @@ enum MessageType {
     ChatMessage = 2,
 };
 
-struct Packet {
+struct OutGoingPacket {
     MessageType type;
     int clientId;
     union {
@@ -38,6 +38,24 @@ struct Packet {
         } attackData;
         struct {
             char message[BUFFER_SIZE - sizeof(MessageType) - sizeof(int)];
+        } chatData;
+    };
+};
+
+struct PlayerPosition {
+    int playerId;
+    float x, y;
+};
+
+struct IncomingPacket {
+    MessageType type;
+    union {
+        struct {
+            int numPlayers;
+            PlayerPosition players[BUFFER_SIZE / sizeof(PlayerPosition)];
+        } movementUpdates;
+        struct {
+            char message[BUFFER_SIZE - sizeof(MessageType)];
         } chatData;
     };
 };
@@ -59,4 +77,4 @@ private:
     int client_addr_len;
 };
 
-#endif // NETWORK_MANAGER_H
+#endif

@@ -47,36 +47,40 @@ void NetworkManager::setupUDPClient() {
 }
 
 void NetworkManager::sendChatMessage(int clientId, const char* message) {
-    Packet packet;
+    OutGoingPacket packet;
     packet.type = ChatMessage;
     packet.clientId = clientId;
     strncpy_s(packet.chatData.message, message, sizeof(packet.chatData.message) - 1);
     packet.chatData.message[sizeof(packet.chatData.message) - 1] = '\0';
 
-    sendto(sock, (char*)&packet, sizeof(Packet), 0, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
+    sendto(sock, (char*)&packet, sizeof(OutGoingPacket), 0, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
 }
 
 void NetworkManager::sendPlayerMovement(int clientId, float x, float y) {
-    Packet packet;
+    OutGoingPacket packet;
     packet.type = PlayerMovement;
     packet.clientId = clientId;
     packet.movementData.x = x;
     packet.movementData.y = y; 
 
-    sendto(sock, (char*)&packet, sizeof(Packet), 0, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
+    sendto(sock, (char*)&packet, sizeof(OutGoingPacket), 0, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
 }
 
-bool NetworkManager::receiveData(int& receivedClientId, float& receivedXPos, float& receivedYPos) {
-    int bytesReceived = recvfrom(sock, buffer, BUFFER_SIZE - 1, 0, (struct sockaddr*)&client_addr, &client_addr_len);
-    if (bytesReceived > 0) {
-        buffer[bytesReceived] = '\0';
+bool NetworkManager::receiveData(int& receivedPlayerId, float& receivedXPos, float& receivedYPos) {
+    IncomingPacket incomingPacket;
+    int bytesReceived = recvfrom(sock, (char*)&incomingPacket, sizeof(IncomingPacket), 0, (struct sockaddr*)&client_addr, &client_addr_len);
 
-        std::istringstream iss(buffer);
-        if (!(iss >> receivedClientId >> receivedXPos >> receivedYPos)) {
-            std::cerr << "Error parsing received data." << std::endl;
-            return false;
+    if (bytesReceived > 0) {
+        if (incomingPacket.type == PlayerMovement && incomingPacket.movementUpdates.numPlayers > 0) {
+            const PlayerPosition& firstPlayer = incomingPacket.movementUpdates.players[0];
+            receivedPlayerId = firstPlayer.playerId;
+            receivedXPos = firstPlayer.x;
+            receivedYPos = firstPlayer.y;
+            return true;
         }
-        return true;
+        else {
+            std::cerr << "Unexpected message type or no players in the update." << std::endl;
+        }
     }
     return false;
 }
