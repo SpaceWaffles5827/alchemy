@@ -142,6 +142,7 @@
     <ClCompile Include="include\glm\detail\glm.cpp" />
     <ClCompile Include="include\glm\glm.cppm" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\player.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="lib\glew32.lib" />
@@ -149,6 +150,7 @@
     <Library Include="lib\glfw3.lib" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\alchemy\player.h" />
     <ClInclude Include="include\GLEW\eglew.h" />
     <ClInclude Include="include\GLEW\glew.h" />
     <ClInclude Include="include\GLEW\glxew.h" />

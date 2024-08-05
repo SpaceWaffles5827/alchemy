@@ -15,10 +15,7 @@
 #pragma comment(lib, "Ws2_32.lib")
 #endif
 
-#undef APIENTRY
-#define GLFW_INCLUDE_NONE
-#include <GLFW/glfw3.h>
-#include <GLEW/glew.h>
+#include <alchemy/player.h>
 
 #define SERVER_PORT 8080
 #define BUFFER_SIZE 256
@@ -83,39 +80,42 @@ void sendChatMessage(SOCKET& sock, sockaddr_in& serv_addr, int clientId, const c
 }
 
 // Function to handle key input, update position, and send it to the server
-void processInputAndSendToServer(GLFWwindow* window, SOCKET& sock, sockaddr_in& serv_addr, int clientId, float& xPos, float& yPos)
+void processInputAndSendToServer(GLFWwindow* window, SOCKET& sock, sockaddr_in& serv_addr, int clientId, Player& player)
 {
     bool positionUpdated = false;
     float speed = 0.01f; // Speed of movement
+    glm::vec2 position = player.getPosition();
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
     {
-        yPos += speed;
+        position.y += speed;
         positionUpdated = true;
     }
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
     {
-        yPos -= speed;
+        position.y -= speed;
         positionUpdated = true;
     }
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
     {
-        xPos -= speed;
+        position.x -= speed;
         positionUpdated = true;
     }
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
     {
-        xPos += speed;
+        position.x += speed;
         positionUpdated = true;
     }
 
     if (positionUpdated)
     {
+        player.updatePosition(position.x, position.y);
+
         Packet packet;
         packet.type = PlayerMovement;
         packet.clientId = clientId;
-        packet.movementData.x = xPos;
-        packet.movementData.y = yPos;
+        packet.movementData.x = position.x;
+        packet.movementData.y = position.y;
 
         sendto(sock, (char*)&packet, sizeof(Packet), 0, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
     }
@@ -165,11 +165,11 @@ int main(int argc, char** argv)
     char buffer[BUFFER_SIZE];
     int client_addr_len = sizeof(client_addr);
 
-    float xPos = 0.0f, yPos = 0.0f;
-    float xRedPos = 0.5f, yRedPos = 0.5f; // Initial position of the red square
-
     std::srand(static_cast<unsigned int>(std::time(0)));
     int clientId = std::rand();
+
+    Player player1(clientId, glm::vec3(1.0f, 0.5f, 0.2f)); // First square
+    Player player2(clientId + 1, glm::vec3(1.0f, 0.0f, 0.0f)); // Red square
 
     GLFWwindow* window;
 
@@ -205,36 +205,13 @@ int main(int argc, char** argv)
         -0.1f, -0.1f, 0.0f
     };
 
-    GLfloat redSquareVertices[] = {
-        -0.1f, -0.1f, 0.0f,
-         0.1f, -0.1f, 0.0f,
-         0.1f,  0.1f, 0.0f,
-         0.1f,  0.1f, 0.0f,
-        -0.1f,  0.1f, 0.0f,
-        -0.1f, -0.1f, 0.0f
-    };
-
-    GLuint VBO, VAO, redVBO, redVAO;
+    GLuint VBO, VAO;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
-    glGenVertexArrays(1, &redVAO);
-    glGenBuffers(1, &redVBO);
 
-    // Setup for the first square
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
-
-    // Setup for the red square
-    glBindVertexArray(redVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, redVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(redSquareVertices), redSquareVertices, GL_STATIC_DRAW);
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
@@ -269,7 +246,7 @@ int main(int argc, char** argv)
     glDeleteShader(redFragmentShader);
 
     // Game loop
-    const double tickRate = 1.0 / 64.0; // 60Hz
+    const double tickRate = 1.0 / 64.0; // 64Hz
     double previousTime = glfwGetTime();
     double lag = 0.0;
 
@@ -282,7 +259,7 @@ int main(int argc, char** argv)
 
         // Process input and update state at a fixed tick rate
         while (lag >= tickRate) {
-            processInputAndSendToServer(window, sock, serv_addr, clientId, xPos, yPos);
+            processInputAndSendToServer(window, sock, serv_addr, clientId, player1);
             lag -= tickRate;
         }
 
@@ -299,29 +276,14 @@ int main(int argc, char** argv)
                 continue;
             }
 
-            xRedPos = receivedXPos;
-            yRedPos = receivedYPos;
+            player2.updatePosition(receivedXPos, receivedYPos);
         }
 
-        // Rendering
         glClear(GL_COLOR_BUFFER_BIT);
 
-        // Draw the first square
-        glUseProgram(shaderProgram);
-        glBindVertexArray(VAO);
-        GLuint transformLoc = glGetUniformLocation(shaderProgram, "transform");
-        glm::mat4 transform = glm::translate(glm::mat4(1.0f), glm::vec3(xPos, yPos, 0.0f));
-        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        player1.render(shaderProgram, VAO);
 
-        // Draw the red square
-        glUseProgram(redShaderProgram);
-        glBindVertexArray(redVAO);
-        transform = glm::translate(glm::mat4(1.0f), glm::vec3(xRedPos, yRedPos, 0.0f));
-        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));
-        glDrawArrays(GL_TRIANGLES, 0, 6);
-
-        glBindVertexArray(0);
+        player2.render(redShaderProgram, VAO);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -330,8 +292,6 @@ int main(int argc, char** argv)
     // Cleanup
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
-    glDeleteVertexArrays(1, &redVAO);
-    glDeleteBuffers(1, &redVBO);
     glDeleteProgram(shaderProgram);
     glDeleteProgram(redShaderProgram);
     glfwTerminate();
