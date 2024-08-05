@@ -200,18 +200,18 @@ int main(int argc, char** argv)
         -0.1f, -0.1f, 0.0f,
          0.1f, -0.1f, 0.0f,
          0.1f,  0.1f, 0.0f,
-          0.1f,  0.1f, 0.0f,
-         -0.1f,  0.1f, 0.0f,
-         -0.1f, -0.1f, 0.0f
+         0.1f,  0.1f, 0.0f,
+        -0.1f,  0.1f, 0.0f,
+        -0.1f, -0.1f, 0.0f
     };
 
     GLfloat redSquareVertices[] = {
         -0.1f, -0.1f, 0.0f,
          0.1f, -0.1f, 0.0f,
          0.1f,  0.1f, 0.0f,
-          0.1f,  0.1f, 0.0f,
-         -0.1f,  0.1f, 0.0f,
-         -0.1f, -0.1f, 0.0f
+         0.1f,  0.1f, 0.0f,
+        -0.1f,  0.1f, 0.0f,
+        -0.1f, -0.1f, 0.0f
     };
 
     GLuint VBO, VAO, redVBO, redVAO;
@@ -268,12 +268,26 @@ int main(int argc, char** argv)
     glDeleteShader(fragmentShader);
     glDeleteShader(redFragmentShader);
 
+    // Game loop
+    const double tickRate = 1.0 / 64.0; // 60Hz
+    double previousTime = glfwGetTime();
+    double lag = 0.0;
+
     while (!glfwWindowShouldClose(window))
     {
-        processInputAndSendToServer(window, sock, serv_addr, clientId, xPos, yPos);
+        double currentTime = glfwGetTime();
+        double elapsed = currentTime - previousTime;
+        previousTime = currentTime;
+        lag += elapsed;
 
+        // Process input and update state at a fixed tick rate
+        while (lag >= tickRate) {
+            processInputAndSendToServer(window, sock, serv_addr, clientId, xPos, yPos);
+            lag -= tickRate;
+        }
+
+        // Receive server updates
         int bytesReceived = recvfrom(sock, buffer, BUFFER_SIZE - 1, 0, (struct sockaddr*)&client_addr, &client_addr_len);
-
         if (bytesReceived > 0) {
             buffer[bytesReceived] = '\0';
 
@@ -285,14 +299,11 @@ int main(int argc, char** argv)
                 continue;
             }
 
-            std::cout << "Received Client " << receivedClientId << " position: ("
-                << std::showpos << std::fixed << std::setw(6) << std::setprecision(2) << receivedXPos << ", "
-                << std::setw(6) << std::setprecision(2) << receivedYPos << std::noshowpos << ")" << std::endl;
-
             xRedPos = receivedXPos;
             yRedPos = receivedYPos;
         }
 
+        // Rendering
         glClear(GL_COLOR_BUFFER_BIT);
 
         // Draw the first square
