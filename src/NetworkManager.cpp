@@ -61,7 +61,7 @@ void NetworkManager::sendPlayerMovement(int clientId, float x, float y) {
     packet.type = PlayerMovement;
     packet.clientId = clientId;
     packet.movementData.x = x;
-    packet.movementData.y = y;
+    packet.movementData.y = y; 
 
     sendto(sock, (char*)&packet, sizeof(Packet), 0, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
 }

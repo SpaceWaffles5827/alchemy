@@ -30,6 +30,9 @@
     <ClCompile Include="src\networkManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\game.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Library Include="lib\glfw3.lib" />
@@ -923,6 +926,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\alchemy\networkManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\alchemy\game.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

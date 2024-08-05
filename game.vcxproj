@@ -139,6 +139,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\game.cpp" />
     <ClCompile Include="include\glm\detail\glm.cpp" />
     <ClCompile Include="include\glm\glm.cppm" />
     <ClCompile Include="src\main.cpp" />
@@ -151,6 +152,7 @@
     <Library Include="lib\glfw3.lib" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\alchemy\game.h" />
     <ClInclude Include="include\alchemy\networkManager.h" />
     <ClInclude Include="include\alchemy\player.h" />
     <ClInclude Include="include\GLEW\eglew.h" />
