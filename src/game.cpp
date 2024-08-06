@@ -170,6 +170,9 @@ void Game::processInput() {
         player1.updatePosition(position.x, position.y);
         networkManager.sendPlayerMovement(clientId, position.x, position.y);
     }
+    else {
+        networkManager.sendHeatBeat(clientId);
+    }
 }
 
 void Game::update(double deltaTime) {

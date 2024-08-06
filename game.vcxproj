@@ -159,6 +159,7 @@
   <ItemGroup>
     <ClInclude Include="include\alchemy\game.h" />
     <ClInclude Include="include\alchemy\networkManager.h" />
+    <ClInclude Include="include\alchemy\network_protocol.h" />
     <ClInclude Include="include\alchemy\player.h" />
     <ClInclude Include="include\alchemy\server.h" />
     <ClInclude Include="include\GLEW\eglew.h" />

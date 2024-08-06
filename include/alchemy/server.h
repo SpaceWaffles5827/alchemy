@@ -1,22 +1,27 @@
 #ifndef SERVER_H
 #define SERVER_H
 
-#include <winsock2.h>
+#include <winsock2.h>       
+#include <ws2tcpip.h>         
+#include <iostream>         
+#include <unordered_map>      
+#include <unordered_set>      
+#include <string>            
+#include <functional>         
+#include <chrono>          
+#include <thread>         
+#include <mutex>             
+#include <queue>               
+#include <cstring>   
 #include <ws2tcpip.h>
-#include <iostream>
-#include <unordered_map>
-#include <unordered_set>
-#include <string>
-#include <functional>
 #include <chrono>
-#include <thread>
-#include <mutex>
-#include <queue>
 
 #pragma comment(lib, "Ws2_32.lib")
 
 #define SERVER_PORT 8080
 #define BUFFER_SIZE 1024
+
+#define HEARTBEAT_TIMEOUT 5.0 // Timeout in seconds
 
 class Server {
 public:
@@ -29,11 +34,16 @@ private:
         PlayerMovementUpdates = 0,
         PlayerAttack = 1,
         ChatMessage = 2,
+        heartBeat = 3,
     };
 
-    struct PlayerPosition {
+    struct PlayerInfo {
         float x;
         float y;
+        std::chrono::steady_clock::time_point lastKeepAlive;
+
+        PlayerInfo(float x = 0.0f, float y = 0.0f)
+            : x(x), y(y), lastKeepAlive(std::chrono::steady_clock::now()) {}
     };
 
     struct IncomingPacket {
@@ -50,6 +60,10 @@ private:
             struct {
                 char message[BUFFER_SIZE - sizeof(MessageType) - sizeof(int)];
             } chatData;
+            struct
+            {
+                bool alive;
+            } heartBeat;
         };
     };
 
@@ -95,13 +109,14 @@ private:
     void bindSocket();
     void receiveData();
     void handleClientDisconnect(const sockaddr_in& clientAddr);
+    void checkHeartbeats();
     void processIncomingPacket(const IncomingPacket& packet, const sockaddr_in& clientAddr);
     void sendMovementUpdates();
 
     SOCKET serverSocket;
     sockaddr_in serverAddr;
     std::unordered_set<sockaddr_in, sockaddr_in_hash, sockaddr_in_equal> clients;
-    std::unordered_map<int, PlayerPosition> playerPositions;
+    std::unordered_map<int, PlayerInfo> playerPositions;
     std::mutex mutex;
     std::thread receiverThread;
     const double tickRate = 1.0 / 64.0;

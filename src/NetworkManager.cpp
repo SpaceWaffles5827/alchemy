@@ -2,6 +2,7 @@
 #include <alchemy/player.h>
 #include <unordered_map>
 #include <sstream>
+#include <unordered_set>
 
 NetworkManager::NetworkManager() : client_addr_len(sizeof(client_addr)) {
     std::srand(static_cast<unsigned int>(std::time(0)));
@@ -67,17 +68,31 @@ void NetworkManager::sendPlayerMovement(int clientId, float x, float y) {
     sendto(sock, (char*)&packet, sizeof(OutGoingPacket), 0, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
 }
 
+void NetworkManager::sendHeatBeat(int clientId) {
+    OutGoingPacket packet;
+    packet.type = heartBeat;
+    packet.clientId = clientId;
+
+    sendto(sock, (char*)&packet, sizeof(OutGoingPacket), 0, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
+}
+
 bool NetworkManager::receiveData(std::unordered_map<int, Player>& players) {
     IncomingPacket incomingPacket;
     int bytesReceived = recvfrom(sock, (char*)&incomingPacket, sizeof(IncomingPacket), 0, (struct sockaddr*)&client_addr, &client_addr_len);
 
     if (bytesReceived > 0) {
         if (incomingPacket.type == PlayerMovement && incomingPacket.movementUpdates.numPlayers > 0) {
+            // Set to track the player IDs received in this packet
+            std::unordered_set<int> receivedPlayerIds;
+
+            // Update player positions and collect the IDs from the incoming packet
             for (int i = 0; i < incomingPacket.movementUpdates.numPlayers; ++i) {
                 const PlayerPosition& playerData = incomingPacket.movementUpdates.players[i];
                 int playerId = playerData.playerId;
                 float x = playerData.x;
                 float y = playerData.y;
+
+                receivedPlayerIds.insert(playerId);
 
                 auto it = players.find(playerId);
                 if (it != players.end()) {
@@ -91,6 +106,19 @@ bool NetworkManager::receiveData(std::unordered_map<int, Player>& players) {
                     players[playerId] = newPlayer;
                 }
             }
+
+            // Remove players that are not present in the received list
+            for (auto it = players.begin(); it != players.end(); ) {
+                if (receivedPlayerIds.find(it->first) == receivedPlayerIds.end()) {
+                    // Player ID not in the received data, remove from map
+                    it = players.erase(it);
+                    std::cout << "Player " << it->first << " removed due to inactivity." << std::endl;
+                }
+                else {
+                    ++it;
+                }
+            }
+
             return true;
         }
         else {

@@ -25,6 +25,7 @@ enum MessageType {
     PlayerMovement = 0,
     PlayerAttack = 1,
     ChatMessage = 2,
+    heartBeat = 3,
 };
 
 struct OutGoingPacket {
@@ -41,6 +42,9 @@ struct OutGoingPacket {
         struct {
             char message[BUFFER_SIZE - sizeof(MessageType) - sizeof(int)];
         } chatData;
+        struct {
+            bool alive;
+        } heartBeat;
     };
 };
 
@@ -70,6 +74,7 @@ public:
     void setupUDPClient();
     void sendChatMessage(int clientId, const char* message);
     void sendPlayerMovement(int clientId, float x, float y);
+    void sendHeatBeat(int clientId);
     bool receiveData(std::unordered_map<int, Player>& players);
 
 private:
