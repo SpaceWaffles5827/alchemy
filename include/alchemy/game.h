@@ -6,6 +6,7 @@
 #include <glm/glm.hpp>
 #include "networkManager.h"
 #include "player.h"
+#include <unordered_map>
 
 class Game {
 public:
@@ -29,9 +30,12 @@ private:
     GLuint shaderProgram, redShaderProgram;
 
     NetworkManager networkManager;
-    Player player1, player2;
+    Player player1;
+
     int clientId;
     double tickRate;
+
+    std::unordered_map<int, Player> players;
 };
 
 #endif

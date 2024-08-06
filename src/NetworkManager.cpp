@@ -1,5 +1,6 @@
 #include <alchemy/networkManager.h>
-
+#include <alchemy/player.h>
+#include <unordered_map>
 #include <sstream>
 
 NetworkManager::NetworkManager() : client_addr_len(sizeof(client_addr)) {
@@ -66,21 +67,44 @@ void NetworkManager::sendPlayerMovement(int clientId, float x, float y) {
     sendto(sock, (char*)&packet, sizeof(OutGoingPacket), 0, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
 }
 
-bool NetworkManager::receiveData(int& receivedPlayerId, float& receivedXPos, float& receivedYPos) {
+bool NetworkManager::receiveData(std::unordered_map<int, Player>& players) {
     IncomingPacket incomingPacket;
     int bytesReceived = recvfrom(sock, (char*)&incomingPacket, sizeof(IncomingPacket), 0, (struct sockaddr*)&client_addr, &client_addr_len);
 
     if (bytesReceived > 0) {
         if (incomingPacket.type == PlayerMovement && incomingPacket.movementUpdates.numPlayers > 0) {
-            const PlayerPosition& firstPlayer = incomingPacket.movementUpdates.players[0];
-            receivedPlayerId = firstPlayer.playerId;
-            receivedXPos = firstPlayer.x;
-            receivedYPos = firstPlayer.y;
+            for (int i = 0; i < incomingPacket.movementUpdates.numPlayers; ++i) {
+                const PlayerPosition& playerData = incomingPacket.movementUpdates.players[i];
+                int playerId = playerData.playerId;
+                float x = playerData.x;
+                float y = playerData.y;
+
+                auto it = players.find(playerId);
+                if (it != players.end()) {
+                    // Update the existing player's position
+                    it->second.updatePosition(x, y);
+                }
+                else {
+                    // If a new player is detected, add them to the map
+                    glm::vec3 defaultColor(1.0f, 1.0f, 1.0f); // White color
+                    Player newPlayer(playerId, defaultColor, x, y);
+                    players[playerId] = newPlayer;
+                }
+            }
             return true;
         }
         else {
             std::cerr << "Unexpected message type or no players in the update." << std::endl;
         }
+    }
+    else if (bytesReceived == SOCKET_ERROR) {
+        int errorCode =
+#ifdef _WIN32
+            WSAGetLastError();
+#else
+            errno;
+#endif
+        std::cerr << "recvfrom failed with error code: " << errorCode << std::endl;
     }
     return false;
 }

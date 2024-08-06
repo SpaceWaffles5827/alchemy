@@ -4,6 +4,8 @@
 #include <iostream>
 #include <cstring>
 #include <cstdlib>
+#include "player.h"
+#include <unordered_map>
 #include <ctime>
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -68,7 +70,7 @@ public:
     void setupUDPClient();
     void sendChatMessage(int clientId, const char* message);
     void sendPlayerMovement(int clientId, float x, float y);
-    bool receiveData(int& receivedClientId, float& receivedXPos, float& receivedYPos);
+    bool receiveData(std::unordered_map<int, Player>& players);
 
 private:
     SOCKET sock;

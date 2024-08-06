@@ -8,6 +8,7 @@
 
 class Player {
 public:
+    Player() : clientId(0), color(1.0f, 1.0f, 1.0f), position(0.0f, 0.0f) {} // Default constructor
     Player(int clientId, const glm::vec3& color, float x = 0.0f, float y = 0.0f);
     ~Player();
 

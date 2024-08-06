@@ -1,5 +1,6 @@
 #include <alchemy/game.h>
 #include <iostream>
+#include <alchemy/player.h>
 
 const char* vertexShaderSource = "#version 330 core\n"
 "layout (location = 0) in vec3 aPos;\n"
@@ -25,10 +26,9 @@ const char* redFragmentShaderSource = "#version 330 core\n"
 
 Game::Game()
     : window(nullptr), VAO(0), VBO(0), shaderProgram(0), redShaderProgram(0),
-    player1(0, glm::vec3(1.0f, 0.5f, 0.2f)), player2(1, glm::vec3(1.0f, 0.0f, 0.0f)), clientId(std::rand()), tickRate(1.0 / 64.0) {
+    player1(0, glm::vec3(1.0f, 0.5f, 0.2f)), clientId(std::rand()), tickRate(1.0 / 64.0) {
     networkManager.setupUDPClient();
     player1 = Player(clientId, glm::vec3(1.0f, 0.5f, 0.2f));
-    player2 = Player(clientId + 1, glm::vec3(1.0f, 0.0f, 0.0f));
 }
 
 Game::~Game() {
@@ -173,17 +173,25 @@ void Game::processInput() {
 }
 
 void Game::update(double deltaTime) {
-    int receivedClientId;
-    float receivedXPos, receivedYPos;
-    if (networkManager.receiveData(receivedClientId, receivedXPos, receivedYPos)) {
-        player2.updatePosition(receivedXPos, receivedYPos);
+    if (networkManager.receiveData(players)) {
+        for (auto& pair : players) { 
+            int playerId = pair.first;    
+            Player& player = pair.second;  
+
+            glm::vec2 position = player.getPosition();
+            std::cout << "Player ID: " << playerId << " Position: (" << position.x << ", " << position.y << ")\n";
+
+        }
     }
 }
 
 void Game::render() {
     glClear(GL_COLOR_BUFFER_BIT);
     player1.render(shaderProgram, VAO);
-    player2.render(redShaderProgram, VAO);
+    for (const auto& pair : players) {
+        const Player& player = pair.second;
+        player.render(shaderProgram, VAO);
+    }
 }
 
 void Game::cleanup() {
