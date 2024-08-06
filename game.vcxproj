@@ -77,6 +77,7 @@
       <PreprocessorDefinitions>GLEW_STATIC</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>C:\Users\Jack\source\repos\game\include;;C:\Users\Jack\source\repos\game\include</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -94,6 +95,7 @@
       <PreprocessorDefinitions>GLEW_STATIC</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>C:\Users\Jack\source\repos\game\include;;C:\Users\Jack\source\repos\game\include</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -111,6 +113,7 @@
       <PreprocessorDefinitions>GLEW_STATIC</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>C:\Users\Jack\source\repos\game\include;C:\Users\Jack\source\repos\game\include;%(AdditionalIncludeDirectories);C:\Users\Jack\source\repos\game\include</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -128,6 +131,7 @@
       <PreprocessorDefinitions>GLEW_STATIC</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>C:\Users\Jack\source\repos\game\include;C:\Users\Jack\source\repos\game\include;%(AdditionalIncludeDirectories);C:\Users\Jack\source\repos\game\include</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -145,6 +149,7 @@
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\networkManager.cpp" />
     <ClCompile Include="src\player.cpp" />
+    <ClCompile Include="src\server.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="lib\glew32.lib" />
@@ -155,6 +160,7 @@
     <ClInclude Include="include\alchemy\game.h" />
     <ClInclude Include="include\alchemy\networkManager.h" />
     <ClInclude Include="include\alchemy\player.h" />
+    <ClInclude Include="include\alchemy\server.h" />
     <ClInclude Include="include\GLEW\eglew.h" />
     <ClInclude Include="include\GLEW\glew.h" />
     <ClInclude Include="include\GLEW\glxew.h" />
