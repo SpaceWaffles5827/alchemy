@@ -38,7 +38,7 @@ const char* Game::redFragmentShaderSource = "#version 330 core\n"
 "}\0";
 
 Game::Game()
-    : window(nullptr), VAO(0), VBO(0), shaderProgram(0), redShaderProgram(0), clientId(std::rand()), tickRate(1.0 / 64.0), clientPlayer(clientId, glm::vec3(1.0f, 0.5f, 0.2f)), projection(1.0f) {
+    : window(nullptr), VAO(0), VBO(0), shaderProgram(0), redShaderProgram(0), clientId(std::rand()), tickRate(1.0 / 64.0), clientPlayer(clientId, glm::vec3(1.0f, 0.5f, 0.2f)), projection(1.0f), cameraZoom(1.0f) {
     networkManager.setupUDPClient();
 
     initGLFW();
@@ -128,8 +128,12 @@ void Game::scroll_callback(GLFWwindow* window, double xOffset, double yOffset) {
     if (game->cameraZoom < 0.1f) game->cameraZoom = 0.1f; // Prevent zooming too far out
     if (game->cameraZoom > 3.0f) game->cameraZoom = 3.0f; // Prevent zooming too far in
 
+    // Get the current window size
+    int width, height;
+    glfwGetWindowSize(window, &width, &height);
+
     // Update the projection matrix to reflect the new zoom level
-    game->updateProjectionMatrix(800, 800);
+    game->updateProjectionMatrix(width, height);
 }
 
 void Game::initGLEW() {
@@ -176,8 +180,12 @@ void Game::setupShaders() {
     glDeleteShader(fragmentShader);
     glDeleteShader(redFragmentShader);
 
+    // Get the current window size
+    int width, height;
+    glfwGetWindowSize(window, &width, &height);
+
     // Set initial projection matrix
-    updateProjectionMatrix(800, 800);
+    updateProjectionMatrix(width, height);
 }
 
 void Game::setupBuffers() {
@@ -259,8 +267,12 @@ void Game::update(double deltaTime) {
 void Game::render() {
     glClear(GL_COLOR_BUFFER_BIT);
 
+    // Get the current window size
+    int width, height;
+    glfwGetWindowSize(window, &width, &height);
+
     // Update the projection matrix to follow the player
-    updateProjectionMatrix(800, 800);
+    updateProjectionMatrix(width, height);
 
     // Render world objects with the red shader program
     glUseProgram(redShaderProgram);
@@ -316,7 +328,8 @@ void Game::updateProjectionMatrix(int width, int height) {
     // Update the projection matrix to follow the player
     projection = glm::ortho(
         playerPos.x - viewWidth / 2.0f, playerPos.x + viewWidth / 2.0f,
-        playerPos.y - viewHeight / 2.0f, playerPos.y + viewHeight / 2.0f
+        playerPos.y - viewHeight / 2.0f, playerPos.y + viewHeight / 2.0f,
+        -1.0f, 1.0f
     );
 
     GLuint transformLoc = glGetUniformLocation(shaderProgram, "transform");
