@@ -3,6 +3,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <ctime>
+#define APIENTRY __stdcall
 #include <GLEW/glew.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
@@ -37,7 +38,7 @@ const char* Game::redFragmentShaderSource = "#version 330 core\n"
 "}\0";
 
 Game::Game()
-    : window(nullptr), VAO(0), VBO(0), shaderProgram(0), redShaderProgram(0), clientId(std::rand()), tickRate(1.0 / 64.0), clientPlayer(clientId, glm::vec3(1.0f, 0.5f, 0.2f)) {
+    : window(nullptr), VAO(0), VBO(0), shaderProgram(0), redShaderProgram(0), clientId(std::rand()), tickRate(1.0 / 64.0), clientPlayer(clientId, glm::vec3(1.0f, 0.5f, 0.2f)), projection(1.0f) {
     networkManager.setupUDPClient();
 
     initGLFW();
@@ -99,6 +100,7 @@ void Game::initGLFW() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);  // Make window resizable
 
     window = glfwCreateWindow(800, 800, "Moving Square", NULL, NULL);
     if (!window) {
@@ -108,6 +110,12 @@ void Game::initGLFW() {
     }
 
     glfwMakeContextCurrent(window);
+
+    // Set the user pointer to the Game instance
+    glfwSetWindowUserPointer(window, this);
+
+    // Register callback for window resize events
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 }
 
 void Game::initGLEW() {
@@ -153,6 +161,9 @@ void Game::setupShaders() {
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
     glDeleteShader(redFragmentShader);
+
+    // Set initial projection matrix
+    updateProjectionMatrix(800, 800);
 }
 
 void Game::setupBuffers() {
@@ -236,16 +247,16 @@ void Game::render() {
 
     // Render world objects with the red shader program
     glUseProgram(redShaderProgram);
-    world.render(redShaderProgram, VAO);
+    world.render(redShaderProgram, VAO, projection);
 
     // Render client player with the main shader program
     glUseProgram(shaderProgram);
-    clientPlayer.render(shaderProgram, VAO);
+    clientPlayer.render(shaderProgram, VAO, projection);
 
     // Render other players with the main shader program
     for (const auto& pair : players) {
         const Player& player = pair.second;
-        player.render(shaderProgram, VAO);
+        player.render(shaderProgram, VAO, projection);
     }
 }
 
@@ -274,4 +285,26 @@ void Game::checkCompileErrors(GLuint shader, std::string type) {
             std::cout << "| ERROR::Program: Link-time error: Type: " << type << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
         }
     }
+}
+
+void Game::updateProjectionMatrix(int width, int height) {
+    // Maintain the aspect ratio
+    float aspectRatio = static_cast<float>(width) / height;
+    float viewWidth = 2.0f; // Adjust the view width as needed
+    float viewHeight = viewWidth / aspectRatio;
+
+    // Update the projection matrix
+    projection = glm::ortho(-viewWidth / 2.0f, viewWidth / 2.0f, -viewHeight / 2.0f, viewHeight / 2.0f);
+    GLuint transformLoc = glGetUniformLocation(shaderProgram, "transform");
+    glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(projection));
+}
+
+void Game::framebuffer_size_callback(GLFWwindow* window, int width, int height) {
+    glViewport(0, 0, width, height);
+
+    // Retrieve the Game instance from the window user pointer
+    Game* game = static_cast<Game*>(glfwGetWindowUserPointer(window));
+
+    // Update the projection matrix
+    game->updateProjectionMatrix(width, height);
 }

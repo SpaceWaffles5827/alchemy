@@ -21,9 +21,9 @@ public:
     }
 
     // Renders all game objects within the world
-    void render(GLuint shaderProgram, GLuint VAO) const {
+    void render(GLuint shaderProgram, GLuint VAO, const glm::mat4& projection) const {
         for (const auto& obj : objects) {
-            obj->render(shaderProgram, VAO);
+            obj->render(shaderProgram, VAO, projection);
         }
     }
 

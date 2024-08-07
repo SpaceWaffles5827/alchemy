@@ -45,7 +45,7 @@ bool Player::loadTexture(const char* filename) {
     return true;
 }
 
-void Player::render(GLuint shaderProgram, GLuint VAO) const {
+void Player::render(GLuint shaderProgram, GLuint VAO, const glm::mat4& projection) const {
     glUseProgram(shaderProgram);
     glBindVertexArray(VAO);
 
@@ -56,8 +56,9 @@ void Player::render(GLuint shaderProgram, GLuint VAO) const {
 
     // Set the transformation matrix
     glm::mat4 transform = glm::translate(glm::mat4(1.0f), glm::vec3(position, 0.0f));
+    glm::mat4 combined = projection * transform;
     GLint transformLoc = glGetUniformLocation(shaderProgram, "transform");
-    glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));
+    glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(combined));
 
     // Draw the player
     glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -75,4 +76,8 @@ glm::vec2 Player::getPosition() const {
 
 int Player::getClientId() const {
     return clientId;
+}
+
+bool Player::isTextureLoaded() const {
+    return textureLoaded;
 }

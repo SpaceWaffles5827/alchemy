@@ -9,7 +9,7 @@ void displayMenu() {
     std::cout << "Please select an option:\n";
     std::cout << "1. Start Game\n";
     std::cout << "2. Start Server\n";
-    std::cout << "3. Start Server\n";
+    std::cout << "3. Start Level Editor\n";
     std::cout << "4. Exit\n";
     std::cout << "Enter your choice: ";
 }

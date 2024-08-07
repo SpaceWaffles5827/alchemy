@@ -5,12 +5,12 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include "networkManager.h"
+#include "player.h"
 #include <unordered_map>
 #include <alchemy/world.h>
 
 class LevelEditor {
 public:
-
     LevelEditor();
     ~LevelEditor();
 
@@ -26,6 +26,9 @@ private:
     void render();
     void cleanup();
     void checkCompileErrors(GLuint shader, std::string type);
+    void updateProjectionMatrix(int width, int height);
+
+    static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
     GLFWwindow* window;
     GLuint VAO, VBO;
@@ -38,6 +41,7 @@ private:
     double tickRate;
     World world;
 
+    glm::mat4 projection;
     std::unordered_map<int, Player> players;
 
     static const char* vertexShaderSource;

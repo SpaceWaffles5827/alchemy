@@ -10,16 +10,15 @@
 
 class Player {
 public:
-    Player() : clientId(0), color(1.0f, 1.0f, 1.0f), position(0.0f, 0.0f), texture(0), textureLoaded(false) {}
-    Player(int clientId, const glm::vec3& color, float x = 0.0f, float y = 0.0f);
+    Player(int clientId = 0, const glm::vec3& color = glm::vec3(1.0f), float x = 0.0f, float y = 0.0f);
     ~Player();
 
     bool loadTexture(const char* filename);
-    bool isTextureLoaded() const { return textureLoaded; }
-    void render(GLuint shaderProgram, GLuint VAO) const;
+    void render(GLuint shaderProgram, GLuint VAO, const glm::mat4& projection) const;
     void updatePosition(float x, float y);
     glm::vec2 getPosition() const;
     int getClientId() const;
+    bool isTextureLoaded() const;
 
 private:
     int clientId;
