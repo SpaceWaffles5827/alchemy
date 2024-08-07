@@ -112,7 +112,7 @@ bool NetworkManager::receiveData(std::unordered_map<int, Player>& players) {
                 if (receivedPlayerIds.find(it->first) == receivedPlayerIds.end()) {
                     // Player ID not in the received data, remove from map
                     it = players.erase(it);
-                    std::cout << "Player " << it->first << " removed due to inactivity." << std::endl;
+                    // std::cout << "Player " << it->first << " removed due to inactivity." << std::endl;
                 }
                 else {
                     ++it;

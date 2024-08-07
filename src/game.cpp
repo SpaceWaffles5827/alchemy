@@ -1,6 +1,13 @@
-#include <iostream>
-#include <stb/stb_image.h>
 #include <alchemy/game.h>
+#include <alchemy/player.h>
+#include <iostream>
+#include <cstdlib>
+#include <ctime>
+#include <GLEW/glew.h>
+#include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 const char* vertexShaderSource = "#version 330 core\n"
 "layout (location = 0) in vec3 aPos;\n"
@@ -30,62 +37,19 @@ const char* redFragmentShaderSource = "#version 330 core\n"
 "}\0";
 
 Game::Game()
-    : window(nullptr), VAO(0), VBO(0), shaderProgram(0), redShaderProgram(0), clientId(std::rand()), tickRate(1.0 / 64.0) {
+    : window(nullptr), VAO(0), VBO(0), shaderProgram(0), redShaderProgram(0), clientId(std::rand()), tickRate(1.0 / 64.0), clientPlayer(clientId, glm::vec3(1.0f, 0.5f, 0.2f)) {
     networkManager.setupUDPClient();
 
     initGLFW();
     initGLEW();
 
-    playerTexture = loadTexture("wizard.png");
-
-    if (playerTexture == 0) {
-        std::cerr << "Failed to load texture 'test.png'" << std::endl;
+    if (!clientPlayer.loadTexture("wizard.png")) {
+        std::cerr << "Failed to load texture 'wizard.png'" << std::endl;
     }
-
-    player1 = Player(clientId, glm::vec3(1.0f, 0.5f, 0.2f), playerTexture);
 }
 
 Game::~Game() {
     cleanup();
-}
-
-GLuint Game::loadTexture(const char* filename) {
-    int width, height, nrChannels;
-
-    stbi_set_flip_vertically_on_load(true);
-
-    unsigned char* data = stbi_load(filename, &width, &height, &nrChannels, 0);
-    if (!data) {
-        std::cerr << "Failed to load texture '" << filename << "'." << std::endl;
-        std::cerr << "STB Reason: " << stbi_failure_reason() << std::endl;
-        return 0;
-    }
-
-    GLuint textureID;
-    glGenTextures(1, &textureID);
-    glBindTexture(GL_TEXTURE_2D, textureID);
-
-    if (nrChannels == 3) {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-    }
-    else if (nrChannels == 4) {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-    }
-    else {
-        std::cerr << "Unsupported texture format for '" << filename << "'." << std::endl;
-        stbi_image_free(data);
-        return 0;
-    }
-
-    glGenerateMipmap(GL_TEXTURE_2D);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-    stbi_image_free(data);
-    return textureID;
 }
 
 void Game::run() {
@@ -142,6 +106,10 @@ void Game::initGLEW() {
         std::cerr << "Failed to initialize GLEW!" << std::endl;
         std::exit(-1);
     }
+
+    // Enable blending
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 void Game::setupShaders() {
@@ -209,7 +177,7 @@ void Game::setupBuffers() {
 void Game::processInput() {
     bool positionUpdated = false;
     float speed = 0.02f;
-    glm::vec2 position = player1.getPosition();
+    glm::vec2 position = clientPlayer.getPosition();
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
         position.y += speed;
@@ -229,7 +197,7 @@ void Game::processInput() {
     }
 
     if (positionUpdated) {
-        player1.updatePosition(position.x, position.y);
+        clientPlayer.updatePosition(position.x, position.y);
         networkManager.sendPlayerMovement(clientId, position.x, position.y);
     }
     else {
@@ -244,8 +212,11 @@ void Game::update(double deltaTime) {
             Player& player = pair.second;
 
             glm::vec2 position = player.getPosition();
-            std::cout << "Player ID: " << playerId << " Position: (" << position.x << ", " << position.y << ")\n";
-
+            if (!player.isTextureLoaded()) {
+                if (!player.loadTexture("wizard.png")) {
+                    std::cerr << "Failed to load texture for player " << playerId << std::endl;
+                }
+            }
         }
     }
 }
@@ -253,15 +224,10 @@ void Game::update(double deltaTime) {
 void Game::render() {
     glClear(GL_COLOR_BUFFER_BIT);
 
-    if (playerTexture != 0) {
-        player1.render(shaderProgram, VAO);
-        for (const auto& pair : players) {
-            const Player& player = pair.second;
-            player.render(shaderProgram, VAO);
-        }
-    }
-    else {
-        std::cerr << "Rendering skipped due to invalid texture." << std::endl;
+    clientPlayer.render(shaderProgram, VAO);
+    for (const auto& pair : players) {
+        const Player& player = pair.second;
+        player.render(shaderProgram, VAO);
     }
 }
 

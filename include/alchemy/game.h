@@ -24,16 +24,14 @@ private:
     void update(double deltaTime);
     void render();
     void cleanup();
-    GLuint loadTexture(const char* filename);
     void checkCompileErrors(GLuint shader, std::string type);
 
     GLFWwindow* window;
     GLuint VAO, VBO;
     GLuint shaderProgram, redShaderProgram;
-    GLuint playerTexture; // Texture for the player
 
     NetworkManager networkManager;
-    Player player1;
+    Player clientPlayer;
 
     int clientId;
     double tickRate;
@@ -41,4 +39,4 @@ private:
     std::unordered_map<int, Player> players;
 };
 
-#endif
+#endif // GAME_H
