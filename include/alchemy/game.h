@@ -29,6 +29,7 @@ private:
     void cleanup();
     void checkCompileErrors(GLuint shader, std::string type);
     void updateProjectionMatrix(int width, int height);
+    static void scroll_callback(GLFWwindow* window, double xOffset, double yOffset);
 
     static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
@@ -49,6 +50,8 @@ private:
     static const char* vertexShaderSource;
     static const char* fragmentShaderSource;
     static const char* redFragmentShaderSource;
+
+    float cameraZoom;
 };
 
 #endif // GAME_H

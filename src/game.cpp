@@ -116,6 +116,23 @@ void Game::initGLFW() {
 
     // Register callback for window resize events
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+
+    glfwSetScrollCallback(window, scroll_callback);
+}
+
+void Game::scroll_callback(GLFWwindow* window, double xOffset, double yOffset) {
+    Game* game = static_cast<Game*>(glfwGetWindowUserPointer(window));
+
+    // Now you can access non-static members of the Game class using the game pointer
+    std::cout << "Scroll input: xOffset = " << xOffset << ", yOffset = " << yOffset << std::endl;
+
+    // Example: Adjusting the camera zoom based on scroll input
+    game->cameraZoom += yOffset * -0.1f;
+    if (game->cameraZoom < 0.1f) game->cameraZoom = 0.1f; // Prevent zooming too far out
+    if (game->cameraZoom > 3.0f) game->cameraZoom = 3.0f; // Prevent zooming too far in
+
+    // Update the projection matrix or any other relevant variables
+    game->updateProjectionMatrix(800, 800);
 }
 
 void Game::initGLEW() {
@@ -290,7 +307,7 @@ void Game::checkCompileErrors(GLuint shader, std::string type) {
 void Game::updateProjectionMatrix(int width, int height) {
     // Maintain the aspect ratio
     float aspectRatio = static_cast<float>(width) / height;
-    float viewWidth = 2.0f; // Adjust the view width as needed
+    float viewWidth = 2.0f * cameraZoom; // Adjust the view width as needed
     float viewHeight = viewWidth / aspectRatio;
 
     // Update the projection matrix
