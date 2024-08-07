@@ -150,6 +150,7 @@
     <ClCompile Include="src\networkManager.cpp" />
     <ClCompile Include="src\player.cpp" />
     <ClCompile Include="src\server.cpp" />
+    <ClCompile Include="src\stb.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="lib\glew32.lib" />
@@ -456,6 +457,7 @@
     <ClInclude Include="include\glm\vec3.hpp" />
     <ClInclude Include="include\glm\vec4.hpp" />
     <ClInclude Include="include\glm\vector_relational.hpp" />
+    <ClInclude Include="include\stb\stb_image.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitattributes" />

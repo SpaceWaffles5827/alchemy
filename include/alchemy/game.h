@@ -24,10 +24,13 @@ private:
     void update(double deltaTime);
     void render();
     void cleanup();
+    GLuint loadTexture(const char* filename);
+    void checkCompileErrors(GLuint shader, std::string type);
 
     GLFWwindow* window;
     GLuint VAO, VBO;
     GLuint shaderProgram, redShaderProgram;
+    GLuint playerTexture; // Texture for the player
 
     NetworkManager networkManager;
     Player player1;

@@ -1,7 +1,7 @@
 #include <alchemy/player.h>
 
-Player::Player(int clientId, const glm::vec3& color, float x, float y)
-    : clientId(clientId), color(color), position(x, y) {}
+Player::Player(int clientId, const glm::vec3& color, GLuint texture, float x, float y)
+    : clientId(clientId), color(color), position(x, y), texture(texture) {}
 
 Player::~Player() {}
 
@@ -9,9 +9,10 @@ void Player::render(GLuint shaderProgram, GLuint VAO) const {
     glUseProgram(shaderProgram);
     glBindVertexArray(VAO);
 
-    // Set the color uniform
-    GLint colorLoc = glGetUniformLocation(shaderProgram, "playerColor");
-    glUniform3fv(colorLoc, 1, glm::value_ptr(color));
+    // Bind the texture
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glUniform1i(glGetUniformLocation(shaderProgram, "ourTexture"), 0);
 
     // Set the transformation matrix
     glm::mat4 transform = glm::translate(glm::mat4(1.0f), glm::vec3(position, 0.0f));

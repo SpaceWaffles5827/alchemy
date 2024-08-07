@@ -8,8 +8,8 @@
 
 class Player {
 public:
-    Player() : clientId(0), color(1.0f, 1.0f, 1.0f), position(0.0f, 0.0f) {}
-    Player(int clientId, const glm::vec3& color, float x = 0.0f, float y = 0.0f);
+    Player() : clientId(0), color(1.0f, 1.0f, 1.0f), position(0.0f, 0.0f), texture(0) {}
+    Player(int clientId, const glm::vec3& color, GLuint texture, float x = 0.0f, float y = 0.0f);
     ~Player();
 
     void render(GLuint shaderProgram, GLuint VAO) const;
@@ -21,6 +21,7 @@ private:
     int clientId;
     glm::vec3 color;
     glm::vec2 position;
+    GLuint texture;
 };
 
 #endif
