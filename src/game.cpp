@@ -59,6 +59,16 @@ void Game::run() {
     double previousTime = glfwGetTime();
     double lag = 0.0;
 
+    // Create a GameObject using shared_ptr
+    std::shared_ptr<GameObject> gameObject1 = std::make_shared<GameObject>(glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1.0f));
+
+    // Set position and rotation
+    gameObject1->setPosition(glm::vec3(0.0f, 0.0f, 0.0f));
+    gameObject1->setRotation(glm::vec3(0.0f, 0.0f, 0.0f));
+
+    // Add gameObject1 to world
+    world.addObject(gameObject1);
+
     while (!glfwWindowShouldClose(window)) {
         double currentTime = glfwGetTime();
         double elapsed = currentTime - previousTime;
@@ -224,7 +234,15 @@ void Game::update(double deltaTime) {
 void Game::render() {
     glClear(GL_COLOR_BUFFER_BIT);
 
+    // Render world objects with the red shader program
+    glUseProgram(redShaderProgram);
+    world.render(redShaderProgram, VAO);
+
+    // Render client player with the main shader program
+    glUseProgram(shaderProgram);
     clientPlayer.render(shaderProgram, VAO);
+
+    // Render other players with the main shader program
     for (const auto& pair : players) {
         const Player& player = pair.second;
         player.render(shaderProgram, VAO);

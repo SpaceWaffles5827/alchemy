@@ -7,6 +7,7 @@
 #include "networkManager.h"
 #include "player.h"
 #include <unordered_map>
+#include <alchemy/world.h>
 
 class Game {
 public:
@@ -35,6 +36,7 @@ private:
 
     int clientId;
     double tickRate;
+    World world;
 
     std::unordered_map<int, Player> players;
 };
