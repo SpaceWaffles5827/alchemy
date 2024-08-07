@@ -123,15 +123,12 @@ void Game::initGLFW() {
 void Game::scroll_callback(GLFWwindow* window, double xOffset, double yOffset) {
     Game* game = static_cast<Game*>(glfwGetWindowUserPointer(window));
 
-    // Now you can access non-static members of the Game class using the game pointer
-    std::cout << "Scroll input: xOffset = " << xOffset << ", yOffset = " << yOffset << std::endl;
-
-    // Example: Adjusting the camera zoom based on scroll input
+    // Adjust the camera zoom based on scroll input
     game->cameraZoom += yOffset * -0.1f;
     if (game->cameraZoom < 0.1f) game->cameraZoom = 0.1f; // Prevent zooming too far out
     if (game->cameraZoom > 3.0f) game->cameraZoom = 3.0f; // Prevent zooming too far in
 
-    // Update the projection matrix or any other relevant variables
+    // Update the projection matrix to reflect the new zoom level
     game->updateProjectionMatrix(800, 800);
 }
 
@@ -262,6 +259,9 @@ void Game::update(double deltaTime) {
 void Game::render() {
     glClear(GL_COLOR_BUFFER_BIT);
 
+    // Update the projection matrix to follow the player
+    updateProjectionMatrix(800, 800);
+
     // Render world objects with the red shader program
     glUseProgram(redShaderProgram);
     world.render(redShaderProgram, VAO, projection);
@@ -310,8 +310,15 @@ void Game::updateProjectionMatrix(int width, int height) {
     float viewWidth = 2.0f * cameraZoom; // Adjust the view width as needed
     float viewHeight = viewWidth / aspectRatio;
 
-    // Update the projection matrix
-    projection = glm::ortho(-viewWidth / 2.0f, viewWidth / 2.0f, -viewHeight / 2.0f, viewHeight / 2.0f);
+    // Get the player's position
+    glm::vec2 playerPos = clientPlayer.getPosition();
+
+    // Update the projection matrix to follow the player
+    projection = glm::ortho(
+        playerPos.x - viewWidth / 2.0f, playerPos.x + viewWidth / 2.0f,
+        playerPos.y - viewHeight / 2.0f, playerPos.y + viewHeight / 2.0f
+    );
+
     GLuint transformLoc = glGetUniformLocation(shaderProgram, "transform");
     glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(projection));
 }
