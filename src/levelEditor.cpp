@@ -1,4 +1,4 @@
-#include <alchemy/game.h>
+#include <alchemy/levelEditor.h>
 #include <alchemy/player.h>
 #include <iostream>
 #include <cstdlib>
@@ -9,7 +9,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-const char* Game::vertexShaderSource = "#version 330 core\n"
+const char* LevelEditor::vertexShaderSource = "#version 330 core\n"
 "layout (location = 0) in vec3 aPos;\n"
 "layout (location = 1) in vec2 aTexCoord;\n"
 "out vec2 TexCoord;\n"
@@ -20,7 +20,7 @@ const char* Game::vertexShaderSource = "#version 330 core\n"
 "   TexCoord = aTexCoord;\n"
 "}\0";
 
-const char* Game::fragmentShaderSource = "#version 330 core\n"
+const char* LevelEditor::fragmentShaderSource = "#version 330 core\n"
 "out vec4 FragColor;\n"
 "in vec2 TexCoord;\n"
 "uniform sampler2D ourTexture;\n"
@@ -29,14 +29,14 @@ const char* Game::fragmentShaderSource = "#version 330 core\n"
 "   FragColor = texture(ourTexture, TexCoord);\n"
 "}\0";
 
-const char* Game::redFragmentShaderSource = "#version 330 core\n"
+const char* LevelEditor::redFragmentShaderSource = "#version 330 core\n"
 "out vec4 FragColor;\n"
 "void main()\n"
 "{\n"
 "   FragColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);\n"
 "}\0";
 
-Game::Game()
+LevelEditor::LevelEditor()
     : window(nullptr), VAO(0), VBO(0), shaderProgram(0), redShaderProgram(0), clientId(std::rand()), tickRate(1.0 / 64.0), clientPlayer(clientId, glm::vec3(1.0f, 0.5f, 0.2f)) {
     networkManager.setupUDPClient();
 
@@ -48,11 +48,11 @@ Game::Game()
     }
 }
 
-Game::~Game() {
+LevelEditor::~LevelEditor() {
     cleanup();
 }
 
-void Game::run() {
+void LevelEditor::run() {
     setupShaders();
     setupBuffers();
 
@@ -90,7 +90,7 @@ void Game::run() {
     cleanup();
 }
 
-void Game::initGLFW() {
+void LevelEditor::initGLFW() {
     if (!glfwInit()) {
         std::cerr << "Failed to initialize GLFW!" << std::endl;
         std::exit(-1);
@@ -110,7 +110,7 @@ void Game::initGLFW() {
     glfwMakeContextCurrent(window);
 }
 
-void Game::initGLEW() {
+void LevelEditor::initGLEW() {
     glewExperimental = GL_TRUE;
     if (glewInit() != GLEW_OK) {
         std::cerr << "Failed to initialize GLEW!" << std::endl;
@@ -122,7 +122,8 @@ void Game::initGLEW() {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
-void Game::setupShaders() {
+void LevelEditor::setupShaders() {
+
     GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
     glCompileShader(vertexShader);
@@ -155,7 +156,7 @@ void Game::setupShaders() {
     glDeleteShader(redFragmentShader);
 }
 
-void Game::setupBuffers() {
+void LevelEditor::setupBuffers() {
     GLfloat vertices[] = {
         -0.1f, -0.1f, 0.0f,  0.0f, 0.0f,
          0.1f, -0.1f, 0.0f,  1.0f, 0.0f,
@@ -184,7 +185,7 @@ void Game::setupBuffers() {
     glBindVertexArray(0);
 }
 
-void Game::processInput() {
+void LevelEditor::processInput() {
     bool positionUpdated = false;
     float speed = 0.02f;
     glm::vec2 position = clientPlayer.getPosition();
@@ -215,7 +216,7 @@ void Game::processInput() {
     }
 }
 
-void Game::update(double deltaTime) {
+void LevelEditor::update(double deltaTime) {
     if (networkManager.receiveData(players)) {
         for (auto& pair : players) {
             int playerId = pair.first;
@@ -231,7 +232,7 @@ void Game::update(double deltaTime) {
     }
 }
 
-void Game::render() {
+void LevelEditor::render() {
     glClear(GL_COLOR_BUFFER_BIT);
 
     // Render world objects with the red shader program
@@ -249,7 +250,7 @@ void Game::render() {
     }
 }
 
-void Game::cleanup() {
+void LevelEditor::cleanup() {
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
     glDeleteProgram(shaderProgram);
@@ -257,7 +258,7 @@ void Game::cleanup() {
     glfwTerminate();
 }
 
-void Game::checkCompileErrors(GLuint shader, std::string type) {
+void LevelEditor::checkCompileErrors(GLuint shader, std::string type) {
     GLint success;
     GLchar infoLog[1024];
     if (type != "PROGRAM") {

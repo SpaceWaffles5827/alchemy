@@ -146,6 +146,7 @@
     <ClCompile Include="src\game.cpp" />
     <ClCompile Include="include\glm\detail\glm.cpp" />
     <ClCompile Include="include\glm\glm.cppm" />
+    <ClCompile Include="src\levelEditor.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\networkManager.cpp" />
     <ClCompile Include="src\player.cpp" />
@@ -160,6 +161,7 @@
   <ItemGroup>
     <ClInclude Include="include\alchemy\game.h" />
     <ClInclude Include="include\alchemy\gameObject.h" />
+    <ClInclude Include="include\alchemy\levelEditor.h" />
     <ClInclude Include="include\alchemy\networkManager.h" />
     <ClInclude Include="include\alchemy\network_protocol.h" />
     <ClInclude Include="include\alchemy\player.h" />

@@ -2,13 +2,15 @@
 #include <string>
 #include <alchemy/game.h>
 #include <alchemy/server.h>
+#include <alchemy/levelEditor.h>
 
 void displayMenu() {
     std::cout << "Welcome to the Game!\n";
     std::cout << "Please select an option:\n";
     std::cout << "1. Start Game\n";
     std::cout << "2. Start Server\n";
-    std::cout << "3. Exit\n";
+    std::cout << "3. Start Server\n";
+    std::cout << "4. Exit\n";
     std::cout << "Enter your choice: ";
 }
 
@@ -32,6 +34,12 @@ int main() {
             break;
         }
         else if (choice == "3") {
+            std::cout << "Starting Level Editor...\n";
+            LevelEditor levelEditor;
+            levelEditor.run();
+            break;
+        }
+        else if (choice == "4") {
             std::cout << "Exiting...\n";
             break;
         }

@@ -1,18 +1,18 @@
-#ifndef GAME_H
-#define GAME_H
+#ifndef LEVELEDITOR_H
+#define LEVELEDITOR_H
 
 #include <GLEW/glew.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include "networkManager.h"
-#include "player.h"
 #include <unordered_map>
 #include <alchemy/world.h>
 
-class Game {
+class LevelEditor {
 public:
-    Game();
-    ~Game();
+
+    LevelEditor();
+    ~LevelEditor();
 
     void run();
 
@@ -45,4 +45,4 @@ private:
     static const char* redFragmentShaderSource;
 };
 
-#endif // GAME_H
+#endif // LEVELEDITOR_H
