@@ -35,8 +35,8 @@ private:
     void checkCompileErrors(GLuint shader, std::string type);
     void updateProjectionMatrix(int width, int height);
     static void scroll_callback(GLFWwindow* window, double xOffset, double yOffset);
-
     static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+    static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 
     GLFWwindow* window;
     GLuint VAO, VBO;

@@ -1,14 +1,7 @@
 #include <alchemy/game.h>
-#include <alchemy/player.h>
 #include <iostream>
 #include <cstdlib>
 #include <ctime>
-#define APIENTRY __stdcall
-#include <GLEW/glew.h>
-#include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
 
 const char* Game::vertexShaderSource = "#version 330 core\n"
 "layout (location = 0) in vec3 aPos;\n"
@@ -38,11 +31,7 @@ const char* Game::redFragmentShaderSource = "#version 330 core\n"
 "}\0";
 
 Game::Game(Mode mode)
-    : window(nullptr), VAO(0), VBO(0), shaderProgram(0), 
-    redShaderProgram(0), clientId(std::rand()), tickRate(1.0 / 64.0), 
-    clientPlayer(clientId, glm::vec3(1.0f, 0.5f, 0.2f)), 
-    projection(1.0f), cameraZoom(1.0f), currentMode(mode) {
-
+    : window(nullptr), VAO(0), VBO(0), shaderProgram(0), redShaderProgram(0), clientId(std::rand()), tickRate(1.0 / 64.0), clientPlayer(clientId, glm::vec3(1.0f, 0.5f, 0.2f)), projection(1.0f), cameraZoom(1.0f), currentMode(mode) {
     networkManager.setupUDPClient();
 
     initGLFW();
@@ -122,6 +111,41 @@ void Game::initGLFW() {
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
     glfwSetScrollCallback(window, scroll_callback);
+
+    // Register the mouse button callback
+    glfwSetMouseButtonCallback(window, mouse_button_callback);
+}
+
+void Game::mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+        Game* game = static_cast<Game*>(glfwGetWindowUserPointer(window));
+
+        if (game->currentMode == Mode::LevelEdit) {
+            double xpos, ypos;
+            glfwGetCursorPos(window, &xpos, &ypos);
+
+            int width, height;
+            glfwGetWindowSize(window, &width, &height);
+
+            // Convert screen coordinates to normalized device coordinates
+            float xNDC = static_cast<float>((2.0 * xpos) / width - 1.0);
+            float yNDC = static_cast<float>(1.0 - (2.0 * ypos) / height);
+
+            // Convert NDC to world coordinates
+            glm::vec4 ndcCoords = glm::vec4(xNDC, yNDC, 0.0f, 1.0f);
+            glm::vec4 worldCoords = glm::inverse(game->projection) * ndcCoords;
+
+            std::cout << "World Coordinates: (" << worldCoords.x << ", " << worldCoords.y << ")" << std::endl;
+
+            std::shared_ptr<GameObject> gameObjectAdding = std::make_shared<GameObject>(glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1.0f));
+
+            // Set position and rotation
+            gameObjectAdding->setPosition(glm::vec3(worldCoords.x, worldCoords.y, 0.0f));
+
+            // Add gameObject1 to world
+            game->world.addObject(gameObjectAdding);
+        }
+    }
 }
 
 void Game::scroll_callback(GLFWwindow* window, double xOffset, double yOffset) {
@@ -270,10 +294,6 @@ void Game::update(double deltaTime) {
 
 void Game::render() {
     glClear(GL_COLOR_BUFFER_BIT);
-
-    if (currentMode == Mode::Game) {
-        std::cout << "game" << std::endl;
-    }
 
     // Get the current window size
     int width, height;

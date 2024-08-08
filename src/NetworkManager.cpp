@@ -132,7 +132,7 @@ bool NetworkManager::receiveData(std::unordered_map<int, Player>& players) {
 #else
             errno;
 #endif
-        std::cerr << "recvfrom failed with error code: " << errorCode << std::endl;
+        // std::cerr << "recvfrom failed with error code: " << errorCode << std::endl;
     }
     return false;
 }
