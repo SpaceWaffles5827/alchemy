@@ -37,8 +37,12 @@ const char* Game::redFragmentShaderSource = "#version 330 core\n"
 "   FragColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);\n"
 "}\0";
 
-Game::Game()
-    : window(nullptr), VAO(0), VBO(0), shaderProgram(0), redShaderProgram(0), clientId(std::rand()), tickRate(1.0 / 64.0), clientPlayer(clientId, glm::vec3(1.0f, 0.5f, 0.2f)), projection(1.0f), cameraZoom(1.0f) {
+Game::Game(Mode mode)
+    : window(nullptr), VAO(0), VBO(0), shaderProgram(0), 
+    redShaderProgram(0), clientId(std::rand()), tickRate(1.0 / 64.0), 
+    clientPlayer(clientId, glm::vec3(1.0f, 0.5f, 0.2f)), 
+    projection(1.0f), cameraZoom(1.0f), currentMode(mode) {
+
     networkManager.setupUDPClient();
 
     initGLFW();
@@ -266,6 +270,10 @@ void Game::update(double deltaTime) {
 
 void Game::render() {
     glClear(GL_COLOR_BUFFER_BIT);
+
+    if (currentMode == Mode::Game) {
+        std::cout << "game" << std::endl;
+    }
 
     // Get the current window size
     int width, height;

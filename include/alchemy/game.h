@@ -11,9 +11,14 @@
 #include <unordered_map>
 #include <alchemy/world.h>
 
+enum class Mode {
+    Game,
+    LevelEdit
+};
+
 class Game {
 public:
-    Game();
+    Game(Mode mode);
     ~Game();
 
     void run();
@@ -52,6 +57,7 @@ private:
     static const char* redFragmentShaderSource;
 
     float cameraZoom;
+    Mode currentMode;
 };
 
 #endif // GAME_H
