@@ -4,6 +4,7 @@
 #include <vector>
 #include <memory>
 #include "GameObject.h"
+#include <glm/glm.hpp>
 
 class World {
 public:
@@ -27,8 +28,32 @@ public:
         }
     }
 
+    void initTileView(int tileCountX, int tileCountY, float tileSize) {
+        float startX = 0;
+        float startY = 0;
+
+        for (int y = 0; y < tileCountY; ++y) {
+            for (int x = 0; x < tileCountX; ++x) {
+                int worldX = startX + x * (tileSize / 5);
+                int worldY = startY + y * (tileSize / 5);
+
+                std::shared_ptr<GameObject> tile = std::make_shared<GameObject>(
+                    glm::vec3(worldX, worldY, 0.0f),  // position
+                    glm::vec3(0.0f),                  // rotation
+                    tileSize,                         // width
+                    tileSize                          // height
+                    );
+
+                // Add the tile if the sum of x and y is even to create a checkerboard pattern
+                if ((x + y) % 2 == 0) {
+                    addObject(tile);
+                }
+            }
+        }
+    }
+
 private:
-    std::vector<std::shared_ptr<GameObject>> objects; 
+    std::vector<std::shared_ptr<GameObject>> objects;
 };
 
 #endif // WORLD_H

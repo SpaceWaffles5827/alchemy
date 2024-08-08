@@ -51,8 +51,12 @@ void Game::run() {
     setupShaders();
     setupBuffers();
 
+    world.initTileView(50, 50, 5.0f);  // 10x10 grid of 5.0f sized tiles
+
     double previousTime = glfwGetTime();
     double lag = 0.0;
+    int frameCount = 0;
+    double fpsTime = 0.0;
 
     std::shared_ptr<GameObject> gameObject1 = std::make_shared<GameObject>(
         glm::vec3(0.0f),    // position
@@ -71,6 +75,17 @@ void Game::run() {
         double elapsed = currentTime - previousTime;
         previousTime = currentTime;
         lag += elapsed;
+
+        fpsTime += elapsed;
+        frameCount++;
+
+        // Calculate FPS every second
+        if (fpsTime >= 1.0) {
+            double fps = frameCount / fpsTime;
+            std::cout << "FPS: " << fps << " | Frame Time: " << (fpsTime / frameCount) * 1000.0 << " ms" << std::endl;
+            frameCount = 0;
+            fpsTime = 0.0;
+        }
 
         while (lag >= tickRate) {
             processInput();
@@ -136,8 +151,6 @@ void Game::mouse_button_callback(GLFWwindow* window, int button, int action, int
             // Snap to 1x1 grid
             float snappedX = std::round(worldCoords.x);
             float snappedY = std::round(worldCoords.y);
-
-            std::cout << "Snapped World Coordinates: (" << snappedX << ", " << snappedY << ")" << std::endl;
 
             float tileWidth = 5.0f;
             float tileHeight = 5.0f; // this is equal to one tile
@@ -264,8 +277,6 @@ void Game::processInput() {
         position.x += speed;
         positionUpdated = true;
     }
-
-    std::cout << position.x << " " << position.y << std::endl;
 
     if (positionUpdated) {
         clientPlayer.updatePosition(position.x, position.y);
