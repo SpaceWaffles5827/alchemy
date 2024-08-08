@@ -31,7 +31,8 @@ const char* Game::redFragmentShaderSource = "#version 330 core\n"
 "}\0";
 
 Game::Game(Mode mode)
-    : window(nullptr), VAO(0), VBO(0), shaderProgram(0), redShaderProgram(0), clientId(std::rand()), tickRate(1.0 / 64.0), clientPlayer(clientId, glm::vec3(1.0f, 0.5f, 0.2f)), projection(1.0f), cameraZoom(1.0f), currentMode(mode) {
+    : window(nullptr), VAO(0), VBO(0), shaderProgram(0), redShaderProgram(0), clientId(std::rand()), tickRate(1.0 / 64.0),
+    clientPlayer(clientId, glm::vec3(1.0f, 0.5f, 0.2f), 0.0f, 0.0f, 5.0f, 5.0f), projection(1.0f), cameraZoom(1.0f), currentMode(mode) {
     networkManager.setupUDPClient();
 
     initGLFW();
@@ -53,14 +54,16 @@ void Game::run() {
     double previousTime = glfwGetTime();
     double lag = 0.0;
 
-    // Create a GameObject using shared_ptr
-    std::shared_ptr<GameObject> gameObject1 = std::make_shared<GameObject>(glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1.0f));
+    std::shared_ptr<GameObject> gameObject1 = std::make_shared<GameObject>(
+        glm::vec3(0.0f),    // position
+        glm::vec3(0.0f),    // rotation
+        5.0f,               // width
+        5.0f                // height
+        );
 
-    // Set position and rotation
     gameObject1->setPosition(glm::vec3(0.0f, 0.0f, 0.0f));
     gameObject1->setRotation(glm::vec3(0.0f, 0.0f, 0.0f));
 
-    // Add gameObject1 to world
     world.addObject(gameObject1);
 
     while (!glfwWindowShouldClose(window)) {
@@ -93,7 +96,7 @@ void Game::initGLFW() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);  // Make window resizable
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
     window = glfwCreateWindow(800, 800, "Moving Square", NULL, NULL);
     if (!window) {
@@ -104,15 +107,12 @@ void Game::initGLFW() {
 
     glfwMakeContextCurrent(window);
 
-    // Set the user pointer to the Game instance
     glfwSetWindowUserPointer(window, this);
 
-    // Register callback for window resize events
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
     glfwSetScrollCallback(window, scroll_callback);
 
-    // Register the mouse button callback
     glfwSetMouseButtonCallback(window, mouse_button_callback);
 }
 
@@ -127,22 +127,28 @@ void Game::mouse_button_callback(GLFWwindow* window, int button, int action, int
             int width, height;
             glfwGetWindowSize(window, &width, &height);
 
-            // Convert screen coordinates to normalized device coordinates
             float xNDC = static_cast<float>((2.0 * xpos) / width - 1.0);
             float yNDC = static_cast<float>(1.0 - (2.0 * ypos) / height);
 
-            // Convert NDC to world coordinates
             glm::vec4 ndcCoords = glm::vec4(xNDC, yNDC, 0.0f, 1.0f);
             glm::vec4 worldCoords = glm::inverse(game->projection) * ndcCoords;
 
-            std::cout << "World Coordinates: (" << worldCoords.x << ", " << worldCoords.y << ")" << std::endl;
+            // Snap to 1x1 grid
+            float snappedX = std::round(worldCoords.x);
+            float snappedY = std::round(worldCoords.y);
 
-            std::shared_ptr<GameObject> gameObjectAdding = std::make_shared<GameObject>(glm::vec3(0.0f), glm::vec3(0.0f), glm::vec3(1.0f));
+            std::cout << "Snapped World Coordinates: (" << snappedX << ", " << snappedY << ")" << std::endl;
 
-            // Set position and rotation
-            gameObjectAdding->setPosition(glm::vec3(worldCoords.x, worldCoords.y, 0.0f));
+            float tileWidth = 5.0f;
+            float tileHeight = 5.0f; // this is equal to one tile
 
-            // Add gameObject1 to world
+            std::shared_ptr<GameObject> gameObjectAdding = std::make_shared<GameObject>(
+                glm::vec3(snappedX, snappedY, 0.0f),  // position
+                glm::vec3(0.0f),                      // rotation
+                tileWidth,                            // width
+                tileHeight                            // height
+                );
+
             game->world.addObject(gameObjectAdding);
         }
     }
@@ -151,16 +157,13 @@ void Game::mouse_button_callback(GLFWwindow* window, int button, int action, int
 void Game::scroll_callback(GLFWwindow* window, double xOffset, double yOffset) {
     Game* game = static_cast<Game*>(glfwGetWindowUserPointer(window));
 
-    // Adjust the camera zoom based on scroll input
     game->cameraZoom += yOffset * -0.1f;
-    if (game->cameraZoom < 0.1f) game->cameraZoom = 0.1f; // Prevent zooming too far out
-    if (game->cameraZoom > 3.0f) game->cameraZoom = 3.0f; // Prevent zooming too far in
+    if (game->cameraZoom < 0.1f) game->cameraZoom = 0.1f;
+    if (game->cameraZoom > 3.0f) game->cameraZoom = 3.0f;
 
-    // Get the current window size
     int width, height;
     glfwGetWindowSize(window, &width, &height);
 
-    // Update the projection matrix to reflect the new zoom level
     game->updateProjectionMatrix(width, height);
 }
 
@@ -171,7 +174,6 @@ void Game::initGLEW() {
         std::exit(-1);
     }
 
-    // Enable blending
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
@@ -208,11 +210,9 @@ void Game::setupShaders() {
     glDeleteShader(fragmentShader);
     glDeleteShader(redFragmentShader);
 
-    // Get the current window size
     int width, height;
     glfwGetWindowSize(window, &width, &height);
 
-    // Set initial projection matrix
     updateProjectionMatrix(width, height);
 }
 
@@ -233,11 +233,9 @@ void Game::setupBuffers() {
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    // Position attribute
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
-    // Texture coordinates attribute
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
@@ -247,7 +245,7 @@ void Game::setupBuffers() {
 
 void Game::processInput() {
     bool positionUpdated = false;
-    float speed = 0.02f;
+    float speed = 0.10f;
     glm::vec2 position = clientPlayer.getPosition();
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
@@ -266,6 +264,8 @@ void Game::processInput() {
         position.x += speed;
         positionUpdated = true;
     }
+
+    std::cout << position.x << " " << position.y << std::endl;
 
     if (positionUpdated) {
         clientPlayer.updatePosition(position.x, position.y);
@@ -295,22 +295,17 @@ void Game::update(double deltaTime) {
 void Game::render() {
     glClear(GL_COLOR_BUFFER_BIT);
 
-    // Get the current window size
     int width, height;
     glfwGetWindowSize(window, &width, &height);
 
-    // Update the projection matrix to follow the player
     updateProjectionMatrix(width, height);
 
-    // Render world objects with the red shader program
     glUseProgram(redShaderProgram);
     world.render(redShaderProgram, VAO, projection);
 
-    // Render client player with the main shader program
     glUseProgram(shaderProgram);
     clientPlayer.render(shaderProgram, VAO, projection);
 
-    // Render other players with the main shader program
     for (const auto& pair : players) {
         const Player& player = pair.second;
         player.render(shaderProgram, VAO, projection);
@@ -345,15 +340,12 @@ void Game::checkCompileErrors(GLuint shader, std::string type) {
 }
 
 void Game::updateProjectionMatrix(int width, int height) {
-    // Maintain the aspect ratio
     float aspectRatio = static_cast<float>(width) / height;
-    float viewWidth = 2.0f * cameraZoom; // Adjust the view width as needed
+    float viewWidth = 20.0f * cameraZoom;
     float viewHeight = viewWidth / aspectRatio;
 
-    // Get the player's position
     glm::vec2 playerPos = clientPlayer.getPosition();
 
-    // Update the projection matrix to follow the player
     projection = glm::ortho(
         playerPos.x - viewWidth / 2.0f, playerPos.x + viewWidth / 2.0f,
         playerPos.y - viewHeight / 2.0f, playerPos.y + viewHeight / 2.0f,
@@ -367,9 +359,7 @@ void Game::updateProjectionMatrix(int width, int height) {
 void Game::framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
 
-    // Retrieve the Game instance from the window user pointer
     Game* game = static_cast<Game*>(glfwGetWindowUserPointer(window));
 
-    // Update the projection matrix
     game->updateProjectionMatrix(width, height);
 }

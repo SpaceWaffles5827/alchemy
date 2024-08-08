@@ -9,8 +9,10 @@
 
 class GameObject {
 public:
-    GameObject(const glm::vec3& pos, const glm::vec3& rot, const glm::vec3& scl)
-        : position(pos), rotation(rot), scale(scl) {}
+    GameObject(const glm::vec3& pos, const glm::vec3& rot, float width, float height)
+        : position(pos), rotation(rot), width(width), height(height) {
+        scale = glm::vec3(width, height, 1.0f);  // Set scale based on width and height
+    }
 
     virtual ~GameObject() = default;
 
@@ -42,16 +44,24 @@ public:
     const glm::vec3& getPosition() const { return position; }
     const glm::vec3& getRotation() const { return rotation; }
     const glm::vec3& getScale() const { return scale; }
+    float getWidth() const { return width; }
+    float getHeight() const { return height; }
 
     // Setters
     void setPosition(const glm::vec3& pos) { position = pos; }
     void setRotation(const glm::vec3& rot) { rotation = rot; }
-    void setScale(const glm::vec3& scl) { scale = scl; }
+    void setScale(float w, float h) {
+        width = w;
+        height = h;
+        scale = glm::vec3(width, height, 1.0f);
+    }
 
 private:
     glm::vec3 position;
     glm::vec3 rotation;
     glm::vec3 scale;
+    float width;
+    float height;
 };
 
 #endif // GAMEOBJECT_H

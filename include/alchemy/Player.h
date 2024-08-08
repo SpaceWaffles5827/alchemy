@@ -10,7 +10,7 @@
 
 class Player {
 public:
-    Player(int clientId = 0, const glm::vec3& color = glm::vec3(1.0f), float x = 0.0f, float y = 0.0f);
+    Player(int clientId = 0, const glm::vec3& color = glm::vec3(1.0f), float x = 0.0f, float y = 0.0f, float width = 1.0f, float height = 1.0f);
     ~Player();
 
     bool loadTexture(const char* filename);
@@ -19,11 +19,15 @@ public:
     glm::vec2 getPosition() const;
     int getClientId() const;
     bool isTextureLoaded() const;
+    float getWidth() const;
+    float getHeight() const;
 
 private:
     int clientId;
     glm::vec3 color;
     glm::vec2 position;
+    float width;
+    float height;
     GLuint texture;
     bool textureLoaded;
 };

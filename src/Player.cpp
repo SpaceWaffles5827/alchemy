@@ -1,7 +1,7 @@
-#include <alchemy/player.h>
+#include <alchemy/Player.h>
 
-Player::Player(int clientId, const glm::vec3& color, float x, float y)
-    : clientId(clientId), color(color), position(x, y), texture(0), textureLoaded(false) {}
+Player::Player(int clientId, const glm::vec3& color, float x, float y, float width, float height)
+    : clientId(clientId), color(color), position(x, y), width(width), height(height), texture(0), textureLoaded(false) {}
 
 Player::~Player() {
     if (texture) {
@@ -56,6 +56,7 @@ void Player::render(GLuint shaderProgram, GLuint VAO, const glm::mat4& projectio
 
     // Set the transformation matrix
     glm::mat4 transform = glm::translate(glm::mat4(1.0f), glm::vec3(position, 0.0f));
+    transform = glm::scale(transform, glm::vec3(width, height, 1.0f)); // Apply the width and height
     glm::mat4 combined = projection * transform;
     GLint transformLoc = glGetUniformLocation(shaderProgram, "transform");
     glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(combined));
@@ -80,4 +81,12 @@ int Player::getClientId() const {
 
 bool Player::isTextureLoaded() const {
     return textureLoaded;
+}
+
+float Player::getWidth() const {
+    return width;
+}
+
+float Player::getHeight() const {
+    return height;
 }
