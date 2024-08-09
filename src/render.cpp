@@ -143,26 +143,21 @@ GLuint Render::loadShader(const char* vertexShaderSource, const char* fragmentSh
 void Render::batchRenderGameObjects(const std::vector<std::shared_ptr<GameObject>>& gameObjects, const glm::mat4& projection) {
     if (gameObjects.empty()) return;
 
-    // Calculate the number of instances per batch
     size_t totalGameObjects = gameObjects.size();
-    size_t maxInstances = maxVerticesPerBatch / 6; // Each quad has 6 vertices
+    size_t maxInstances = maxVerticesPerBatch / 6;
     size_t numBatches = (totalGameObjects + maxInstances - 1) / maxInstances;
-
-    // Calculate the total number of triangles being rendered
-    // size_t totalTriangles = totalGameObjects * 2; // Each game object has 2 triangles (a quad)
-    // std::cout << "Rendering " << totalTriangles << " triangles in total." << std::endl;
 
     glUseProgram(shaderProgram);
     glBindVertexArray(VAO);
+
+    std::vector<glm::mat4> instanceTransforms;
+    instanceTransforms.reserve(maxInstances);
 
     for (size_t batchIndex = 0; batchIndex < numBatches; ++batchIndex) {
         size_t startIdx = batchIndex * maxInstances;
         size_t endIdx = std::min(startIdx + maxInstances, totalGameObjects);
 
-        // Prepare the instance transforms
-        std::vector<glm::mat4> instanceTransforms;
-        instanceTransforms.reserve(endIdx - startIdx);
-
+        instanceTransforms.clear();
         for (size_t i = startIdx; i < endIdx; ++i) {
             const auto& gameObject = gameObjects[i];
             glm::mat4 model = glm::mat4(1.0f);
@@ -176,14 +171,14 @@ void Render::batchRenderGameObjects(const std::vector<std::shared_ptr<GameObject
             instanceTransforms.push_back(combined);
         }
 
-        // Bind the instance VBO
         glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
 
-        // Update the buffer data
-        GLint bufferSize = instanceTransforms.size() * sizeof(glm::mat4);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, bufferSize, instanceTransforms.data());
+        void* bufferData = glMapBufferRange(GL_ARRAY_BUFFER, 0, instanceTransforms.size() * sizeof(glm::mat4), GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
+        if (bufferData) {
+            std::memcpy(bufferData, instanceTransforms.data(), instanceTransforms.size() * sizeof(glm::mat4));
+            glUnmapBuffer(GL_ARRAY_BUFFER);
+        }
 
-        // Draw the batch
         glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0, static_cast<GLsizei>(endIdx - startIdx));
     }
 

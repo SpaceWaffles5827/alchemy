@@ -65,7 +65,7 @@ void Game::run() {
         1.0f                // height
         );
 
-    world.initTileView(100, 100, 1.0);
+    world.initTileView(200, 200, 1.0);
 
     while (!glfwWindowShouldClose(window)) {
         double currentTime = glfwGetTime();
