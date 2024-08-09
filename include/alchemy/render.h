@@ -8,6 +8,7 @@
 #include "GameObject.h"
 #include <vector>
 #include <memory>
+#include <map>  // Add this include for std::map
 
 class Render {
 public:

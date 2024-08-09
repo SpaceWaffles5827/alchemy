@@ -9,8 +9,8 @@
 
 class GameObject {
 public:
-    GameObject(const glm::vec3& pos, const glm::vec3& rot, float width, float height)
-        : position(pos), rotation(rot), width(width), height(height) {
+    GameObject(const glm::vec3& pos, const glm::vec3& rot, float width, float height, GLuint textureID)
+        : position(pos), rotation(rot), width(width), height(height), textureID(textureID) {
         scale = glm::vec3(width, height, 1.0f);  // Set scale based on width and height
     }
 
@@ -22,6 +22,8 @@ public:
 
     virtual void render(GLuint shaderProgram, GLuint VAO, const glm::mat4& projection) const {
         glUseProgram(shaderProgram);
+
+        glBindTexture(GL_TEXTURE_2D, textureID); // Bind the appropriate texture
 
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::translate(model, position);
@@ -46,6 +48,7 @@ public:
     const glm::vec3& getScale() const { return scale; }
     float getWidth() const { return width; }
     float getHeight() const { return height; }
+    GLuint getTextureID() const { return textureID; } // Add this getter for texture ID
 
     // Setters
     void setPosition(const glm::vec3& pos) { position = pos; }
@@ -62,6 +65,7 @@ private:
     glm::vec3 scale;
     float width;
     float height;
+    GLuint textureID; // Texture ID for this game object
 };
 
 #endif // GAMEOBJECT_H

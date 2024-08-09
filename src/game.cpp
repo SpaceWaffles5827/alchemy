@@ -40,6 +40,8 @@ Game::Game(Mode mode)
 
     renderer.initialize();
 
+    loadTextures(); // Load all textures here
+
     if (!clientPlayer.loadTexture("wizard.png")) {
         std::cerr << "Failed to load texture 'wizard.png'" << std::endl;
     }
@@ -58,14 +60,10 @@ void Game::run() {
     int frameCount = 0;
     double fpsTime = 0.0;
 
-    std::shared_ptr<GameObject> gameObject1 = std::make_shared<GameObject>(
-        glm::vec3(0.0f),    // position
-        glm::vec3(0.0f),    // rotation
-        1.0f,               // width
-        1.0f                // height
-        );
+    GLuint textureID1 = loadTexture("grass.png");
+    GLuint textureID2 = loadTexture("grass.png");
 
-    world.initTileView(200, 200, 1.0);
+    world.initTileView(200, 200, 1.0f, textureID1, textureID2);
 
     while (!glfwWindowShouldClose(window)) {
         double currentTime = glfwGetTime();
@@ -97,6 +95,42 @@ void Game::run() {
     }
 
     cleanup();
+}
+
+GLuint Game::loadTexture(const char* path) {
+    GLuint textureID;
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_2D, textureID);
+
+    // Set the texture wrapping parameters
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // S (X-axis) wrapping
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); // T (Y-axis) wrapping
+    // Set texture filtering parameters
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    // Load the image
+    int width, height, nrChannels;
+    stbi_set_flip_vertically_on_load(true); // Flip the image vertically (optional)
+    unsigned char* data = stbi_load(path, &width, &height, &nrChannels, 0);
+    if (data) {
+        GLenum format;
+        if (nrChannels == 1)
+            format = GL_RED;
+        else if (nrChannels == 3)
+            format = GL_RGB;
+        else if (nrChannels == 4)
+            format = GL_RGBA;
+
+        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else {
+        std::cerr << "Failed to load texture: " << path << std::endl;
+    }
+    stbi_image_free(data);
+
+    return textureID;
 }
 
 void Game::initGLFW() {
@@ -156,7 +190,8 @@ void Game::mouse_button_callback(GLFWwindow* window, int button, int action, int
                 glm::vec3(snappedX, snappedY, 0.0f),  // position
                 glm::vec3(0.0f),                      // rotation
                 tileWidth,                            // width
-                tileHeight                            // height
+                tileHeight,                           // height
+                game->textureID1                      // use the preloaded texture ID
                 );
 
             game->world.addObject(gameObjectAdding);
@@ -298,6 +333,11 @@ void Game::update(double deltaTime) {
             }
         }
     }
+}
+
+void Game::loadTextures() {
+    textureID1 = loadTexture("grass.png"); // Implement texture loading here
+    // Add more textures as needed
 }
 
 void Game::render() {

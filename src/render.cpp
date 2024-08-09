@@ -5,21 +5,30 @@
 const char* Render::defaultVertexShaderSource = R"(
 #version 330 core
 layout(location = 0) in vec3 aPos;
+layout(location = 1) in vec2 aTexCoord; // Add texture coordinates as an input
 layout(location = 2) in mat4 instanceTransform;
+
+out vec2 TexCoord; // Pass texture coordinates to the fragment shader
 
 void main()
 {
     gl_Position = instanceTransform * vec4(aPos, 1.0);
+    TexCoord = aTexCoord; // Pass texture coordinates to fragment shader
 }
 )";
+
 
 const char* Render::defaultFragmentShaderSource = R"(
 #version 330 core
 out vec4 FragColor;
 
+in vec2 TexCoord;
+
+uniform sampler2D ourTexture;
+
 void main()
 {
-    FragColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);  // Solid red color
+    FragColor = texture(ourTexture, TexCoord);
 }
 )";
 
@@ -143,46 +152,65 @@ GLuint Render::loadShader(const char* vertexShaderSource, const char* fragmentSh
 void Render::batchRenderGameObjects(const std::vector<std::shared_ptr<GameObject>>& gameObjects, const glm::mat4& projection) {
     if (gameObjects.empty()) return;
 
-    size_t totalGameObjects = gameObjects.size();
-    size_t maxInstances = maxVerticesPerBatch / 6;
-    size_t numBatches = (totalGameObjects + maxInstances - 1) / maxInstances;
+    // Sort game objects by texture ID
+    std::map<GLuint, std::vector<std::shared_ptr<GameObject>>> textureGroups;
 
-    glUseProgram(shaderProgram);
-    glBindVertexArray(VAO);
-
-    std::vector<glm::mat4> instanceTransforms;
-    instanceTransforms.reserve(maxInstances);
-
-    for (size_t batchIndex = 0; batchIndex < numBatches; ++batchIndex) {
-        size_t startIdx = batchIndex * maxInstances;
-        size_t endIdx = std::min(startIdx + maxInstances, totalGameObjects);
-
-        instanceTransforms.clear();
-        for (size_t i = startIdx; i < endIdx; ++i) {
-            const auto& gameObject = gameObjects[i];
-            glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model, gameObject->getPosition());
-            model = glm::rotate(model, glm::radians(gameObject->getRotation().x), glm::vec3(1.0f, 0.0f, 0.0f));
-            model = glm::rotate(model, glm::radians(gameObject->getRotation().y), glm::vec3(0.0f, 1.0f, 0.0f));
-            model = glm::rotate(model, glm::radians(gameObject->getRotation().z), glm::vec3(0.0f, 0.0f, 1.0f));
-            model = glm::scale(model, gameObject->getScale());
-
-            glm::mat4 combined = projection * model;
-            instanceTransforms.push_back(combined);
-        }
-
-        glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-
-        void* bufferData = glMapBufferRange(GL_ARRAY_BUFFER, 0, instanceTransforms.size() * sizeof(glm::mat4), GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
-        if (bufferData) {
-            std::memcpy(bufferData, instanceTransforms.data(), instanceTransforms.size() * sizeof(glm::mat4));
-            glUnmapBuffer(GL_ARRAY_BUFFER);
-        }
-
-        glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0, static_cast<GLsizei>(endIdx - startIdx));
+    for (const auto& gameObject : gameObjects) {
+        textureGroups[gameObject->getTextureID()].push_back(gameObject);
     }
 
-    glBindVertexArray(0);
+    // Render each group of objects with the same texture
+    for (const auto& group : textureGroups) {
+        GLuint textureID = group.first;
+        const auto& objects = group.second;
+
+        if (objects.empty()) continue;
+
+        size_t totalGameObjects = objects.size();
+        size_t maxInstances = maxVerticesPerBatch / 6;
+        size_t numBatches = (totalGameObjects + maxInstances - 1) / maxInstances;
+
+        glUseProgram(shaderProgram);
+        glBindVertexArray(VAO);
+
+        std::cout << textureID << std::endl;
+
+        glBindTexture(GL_TEXTURE_2D, textureID); // Bind the texture for this group
+
+        std::vector<glm::mat4> instanceTransforms;
+        instanceTransforms.reserve(maxInstances);
+
+        for (size_t batchIndex = 0; batchIndex < numBatches; ++batchIndex) {
+            size_t startIdx = batchIndex * maxInstances;
+            size_t endIdx = std::min(startIdx + maxInstances, totalGameObjects);
+
+            instanceTransforms.clear();
+            for (size_t i = startIdx; i < endIdx; ++i) {
+                const auto& gameObject = objects[i];
+                glm::mat4 model = glm::mat4(1.0f);
+                model = glm::translate(model, gameObject->getPosition());
+                model = glm::rotate(model, glm::radians(gameObject->getRotation().x), glm::vec3(1.0f, 0.0f, 0.0f));
+                model = glm::rotate(model, glm::radians(gameObject->getRotation().y), glm::vec3(0.0f, 1.0f, 0.0f));
+                model = glm::rotate(model, glm::radians(gameObject->getRotation().z), glm::vec3(0.0f, 0.0f, 1.0f));
+                model = glm::scale(model, gameObject->getScale());
+
+                glm::mat4 combined = projection * model;
+                instanceTransforms.push_back(combined);
+            }
+
+            glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+
+            void* bufferData = glMapBufferRange(GL_ARRAY_BUFFER, 0, instanceTransforms.size() * sizeof(glm::mat4), GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
+            if (bufferData) {
+                std::memcpy(bufferData, instanceTransforms.data(), instanceTransforms.size() * sizeof(glm::mat4));
+                glUnmapBuffer(GL_ARRAY_BUFFER);
+            }
+
+            glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0, static_cast<GLsizei>(endIdx - startIdx));
+        }
+
+        glBindVertexArray(0);
+    }
 }
 
 void Render::checkCompileErrors(GLuint shader, const std::string& type) {

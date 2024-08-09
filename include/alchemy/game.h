@@ -56,6 +56,9 @@ private:
     static const char* vertexShaderSource;
     static const char* fragmentShaderSource;
     static const char* redFragmentShaderSource;
+    GLuint loadTexture(const char* path);
+    GLuint textureID1;
+    void loadTextures();
 
     float cameraZoom;
     Mode currentMode;

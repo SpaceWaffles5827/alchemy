@@ -28,7 +28,7 @@ public:
         }
     }
 
-    void initTileView(int tileCountX, int tileCountY, float tileSize) {
+    void initTileView(int tileCountX, int tileCountY, float tileSize, GLuint textureID1, GLuint textureID2) {
         float startX = 0;
         float startY = 0;
 
@@ -37,20 +37,22 @@ public:
                 int worldX = startX + x * (tileSize);
                 int worldY = startY + y * (tileSize);
 
+                // Alternate between two textures for a checkerboard pattern
+                GLuint textureID = ((x + y) % 2 == 0) ? textureID1 : textureID2;
+
                 std::shared_ptr<GameObject> tile = std::make_shared<GameObject>(
                     glm::vec3(worldX, worldY, 0.0f),  // position
                     glm::vec3(0.0f),                  // rotation
                     tileSize,                         // width
-                    tileSize                          // height
+                    tileSize,                         // height
+                    textureID                         // texture ID
                     );
 
-                // Add the tile if the sum of x and y is even to create a checkerboard pattern
-                if ((x + y) % 2 == 0) {
-                    addObject(tile);
-                }
+                addObject(tile);
             }
         }
     }
+
 
     const std::vector<std::shared_ptr<GameObject>>& getObjects() const {
         return objects;
