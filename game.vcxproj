@@ -149,6 +149,7 @@
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\networkManager.cpp" />
     <ClCompile Include="src\player.cpp" />
+    <ClCompile Include="src\render.cpp" />
     <ClCompile Include="src\server.cpp" />
     <ClCompile Include="src\stb.cpp" />
   </ItemGroup>
@@ -163,6 +164,7 @@
     <ClInclude Include="include\alchemy\networkManager.h" />
     <ClInclude Include="include\alchemy\network_protocol.h" />
     <ClInclude Include="include\alchemy\player.h" />
+    <ClInclude Include="include\alchemy\render.h" />
     <ClInclude Include="include\alchemy\server.h" />
     <ClInclude Include="include\alchemy\world.h" />
     <ClInclude Include="include\GLEW\eglew.h" />

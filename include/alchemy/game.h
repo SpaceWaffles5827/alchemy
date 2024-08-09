@@ -10,6 +10,7 @@
 #include "player.h"
 #include <unordered_map>
 #include <alchemy/world.h>
+#include <alchemy/render.h>
 
 enum class Mode {
     Game,
@@ -58,6 +59,7 @@ private:
 
     float cameraZoom;
     Mode currentMode;
+    Render renderer; 
 };
 
 #endif // GAME_H

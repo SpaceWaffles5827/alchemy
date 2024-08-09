@@ -38,6 +38,8 @@ Game::Game(Mode mode)
     initGLFW();
     initGLEW();
 
+    renderer.initialize();
+
     if (!clientPlayer.loadTexture("wizard.png")) {
         std::cerr << "Failed to load texture 'wizard.png'" << std::endl;
     }
@@ -311,8 +313,11 @@ void Game::render() {
 
     updateProjectionMatrix(width, height);
 
-    glUseProgram(redShaderProgram);
-    world.render(redShaderProgram, VAO, projection);
+  
+    // Render the world objects
+    renderer.setShaderProgram(redShaderProgram);  // Set the shader program for batch rendering
+    renderer.batchRenderGameObjects(world.getObjects(), projection);  // Batch render all world objects
+
 
     glUseProgram(shaderProgram);
     clientPlayer.render(shaderProgram, VAO, projection);
