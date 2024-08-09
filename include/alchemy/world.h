@@ -34,8 +34,8 @@ public:
 
         for (int y = 0; y < tileCountY; ++y) {
             for (int x = 0; x < tileCountX; ++x) {
-                int worldX = startX + x * (tileSize / 5);
-                int worldY = startY + y * (tileSize / 5);
+                int worldX = startX + x * (tileSize);
+                int worldY = startY + y * (tileSize);
 
                 std::shared_ptr<GameObject> tile = std::make_shared<GameObject>(
                     glm::vec3(worldX, worldY, 0.0f),  // position

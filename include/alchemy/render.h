@@ -7,6 +7,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include "GameObject.h"
 #include <vector>
+#include <memory>
 
 class Render {
 public:
@@ -17,19 +18,21 @@ public:
     void renderGameObject(const GameObject& gameObject, const glm::mat4& projection);
     void batchRenderGameObjects(const std::vector<std::shared_ptr<GameObject>>& gameObjects, const glm::mat4& projection);
 
-    GLuint loadShader(const char* vertexShaderSource, const char* fragmentShaderSource);
     void setShaderProgram(GLuint shaderProgram);
 
 private:
     GLuint shaderProgram;
-    GLuint VAO, VBO;
+    GLuint VAO, VBO, EBO;
     GLuint instanceVBO;  // Added instance VBO for batch rendering
 
     void setupBuffers();
-    void checkCompileErrors(GLuint shader, std::string type);
+    GLuint loadShader(const char* vertexShaderSource, const char* fragmentShaderSource);
+    void checkCompileErrors(GLuint shader, const std::string& type);
 
     static const char* defaultVertexShaderSource;
     static const char* defaultFragmentShaderSource;
+
+    size_t maxVerticesPerBatch; // Maximum vertices per batch for rendering
 };
 
 #endif // RENDER_H

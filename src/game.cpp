@@ -53,8 +53,6 @@ void Game::run() {
     setupShaders();
     setupBuffers();
 
-    world.initTileView(50, 50, 5.0f);  // 10x10 grid of 5.0f sized tiles
-
     double previousTime = glfwGetTime();
     double lag = 0.0;
     int frameCount = 0;
@@ -63,14 +61,11 @@ void Game::run() {
     std::shared_ptr<GameObject> gameObject1 = std::make_shared<GameObject>(
         glm::vec3(0.0f),    // position
         glm::vec3(0.0f),    // rotation
-        5.0f,               // width
-        5.0f                // height
+        1.0f,               // width
+        1.0f                // height
         );
 
-    gameObject1->setPosition(glm::vec3(0.0f, 0.0f, 0.0f));
-    gameObject1->setRotation(glm::vec3(0.0f, 0.0f, 0.0f));
-
-    world.addObject(gameObject1);
+    world.initTileView(100, 100, 1.0);
 
     while (!glfwWindowShouldClose(window)) {
         double currentTime = glfwGetTime();
@@ -154,8 +149,8 @@ void Game::mouse_button_callback(GLFWwindow* window, int button, int action, int
             float snappedX = std::round(worldCoords.x);
             float snappedY = std::round(worldCoords.y);
 
-            float tileWidth = 5.0f;
-            float tileHeight = 5.0f; // this is equal to one tile
+            float tileWidth = 1.0f;
+            float tileHeight = 1.0f; // this is equal to one tile
 
             std::shared_ptr<GameObject> gameObjectAdding = std::make_shared<GameObject>(
                 glm::vec3(snappedX, snappedY, 0.0f),  // position
@@ -174,7 +169,7 @@ void Game::scroll_callback(GLFWwindow* window, double xOffset, double yOffset) {
 
     game->cameraZoom += yOffset * -0.1f;
     if (game->cameraZoom < 0.1f) game->cameraZoom = 0.1f;
-    if (game->cameraZoom > 3.0f) game->cameraZoom = 3.0f;
+    if (game->cameraZoom > 99.0f) game->cameraZoom = 99.0f;
 
     int width, height;
     glfwGetWindowSize(window, &width, &height);
@@ -313,9 +308,7 @@ void Game::render() {
 
     updateProjectionMatrix(width, height);
 
-  
     // Render the world objects
-    renderer.setShaderProgram(redShaderProgram);  // Set the shader program for batch rendering
     renderer.batchRenderGameObjects(world.getObjects(), projection);  // Batch render all world objects
 
 
