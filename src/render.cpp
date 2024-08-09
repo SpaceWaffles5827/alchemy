@@ -173,12 +173,27 @@ void Render::batchRenderGameObjects(const std::vector<std::shared_ptr<GameObject
         glUseProgram(shaderProgram);
         glBindVertexArray(VAO);
 
-        std::cout << textureID << std::endl;
+        glBindTexture(GL_TEXTURE_2D, textureID);
 
-        glBindTexture(GL_TEXTURE_2D, textureID); // Bind the texture for this group
+        // Set texture filtering parameters
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glGenerateMipmap(GL_TEXTURE_2D);
 
         std::vector<glm::mat4> instanceTransforms;
         instanceTransforms.reserve(maxInstances);
+
+        // Hardcoded texture coordinates for this example
+        GLfloat hardcodedVertices[] = {
+            // Positions        // Texture Coords (hardcoded)
+            -0.5f, -0.5f, 0.0f,  0.0f, 0.0f,  // Bottom-left
+             0.5f, -0.5f, 0.0f,  0.5f, 0.0f,  // Bottom-right
+             0.5f,  0.5f, 0.0f,  0.5f, 0.5f,  // Top-right
+            -0.5f,  0.5f, 0.0f,  0.0f, 0.5f   // Top-left
+        };
+
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(hardcodedVertices), hardcodedVertices);
 
         for (size_t batchIndex = 0; batchIndex < numBatches; ++batchIndex) {
             size_t startIdx = batchIndex * maxInstances;

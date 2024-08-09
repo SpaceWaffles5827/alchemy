@@ -1388,5 +1388,17 @@
     <Image Include="wizard.png">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="stone_bricks.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="spriteSheet.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="spruce_log.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="grass.png">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>

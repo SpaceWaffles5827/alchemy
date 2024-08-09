@@ -60,8 +60,8 @@ void Game::run() {
     int frameCount = 0;
     double fpsTime = 0.0;
 
-    GLuint textureID1 = loadTexture("grass.png");
-    GLuint textureID2 = loadTexture("grass.png");
+    GLuint textureID1 = loadTexture("stone_bricks.png");
+    GLuint textureID2 = loadTexture("spruce_log.png");
 
     world.initTileView(200, 200, 1.0f, textureID1, textureID2);
 
