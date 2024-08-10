@@ -32,7 +32,8 @@ const char* Game::redFragmentShaderSource = "#version 330 core\n"
 
 Game::Game(Mode mode)
     : window(nullptr), VAO(0), VBO(0), shaderProgram(0), redShaderProgram(0), clientId(std::rand()), tickRate(1.0 / 64.0),
-    clientPlayer(clientId, glm::vec3(1.0f, 0.5f, 0.2f), 0.0f, 0.0f, 5.0f, 5.0f), projection(1.0f), cameraZoom(1.0f), currentMode(mode) {
+    projection(1.0f), cameraZoom(1.0f), currentMode(mode) {
+
     networkManager.setupUDPClient();
 
     initGLFW();
@@ -40,11 +41,10 @@ Game::Game(Mode mode)
 
     renderer.initialize();
 
-    loadTextures(); // Load all textures here
+    textureID1 = loadTexture("aniwoo.png");
 
-    if (!clientPlayer.loadTexture("wizard.png")) {
-        std::cerr << "Failed to load texture 'wizard.png'" << std::endl;
-    }
+    // Initialize clientPlayer with the loaded texture
+    clientPlayer = Player(clientId, glm::vec3(1.0f, 0.5f, 0.2f), 0.0f, 0.0f, 5.0f, 5.0f, textureID1);
 }
 
 Game::~Game() {
@@ -317,7 +317,7 @@ void Game::processInput() {
     }
 
     if (positionUpdated) {
-        clientPlayer.updatePosition(position.x, position.y);
+        clientPlayer.setPosition(glm::vec3(position.x, position.y, 0));
         networkManager.sendPlayerMovement(clientId, position.x, position.y);
     }
     else {
@@ -332,17 +332,8 @@ void Game::update(double deltaTime) {
             Player& player = pair.second;
 
             glm::vec2 position = player.getPosition();
-            if (!player.isTextureLoaded()) {
-                if (!player.loadTexture("wizard.png")) {
-                    std::cerr << "Failed to load texture for player " << playerId << std::endl;
-                }
-            }
         }
     }
-}
-
-void Game::loadTextures() {
-    textureID1 = loadTexture("stone_bricks.png");
 }
 
 void Game::render() {

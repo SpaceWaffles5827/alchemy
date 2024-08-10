@@ -97,7 +97,7 @@ bool NetworkManager::receiveData(std::unordered_map<int, Player>& players) {
                 auto it = players.find(playerId);
                 if (it != players.end()) {
                     // Update the existing player's position
-                    it->second.updatePosition(x, y);
+                    it->second.setPosition(glm::vec3(x, y, 0));
                 }
                 else {
                     // If a new player is detected, add them to the map

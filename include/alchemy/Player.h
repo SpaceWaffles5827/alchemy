@@ -7,29 +7,17 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <stb/stb_image.h>
 #include <iostream>
+#include <alchemy/gameObject.h>
 
-class Player {
+class Player : public GameObject {
 public:
-    Player(int clientId = 0, const glm::vec3& color = glm::vec3(1.0f), float x = 0.0f, float y = 0.0f, float width = 1.0f, float height = 1.0f);
+    Player(int clientId = 0, const glm::vec3& color = glm::vec3(1.0f), float x = 0.0f, float y = 0.0f, float width = 1.0f, float height = 1.0f, GLuint textureID = 0);
     ~Player();
 
-    bool loadTexture(const char* filename);
-    void render(GLuint shaderProgram, GLuint VAO, const glm::mat4& projection) const;
-    void updatePosition(float x, float y);
-    glm::vec2 getPosition() const;
     int getClientId() const;
-    bool isTextureLoaded() const;
-    float getWidth() const;
-    float getHeight() const;
 
 private:
     int clientId;
-    glm::vec3 color;
-    glm::vec2 position;
-    float width;
-    float height;
-    GLuint texture;
-    bool textureLoaded;
 };
 
 #endif // PLAYER_H
