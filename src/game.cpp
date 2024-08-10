@@ -60,8 +60,8 @@ void Game::run() {
     int frameCount = 0;
     double fpsTime = 0.0;
 
-    GLuint textureID1 = loadTexture("stone_bricks.png");
-    GLuint textureID2 = loadTexture("spruce_log.png");
+    GLuint textureID1 = loadTexture("spriteSheet.png");
+    GLuint textureID2 = loadTexture("spriteSheet.png");
 
     world.initTileView(200, 200, 1.0f, textureID1, textureID2);
 
@@ -179,7 +179,6 @@ void Game::mouse_button_callback(GLFWwindow* window, int button, int action, int
             glm::vec4 ndcCoords = glm::vec4(xNDC, yNDC, 0.0f, 1.0f);
             glm::vec4 worldCoords = glm::inverse(game->projection) * ndcCoords;
 
-            // Snap to 1x1 grid
             float snappedX = std::round(worldCoords.x);
             float snappedY = std::round(worldCoords.y);
 
@@ -187,12 +186,19 @@ void Game::mouse_button_callback(GLFWwindow* window, int button, int action, int
             float tileHeight = 1.0f; // this is equal to one tile
 
             std::shared_ptr<GameObject> gameObjectAdding = std::make_shared<GameObject>(
-                glm::vec3(snappedX, snappedY, 0.0f),  // position
-                glm::vec3(0.0f),                      // rotation
-                tileWidth,                            // width
-                tileHeight,                           // height
-                game->textureID1                      // use the preloaded texture ID
+                glm::vec3(snappedX, snappedY, 0.0f), 
+                glm::vec3(0.0f),                      
+                tileWidth,                           
+                tileHeight,                          
+                game->textureID1
                 );
+
+            int randomTileX = rand() % 8; // Random x between 0 and 7
+            int randomTileY = rand() % 8; // Random y between 0 and 7
+
+            std::cout << "Placing on: (" << randomTileX << ", " << randomTileY << ")" << std::endl;
+
+            // gameObjectAdding->setTextureTile(randomTileX, randomTileY, 8, 256, 256, 32, 32);
 
             game->world.addObject(gameObjectAdding);
         }
@@ -336,8 +342,7 @@ void Game::update(double deltaTime) {
 }
 
 void Game::loadTextures() {
-    textureID1 = loadTexture("grass.png"); // Implement texture loading here
-    // Add more textures as needed
+    textureID1 = loadTexture("stone_bricks.png");
 }
 
 void Game::render() {
@@ -348,8 +353,7 @@ void Game::render() {
 
     updateProjectionMatrix(width, height);
 
-    // Render the world objects
-    renderer.batchRenderGameObjects(world.getObjects(), projection);  // Batch render all world objects
+    renderer.batchRenderGameObjects(world.getObjects(), projection);
 
 
     glUseProgram(shaderProgram);

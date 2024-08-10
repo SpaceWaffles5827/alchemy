@@ -1,5 +1,6 @@
 #include <alchemy/render.h>
 #include <iostream>
+#include <tuple>
 
 // Default shaders
 const char* Render::defaultVertexShaderSource = R"(
@@ -149,19 +150,38 @@ GLuint Render::loadShader(const char* vertexShaderSource, const char* fragmentSh
     return program;
 }
 
+struct TextureGroupComparator {
+    bool operator()(const std::tuple<GLuint, glm::vec2, glm::vec2>& lhs, const std::tuple<GLuint, glm::vec2, glm::vec2>& rhs) const {
+        if (std::get<0>(lhs) != std::get<0>(rhs))
+            return std::get<0>(lhs) < std::get<0>(rhs);
+
+        if (std::get<1>(lhs).x != std::get<1>(rhs).x)
+            return std::get<1>(lhs).x < std::get<1>(rhs).x;
+        if (std::get<1>(lhs).y != std::get<1>(rhs).y)
+            return std::get<1>(lhs).y < std::get<1>(rhs).y;
+
+        if (std::get<2>(lhs).x != std::get<2>(rhs).x)
+            return std::get<2>(lhs).x < std::get<2>(rhs).x;
+        return std::get<2>(lhs).y < std::get<2>(rhs).y;
+    }
+};
+
 void Render::batchRenderGameObjects(const std::vector<std::shared_ptr<GameObject>>& gameObjects, const glm::mat4& projection) {
     if (gameObjects.empty()) return;
 
-    // Sort game objects by texture ID
-    std::map<GLuint, std::vector<std::shared_ptr<GameObject>>> textureGroups;
+    // Group game objects by texture ID and texture coordinates using std::tuple with a custom comparator
+    std::map<std::tuple<GLuint, glm::vec2, glm::vec2>, std::vector<std::shared_ptr<GameObject>>, TextureGroupComparator> textureGroups;
 
     for (const auto& gameObject : gameObjects) {
-        textureGroups[gameObject->getTextureID()].push_back(gameObject);
+        auto groupKey = std::make_tuple(gameObject->getTextureID(), gameObject->getTextureTopLeft(), gameObject->getTextureBottomRight());
+        textureGroups[groupKey].push_back(gameObject);
     }
 
-    // Render each group of objects with the same texture
+    // Render each group of objects with the same texture and texture coordinates
     for (const auto& group : textureGroups) {
-        GLuint textureID = group.first;
+        GLuint textureID = std::get<0>(group.first);
+        const glm::vec2& texTopLeft = std::get<1>(group.first);
+        const glm::vec2& texBottomRight = std::get<2>(group.first);
         const auto& objects = group.second;
 
         if (objects.empty()) continue;
@@ -183,17 +203,17 @@ void Render::batchRenderGameObjects(const std::vector<std::shared_ptr<GameObject
         std::vector<glm::mat4> instanceTransforms;
         instanceTransforms.reserve(maxInstances);
 
-        // Hardcoded texture coordinates for this example
-        GLfloat hardcodedVertices[] = {
-            // Positions        // Texture Coords (hardcoded)
-            -0.5f, -0.5f, 0.0f,  0.0f, 0.0f,  // Bottom-left
-             0.5f, -0.5f, 0.0f,  0.5f, 0.0f,  // Bottom-right
-             0.5f,  0.5f, 0.0f,  0.5f, 0.5f,  // Top-right
-            -0.5f,  0.5f, 0.0f,  0.0f, 0.5f   // Top-left
+        // Update vertices with specific texture coordinates for this batch
+        GLfloat vertices[] = {
+            // Positions        // Texture Coords (dynamic)
+            -0.5f, -0.5f, 0.0f,  texTopLeft.x, texBottomRight.y,  // Bottom-left
+             0.5f, -0.5f, 0.0f,  texBottomRight.x, texBottomRight.y,  // Bottom-right
+             0.5f,  0.5f, 0.0f,  texBottomRight.x, texTopLeft.y,  // Top-right
+            -0.5f,  0.5f, 0.0f,  texTopLeft.x, texTopLeft.y   // Top-left
         };
 
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(hardcodedVertices), hardcodedVertices);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
 
         for (size_t batchIndex = 0; batchIndex < numBatches; ++batchIndex) {
             size_t startIdx = batchIndex * maxInstances;

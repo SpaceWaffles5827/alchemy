@@ -28,31 +28,35 @@ public:
         }
     }
 
-    void initTileView(int tileCountX, int tileCountY, float tileSize, GLuint textureID1, GLuint textureID2) {
-        float startX = 0;
-        float startY = 0;
+    void initTileView(int width, int height, float tileSize, GLuint textureID1, GLuint textureID2) {
+        srand(time(NULL));  // Seed the random number generator
 
-        for (int y = 0; y < tileCountY; ++y) {
-            for (int x = 0; x < tileCountX; ++x) {
-                int worldX = startX + x * (tileSize);
-                int worldY = startY + y * (tileSize);
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                // Generate random tile coordinates
+                int randomTileX = rand() % 8; // Random x between 0 and 7
+                int randomTileY = rand() % 8; // Random y between 0 and 7
 
-                // Alternate between two textures for a checkerboard pattern
-                GLuint textureID = ((x + y) % 2 == 0) ? textureID1 : textureID2;
+                // std::cout << "test: " << randomTileX;
 
-                std::shared_ptr<GameObject> tile = std::make_shared<GameObject>(
-                    glm::vec3(worldX, worldY, 0.0f),  // position
-                    glm::vec3(0.0f),                  // rotation
-                    tileSize,                         // width
-                    tileSize,                         // height
-                    textureID                         // texture ID
+                // Select texture based on position for variation
+                GLuint selectedTexture = (x + y) % 2 == 0 ? textureID1 : textureID2;
+
+                // Create the tile object
+                auto tile = std::make_shared<GameObject>(
+                    glm::vec3(x * tileSize, y * tileSize, 0.0f), // Position
+                    glm::vec3(0.0f), // Rotation
+                    tileSize, tileSize, // Width and Height
+                    selectedTexture
                     );
+
+                // Set texture tile with random coordinates
+                tile->setTextureTile(randomTileX, 0, 8, 256, 256, 32, 32); // Assuming each tile is 128x128 in a 1024x1024 texture
 
                 addObject(tile);
             }
         }
     }
-
 
     const std::vector<std::shared_ptr<GameObject>>& getObjects() const {
         return objects;
