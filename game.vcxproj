@@ -610,7 +610,9 @@
     <Text Include="LICENSE.txt" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="aniwoo.png" />
+    <Image Include="andiwooIdle.png" />
+    <Image Include="andiwooRunning.png" />
+    <Image Include="aniwooRunning.png" />
     <Image Include="grass.png" />
     <Image Include="spriteSheet.png" />
     <Image Include="spruce_log.png" />

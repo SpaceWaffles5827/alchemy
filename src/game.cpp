@@ -42,8 +42,9 @@ Game::Game(Mode mode)
     renderer.initialize();
 
     // Initialize clientPlayer within the world
-    GLuint textureID1 = loadTexture("stone_bricks.png");
-    std::shared_ptr<Player> clientPlayer = std::make_shared<Player>(clientId, glm::vec3(1.0f, 0.5f, 0.2f), 0.0f, 0.0f, 1.0f, 1.0f, textureID1);
+    GLuint textureID1 = loadTexture("aniwooRunning.png");
+    std::shared_ptr<Player> clientPlayer = std::make_shared<Player>(clientId, glm::vec3(1.0f, 0.5f, 0.2f), 0.0f, 0.0f, 1.0f, 2.0f, textureID1);
+    clientPlayer->setTextureTile(0, 0, 8, 512, 512, 64, 128);
     world.addPlayer(clientPlayer);
 
     GLuint textureID2 = loadTexture("spriteSheet.png");
@@ -301,23 +302,38 @@ void Game::processInput() {
     if (!player) return; // Ensure the player exists
 
     glm::vec3 position = player->getPosition();
-    float speed = 0.10f;
+    float speed = 0.12f;
+
+    static int frame = 0;
+    static double lastTime = glfwGetTime();
+    double currentTime = glfwGetTime();
+    double frameDuration = 0.075; // Adjust this value to control the speed of the animation
+
+    // Update frame index based on time elapsed
+    if (currentTime - lastTime >= frameDuration) {
+        frame = (frame + 1) % 8; // Loop through 8 frames
+        lastTime = currentTime;
+    }
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
         position.y += speed;
         positionUpdated = true;
+        player->setTextureTile(frame, 3, 8, 512, 512, 64, 128);
     }
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
         position.y -= speed;
         positionUpdated = true;
+        player->setTextureTile(frame, 0, 8, 512, 512, 64, 128);
     }
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
         position.x -= speed;
         positionUpdated = true;
+        player->setTextureTile(frame, 1, 8, 512, 512, 64, 128);
     }
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
         position.x += speed;
         positionUpdated = true;
+        player->setTextureTile(frame, 2, 8, 512, 512, 64, 128);
     }
 
     if (positionUpdated) {

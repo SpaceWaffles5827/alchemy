@@ -1400,7 +1400,13 @@
     <Image Include="grass.png">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="aniwoo.png">
+    <Image Include="aniwooRunning.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="andiwooRunning.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="andiwooIdle.png">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>
