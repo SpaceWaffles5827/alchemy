@@ -295,11 +295,14 @@ void Game::setupBuffers() {
 }
 
 void Game::processInput() {
-    bool positionUpdated = false;
+    static GLuint runningTextureID = loadTexture("aniwooRunning.png");
+    static GLuint idleTextureID = loadTexture("andiwooIdle.png");
 
-    // Fetch the player's position from the World class
+    bool positionUpdated = false;
+    bool isMoving = false;
+
     auto player = world.getPlayerById(clientId);
-    if (!player) return; // Ensure the player exists
+    if (!player) return;
 
     glm::vec3 position = player->getPosition();
     float speed = 0.12f;
@@ -307,40 +310,53 @@ void Game::processInput() {
     static int frame = 0;
     static double lastTime = glfwGetTime();
     double currentTime = glfwGetTime();
-    double frameDuration = 0.075; // Adjust this value to control the speed of the animation
+    double frameDuration = 0.075;  // Adjust for animation speed
 
-    // Update frame index based on time elapsed
+    static int lastDirection = 0;
+    glm::vec3 direction(0.0f);
+
     if (currentTime - lastTime >= frameDuration) {
-        frame = (frame + 1) % 8; // Loop through 8 frames
+        frame = (frame + 1) % 8;
         lastTime = currentTime;
     }
 
+    // Check movement and accumulate direction
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-        position.y += speed;
-        positionUpdated = true;
-        player->setTextureTile(frame, 3, 8, 512, 512, 64, 128);
+        direction.y += 1.0f;
+        lastDirection = 3;
+        isMoving = true;
     }
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-        position.y -= speed;
-        positionUpdated = true;
-        player->setTextureTile(frame, 0, 8, 512, 512, 64, 128);
+        direction.y -= 1.0f;
+        lastDirection = 0;
+        isMoving = true;
     }
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-        position.x -= speed;
-        positionUpdated = true;
-        player->setTextureTile(frame, 1, 8, 512, 512, 64, 128);
+        direction.x -= 1.0f;
+        lastDirection = 1;
+        isMoving = true;
     }
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-        position.x += speed;
+        direction.x += 1.0f;
+        lastDirection = 2;
+        isMoving = true;
+    }
+
+    if (isMoving) {
+        direction = glm::normalize(direction);
+        position += direction * speed;
         positionUpdated = true;
-        player->setTextureTile(frame, 2, 8, 512, 512, 64, 128);
+
+        player->setTexture(runningTextureID);
+        player->setTextureTile(frame, lastDirection, 8, 512, 512, 64, 128);
+    }
+    else {
+        player->setTexture(idleTextureID);
+        player->setTextureTile(frame, lastDirection, 8, 512, 512, 64, 128);
     }
 
     if (positionUpdated) {
-        // Update the player's position in the World
         world.updatePlayerPosition(clientId, position);
-
-        // Optionally send updated position over the network
         networkManager.sendPlayerMovement(clientId, position.x, position.y);
     }
     else {

@@ -88,6 +88,9 @@ public:
         setTextureCoords(glm::vec2(left, invertedTop), glm::vec2(right, invertedBottom));
     }
 
+    void setTexture(GLuint newTextureID) {
+        textureID = newTextureID;
+    }
 
 private:
     glm::vec3 position;
