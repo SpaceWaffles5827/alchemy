@@ -3,7 +3,9 @@
 
 #include <vector>
 #include <memory>
+#include <algorithm>
 #include "GameObject.h"
+#include "Player.h"
 #include <glm/glm.hpp>
 
 class World {
@@ -15,16 +17,34 @@ public:
         objects.push_back(object);
     }
 
+    void addPlayer(std::shared_ptr<Player> object) {
+        players.push_back(object);
+    }
+
+    void updatePlayerPosition(int clientId, const glm::vec3& newPosition) {
+        auto player = getPlayerById(clientId);
+        if (player) {
+            player->setPosition(newPosition);
+        }
+    }
+
     void update(float deltaTime) {
         for (auto& obj : objects) {
             obj->update(deltaTime);
         }
+
+        for (auto& player : players) {
+            player->update(deltaTime);
+        }
     }
 
-    // Renders all game objects within the world
     void render(GLuint shaderProgram, GLuint VAO, const glm::mat4& projection) const {
         for (const auto& obj : objects) {
             obj->render(shaderProgram, VAO, projection);
+        }
+
+        for (const auto& player : players) {
+            player->render(shaderProgram, VAO, projection);
         }
     }
 
@@ -33,16 +53,11 @@ public:
 
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
-                // Generate random tile coordinates
                 int randomTileX = rand() % 8; // Random x between 0 and 7
-                int randomTileY = rand() % 8; // Random y between 0 and 7
+                int randomTileY = rand() % 3; // Random y between 0 and 7
 
-                // std::cout << "test: " << randomTileX;
-
-                // Select texture based on position for variation
                 GLuint selectedTexture = (x + y) % 2 == 0 ? textureID1 : textureID2;
 
-                // Create the tile object
                 auto tile = std::make_shared<GameObject>(
                     glm::vec3(x * tileSize, y * tileSize, 0.0f), // Position
                     glm::vec3(0.0f), // Rotation
@@ -50,8 +65,7 @@ public:
                     selectedTexture
                     );
 
-                // Set texture tile with random coordinates
-                tile->setTextureTile(randomTileX, 0, 8, 256, 256, 32, 32); // Assuming each tile is 128x128 in a 1024x1024 texture
+                tile->setTextureTile(randomTileX, randomTileY, 8, 256, 256, 32, 32);
 
                 addObject(tile);
             }
@@ -62,8 +76,25 @@ public:
         return objects;
     }
 
+    const std::vector<std::shared_ptr<Player>>& getPlayers() const {
+        return players;
+    }
+
+    std::shared_ptr<Player> getPlayerById(int clientId) const {
+        auto it = std::find_if(players.begin(), players.end(), [clientId](const std::shared_ptr<Player>& player) {
+            return player->getClientId() == clientId;
+            });
+
+        if (it != players.end()) {
+            return *it;
+        }
+
+        return nullptr; // Return nullptr if the player with the given clientId is not found
+    }
+
 private:
     std::vector<std::shared_ptr<GameObject>> objects;
+    std::vector<std::shared_ptr<Player>> players;
 };
 
 #endif // WORLD_H

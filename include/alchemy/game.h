@@ -44,7 +44,6 @@ private:
     GLuint shaderProgram, redShaderProgram;
 
     NetworkManager networkManager;
-    Player clientPlayer;
 
     int clientId;
     double tickRate;
@@ -61,7 +60,7 @@ private:
 
     float cameraZoom;
     Mode currentMode;
-    Render renderer; 
+    Render renderer;
 };
 
 #endif // GAME_H

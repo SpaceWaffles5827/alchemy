@@ -41,10 +41,14 @@ Game::Game(Mode mode)
 
     renderer.initialize();
 
-    textureID1 = loadTexture("aniwoo.png");
+    // Initialize clientPlayer within the world
+    GLuint textureID1 = loadTexture("stone_bricks.png");
+    std::shared_ptr<Player> clientPlayer = std::make_shared<Player>(clientId, glm::vec3(1.0f, 0.5f, 0.2f), 0.0f, 0.0f, 1.0f, 1.0f, textureID1);
+    world.addPlayer(clientPlayer);
 
-    // Initialize clientPlayer with the loaded texture
-    clientPlayer = Player(clientId, glm::vec3(1.0f, 0.5f, 0.2f), 0.0f, 0.0f, 5.0f, 5.0f, textureID1);
+    GLuint textureID2 = loadTexture("spriteSheet.png");
+
+    world.initTileView(200, 200, 1.0f, textureID2, textureID2);
 }
 
 Game::~Game() {
@@ -59,11 +63,6 @@ void Game::run() {
     double lag = 0.0;
     int frameCount = 0;
     double fpsTime = 0.0;
-
-    GLuint textureID1 = loadTexture("spriteSheet.png");
-    GLuint textureID2 = loadTexture("spriteSheet.png");
-
-    world.initTileView(200, 200, 1.0f, textureID1, textureID2);
 
     while (!glfwWindowShouldClose(window)) {
         double currentTime = glfwGetTime();
@@ -186,10 +185,10 @@ void Game::mouse_button_callback(GLFWwindow* window, int button, int action, int
             float tileHeight = 1.0f; // this is equal to one tile
 
             std::shared_ptr<GameObject> gameObjectAdding = std::make_shared<GameObject>(
-                glm::vec3(snappedX, snappedY, 0.0f), 
-                glm::vec3(0.0f),                      
-                tileWidth,                           
-                tileHeight,                          
+                glm::vec3(snappedX, snappedY, 0.0f),
+                glm::vec3(0.0f),
+                tileWidth,
+                tileHeight,
                 game->textureID1
                 );
 
@@ -296,8 +295,13 @@ void Game::setupBuffers() {
 
 void Game::processInput() {
     bool positionUpdated = false;
+
+    // Fetch the player's position from the World class
+    auto player = world.getPlayerById(clientId);
+    if (!player) return; // Ensure the player exists
+
+    glm::vec3 position = player->getPosition();
     float speed = 0.10f;
-    glm::vec2 position = clientPlayer.getPosition();
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
         position.y += speed;
@@ -317,7 +321,10 @@ void Game::processInput() {
     }
 
     if (positionUpdated) {
-        clientPlayer.setPosition(glm::vec3(position.x, position.y, 0));
+        // Update the player's position in the World
+        world.updatePlayerPosition(clientId, position);
+
+        // Optionally send updated position over the network
         networkManager.sendPlayerMovement(clientId, position.x, position.y);
     }
     else {
@@ -346,9 +353,8 @@ void Game::render() {
 
     renderer.batchRenderGameObjects(world.getObjects(), projection);
 
-
-    glUseProgram(shaderProgram);
-    clientPlayer.render(shaderProgram, VAO, projection);
+    auto gameObjects = std::vector<std::shared_ptr<GameObject>>(world.getPlayers().begin(), world.getPlayers().end());
+    renderer.batchRenderGameObjects(gameObjects, projection);
 
     for (const auto& pair : players) {
         const Player& player = pair.second;
@@ -388,7 +394,10 @@ void Game::updateProjectionMatrix(int width, int height) {
     float viewWidth = 20.0f * cameraZoom;
     float viewHeight = viewWidth / aspectRatio;
 
-    glm::vec2 playerPos = clientPlayer.getPosition();
+    auto player = world.getPlayerById(clientId);
+    if (!player) return; // Ensure the player exists
+
+    glm::vec2 playerPos = player->getPosition();
 
     projection = glm::ortho(
         playerPos.x - viewWidth / 2.0f, playerPos.x + viewWidth / 2.0f,
