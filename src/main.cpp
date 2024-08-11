@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
-#include <alchemy/game.h>
 #include <alchemy/server.h>
+#include <alchemy/global.h>
 
 void displayMenu() {
     std::cout << "Welcome to the Game!\n";
@@ -21,8 +21,7 @@ int main() {
         std::cin >> choice;
 
         if (choice == "1") {
-            std::cout << "Starting Game...\n";
-            Game game(Mode::Game);
+            game.init();
             game.run();
             break;
         }
@@ -34,7 +33,7 @@ int main() {
         }
         else if (choice == "3") {
             std::cout << "Starting Level Editor...\n";
-            Game game(Mode::LevelEdit);
+            game.init(); 
             game.run();
             break;
         }

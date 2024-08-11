@@ -23,6 +23,7 @@ public:
     ~Game();
 
     void run();
+    void init();
 
 private:
     void initGLFW();

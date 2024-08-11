@@ -35,7 +35,15 @@ Game::Game(Mode mode)
     projection(1.0f), cameraZoom(1.0f), currentMode(mode) {
 
     networkManager.setupUDPClient();
+}
 
+
+Game::~Game() {
+    cleanup();
+}
+
+void Game::init() {
+    // Initialize GLFW, GLEW, and renderer in the constructor
     initGLFW();
     initGLEW();
 
@@ -52,9 +60,6 @@ Game::Game(Mode mode)
     world.initTileView(200, 200, 1.0f, textureID2, textureID2);
 }
 
-Game::~Game() {
-    cleanup();
-}
 
 void Game::run() {
     setupShaders();
@@ -198,8 +203,6 @@ void Game::mouse_button_callback(GLFWwindow* window, int button, int action, int
 
             std::cout << "Placing on: (" << randomTileX << ", " << randomTileY << ")" << std::endl;
 
-            // gameObjectAdding->setTextureTile(randomTileX, randomTileY, 8, 256, 256, 32, 32);
-
             game->world.addObject(gameObjectAdding);
         }
     }
@@ -310,7 +313,7 @@ void Game::processInput() {
     static int frame = 0;
     static double lastTime = glfwGetTime();
     double currentTime = glfwGetTime();
-    double frameDuration = 0.075;  // Adjust for animation speed
+    double frameDuration = 0.075;
 
     static int lastDirection = 0;
     glm::vec3 direction(0.0f);
@@ -320,35 +323,42 @@ void Game::processInput() {
         lastTime = currentTime;
     }
 
-    // Check movement and accumulate direction
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+    bool moveUp = glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS;
+    bool moveDown = glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS;
+    bool moveLeft = glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS;
+    bool moveRight = glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS;
+
+    if (moveUp && !moveDown) {
         direction.y += 1.0f;
         lastDirection = 3;
         isMoving = true;
     }
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+    else if (moveDown && !moveUp) {
         direction.y -= 1.0f;
         lastDirection = 0;
         isMoving = true;
     }
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+
+    if (moveLeft && !moveRight) {
         direction.x -= 1.0f;
         lastDirection = 1;
         isMoving = true;
     }
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+    else if (moveRight && !moveLeft) {
         direction.x += 1.0f;
         lastDirection = 2;
         isMoving = true;
     }
 
     if (isMoving) {
-        direction = glm::normalize(direction);
-        position += direction * speed;
-        positionUpdated = true;
+        if (direction.x != 0 || direction.y != 0) {
+            direction = glm::normalize(direction);
+            position += direction * speed;
+            positionUpdated = true;
 
-        player->setTexture(runningTextureID);
-        player->setTextureTile(frame, lastDirection, 8, 512, 512, 64, 128);
+            player->setTexture(runningTextureID);
+            player->setTextureTile(frame, lastDirection, 8, 512, 512, 64, 128);
+        }
     }
     else {
         player->setTexture(idleTextureID);
@@ -395,10 +405,36 @@ void Game::render() {
 }
 
 void Game::cleanup() {
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
-    glDeleteProgram(shaderProgram);
-    glDeleteProgram(redShaderProgram);
+    // Check if VAO was generated before attempting to delete it
+    if (VAO) {
+        glDeleteVertexArrays(1, &VAO);
+        VAO = 0;
+    }
+
+    // Check if VBO was generated before attempting to delete it
+    if (VBO) {
+        glDeleteBuffers(1, &VBO);
+        VBO = 0;
+    }
+
+    // Check if the shader programs were created before attempting to delete them
+    if (shaderProgram) {
+        glDeleteProgram(shaderProgram);
+        shaderProgram = 0;
+    }
+
+    if (redShaderProgram) {
+        glDeleteProgram(redShaderProgram);
+        redShaderProgram = 0;
+    }
+
+    // Properly terminate GLFW if the window is valid
+    if (window) {
+        glfwDestroyWindow(window);
+        window = nullptr;
+    }
+
+    // Terminate GLFW if it's been initialized
     glfwTerminate();
 }
 
