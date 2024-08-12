@@ -51,6 +51,9 @@
     <ClCompile Include="src\textRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\chat.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Library Include="lib\glfw3.lib" />
@@ -1269,6 +1272,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\ft2build.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\alchemy\chat.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

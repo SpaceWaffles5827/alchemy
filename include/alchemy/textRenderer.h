@@ -28,6 +28,8 @@ public:
     // Render a string of text using the loaded font
     void renderText(const std::string& text, GLfloat x, GLfloat y, GLfloat scale, glm::vec3 color);
 
+    void updateScreenSize(GLuint width, GLuint height);
+
 private:
     std::map<GLchar, Character> characters; // Map storing character data
     GLuint VAO, VBO; // Vertex Array Object and Vertex Buffer Object

@@ -12,6 +12,7 @@
 #include <alchemy/world.h>
 #include <alchemy/render.h>
 #include <alchemy/textRenderer.h>
+#include <alchemy/chat.h> 
 #include <memory>
 
 enum class Mode {
@@ -31,6 +32,7 @@ public:
     NetworkManager& getNetworkManager();
     World& getWorld();
     GLFWwindow& getWindow();
+    TextRenderer& getTextRender();
 
 private:
     void initGLFW();
@@ -69,7 +71,8 @@ private:
     Mode currentMode;
     Render renderer;
 
-    std::unique_ptr<TextRenderer> textRenderer; // Unique pointer to manage TextRenderer instance
+    std::unique_ptr<TextRenderer> textRenderer;  // TextRenderer should be initialized first
+    Chat chat;  // Chat should be initialized after TextRenderer
 };
 
 #endif // GAME_H

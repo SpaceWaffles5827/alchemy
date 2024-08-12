@@ -7,6 +7,9 @@ TextRenderer::TextRenderer(GLuint width, GLuint height)
     if (FT_Init_FreeType(&ft)) {
         std::cerr << "ERROR::FREETYPE: Could not init FreeType Library" << std::endl;
     }
+    else {
+        std::cout << "FreeType Library initialized successfully!" << std::endl;
+    }
 
     // Load the shaders
     const char* vertexShaderSource = R"(
@@ -36,6 +39,7 @@ TextRenderer::TextRenderer(GLuint width, GLuint height)
     shaderProgram = loadShader(vertexShaderSource, fragmentShaderSource);
 
     initRenderData();
+    std::cout << "TextRenderer initialized!" << std::endl;
 }
 
 TextRenderer::~TextRenderer() {
@@ -46,6 +50,12 @@ TextRenderer::~TextRenderer() {
 }
 
 void TextRenderer::loadFont(const std::string& font, GLuint fontSize) {
+    // Ensure FreeType library is initialized
+    if (!ft) {
+        std::cerr << "ERROR::FREETYPE: FreeType library not initialized!" << std::endl;
+        return;
+    }
+
     // Load font as face
     FT_Face face;
     if (FT_New_Face(ft, font.c_str(), 0, &face)) {
@@ -63,6 +73,7 @@ void TextRenderer::loadFont(const std::string& font, GLuint fontSize) {
             std::cerr << "ERROR::FREETYPE: Failed to load Glyph: " << static_cast<char>(c) << std::endl;
             continue;
         }
+
         // Generate texture
         GLuint texture;
         glGenTextures(1, &texture);
@@ -78,11 +89,13 @@ void TextRenderer::loadFont(const std::string& font, GLuint fontSize) {
             GL_UNSIGNED_BYTE,
             face->glyph->bitmap.buffer
         );
+
         // Check for any errors in the texture creation
         GLenum error = glGetError();
         if (error != GL_NO_ERROR) {
             std::cerr << "ERROR::TEXTURE_CREATION_FAILED: Glyph " << static_cast<char>(c) << " with error code: " << error << std::endl;
         }
+
         // Set texture options
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -98,6 +111,8 @@ void TextRenderer::loadFont(const std::string& font, GLuint fontSize) {
         };
         characters.insert(std::pair<GLchar, Character>(c, character));
     }
+
+    // Free the face after processing all characters
     FT_Done_Face(face);
 
     // Check if the font was loaded correctly and at least some characters are available
@@ -108,7 +123,6 @@ void TextRenderer::loadFont(const std::string& font, GLuint fontSize) {
         std::cout << "Font loaded successfully: " << font << std::endl;
     }
 }
-
 
 void TextRenderer::renderText(const std::string& text, GLfloat x, GLfloat y, GLfloat scale, glm::vec3 color) {
     if (characters.empty()) {
@@ -197,6 +211,16 @@ GLuint TextRenderer::loadShader(const char* vertexShaderSource, const char* frag
     glDeleteShader(fragmentShader);
 
     return program;
+}
+
+void TextRenderer::updateScreenSize(GLuint width, GLuint height) {
+    screenWidth = width;
+    screenHeight = height;
+
+    // Update the orthographic projection matrix for 2D text rendering
+    glm::mat4 projection = glm::ortho(0.0f, static_cast<GLfloat>(screenWidth), 0.0f, static_cast<GLfloat>(screenHeight));
+    glUseProgram(shaderProgram);
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 }
 
 void TextRenderer::checkCompileErrors(GLuint shader, const std::string& type) {

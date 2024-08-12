@@ -143,6 +143,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\chat.cpp" />
     <ClCompile Include="src\game.cpp" />
     <ClCompile Include="include\glm\detail\glm.cpp" />
     <ClCompile Include="include\glm\glm.cppm" />
@@ -162,6 +163,7 @@
     <Library Include="lib\glfw3.lib" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\alchemy\chat.h" />
     <ClInclude Include="include\alchemy\frustum.h" />
     <ClInclude Include="include\alchemy\game.h" />
     <ClInclude Include="include\alchemy\gameObject.h" />

@@ -35,7 +35,7 @@ const char* Game::redFragmentShaderSource = "#version 330 core\n"
 
 Game::Game(Mode mode)
     : window(nullptr), VAO(0), VBO(0), shaderProgram(0), redShaderProgram(0), clientId(std::rand()), tickRate(1.0 / 64.0),
-    projection(1.0f), cameraZoom(1.0f), currentMode(mode) {
+    projection(1.0f), cameraZoom(1.0f), currentMode(mode), chat(800, 800) {
 
     networkManager.setupUDPClient();
 }
@@ -51,6 +51,22 @@ void Game::init() {
 
     renderer.initialize();
 
+    // Initialize the TextRenderer
+    textRenderer = std::make_unique<TextRenderer>(800, 800);
+
+    if (!textRenderer) {
+        std::cerr << "ERROR::GAME: TextRenderer failed to initialize!" << std::endl;
+    }
+    else {
+        std::cout << "TextRenderer initialized successfully!" << std::endl;
+    }
+
+    // Load the font for the TextRenderer
+    textRenderer->loadFont("fonts/minecraft.ttf", 24);
+
+    // Initialize the Chat component after TextRenderer is ready
+    // chat = Chat(800, 800);
+
     // Initialize clientPlayer within the world
     GLuint textureID1 = loadTexture("aniwooRunning.png");
     std::shared_ptr<Player> clientPlayer = std::make_shared<Player>(clientId, glm::vec3(1.0f, 0.5f, 0.2f), 0.0f, 0.0f, 1.0f, 2.0f, textureID1);
@@ -60,11 +76,7 @@ void Game::init() {
     GLuint textureID2 = loadTexture("spriteSheet.png");
 
     world.initTileView(1000, 500, 1.0f, textureID2, textureID2);
-
-    textRenderer = std::make_unique<TextRenderer>(800, 800);
-    textRenderer->loadFont("fonts/minecraft.ttf", 24);
 }
-
 
 void Game::run() {
     setupShaders();
@@ -303,13 +315,97 @@ void Game::setupBuffers() {
 }
 
 void Game::processInput() {
-    std::shared_ptr<Player> player = world.getPlayerById(clientId);
+    if (chat.isChatModeActive()) {
+        // Process chat input
+        static bool enterKeyReleased = true;
+        static bool backspaceKeyReleased = true;
 
-    if (player) {
-        player->handleInput();
+        if (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS && enterKeyReleased) {
+            chat.addMessage(chat.getCurrentMessage());
+            chat.setCurrentMessage("");  // Reset current message after sending
+            chat.setChatModeActive(false);  // Exit chat mode
+            enterKeyReleased = false;
+        }
+        if (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_RELEASE) {
+            enterKeyReleased = true;
+        }
+
+        if (glfwGetKey(window, GLFW_KEY_BACKSPACE) == GLFW_PRESS && backspaceKeyReleased) {
+            std::string currentMessage = chat.getCurrentMessage();
+            if (!currentMessage.empty()) {
+                currentMessage.pop_back();
+                chat.setCurrentMessage(currentMessage);
+            }
+            backspaceKeyReleased = false;
+        }
+        if (glfwGetKey(window, GLFW_KEY_BACKSPACE) == GLFW_RELEASE) {
+            backspaceKeyReleased = true;
+        }
+
+        // Handle character input
+        static bool keyReleased[GLFW_KEY_LAST] = { true };
+        for (int key = GLFW_KEY_A; key <= GLFW_KEY_Z; ++key) {
+            if (glfwGetKey(window, key) == GLFW_PRESS && keyReleased[key]) {
+                bool shiftPressed = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS;
+                char c = static_cast<char>(key);
+                if (!shiftPressed) {
+                    c += 32;  // Convert to lowercase
+                }
+                std::string currentMessage = chat.getCurrentMessage();
+                currentMessage += c;
+                chat.setCurrentMessage(currentMessage);
+                keyReleased[key] = false;
+            }
+            if (glfwGetKey(window, key) == GLFW_RELEASE) {
+                keyReleased[key] = true;
+            }
+        }
+
+        // Handle number input
+        for (int key = GLFW_KEY_0; key <= GLFW_KEY_9; ++key) {
+            if (glfwGetKey(window, key) == GLFW_PRESS && keyReleased[key]) {
+                char c = static_cast<char>(key);
+                std::string currentMessage = chat.getCurrentMessage();
+                currentMessage += c;
+                chat.setCurrentMessage(currentMessage);
+                keyReleased[key] = false;
+            }
+            if (glfwGetKey(window, key) == GLFW_RELEASE) {
+                keyReleased[key] = true;
+            }
+        }
+
+        // Handle space input
+        if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && keyReleased[GLFW_KEY_SPACE]) {
+            std::string currentMessage = chat.getCurrentMessage();
+            currentMessage += ' ';
+            chat.setCurrentMessage(currentMessage);
+            keyReleased[GLFW_KEY_SPACE] = false;
+        }
+        if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE) {
+            keyReleased[GLFW_KEY_SPACE] = true;
+        }
+
     }
     else {
-        std::cerr << "Player with ID " << clientId << " not found." << std::endl;
+        // General game input
+        std::shared_ptr<Player> player = world.getPlayerById(clientId);
+        if (player) {
+            player->handleInput();
+        }
+        else {
+            std::cerr << "Player with ID " << clientId << " not found." << std::endl;
+        }
+
+        // Enter chat mode
+        static bool tKeyReleased = true;
+        if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS && tKeyReleased) {
+            chat.setChatModeActive(true);  // Enter chat mode when 'T' is pressed
+            tKeyReleased = false;
+        }
+        if (glfwGetKey(window, GLFW_KEY_T) == GLFW_RELEASE) {
+            tKeyReleased = true;
+        }
     }
 }
 
@@ -338,7 +434,10 @@ void Game::render() {
     renderer.batchRenderGameObjects(gameObjects, projection);
 
     // Render the text "Hello"
-    textRenderer->renderText("Hello", 25.0f, 25.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
+    // textRenderer->renderText("Hello This Is A Test Msg", 25.0f, 25.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
+
+    // Render chat messages
+    chat.render();
 }
 
 void Game::cleanup() {
@@ -406,6 +505,10 @@ GLFWwindow& Game::getWindow() {
     return *window;
 }
 
+TextRenderer& Game::getTextRender() {
+    return *textRenderer;
+}
+
 void Game::updateProjectionMatrix(int width, int height) {
     float aspectRatio = static_cast<float>(width) / height;
     float viewWidth = 20.0f * cameraZoom;
@@ -432,4 +535,8 @@ void Game::framebuffer_size_callback(GLFWwindow* window, int width, int height) 
     Game* game = static_cast<Game*>(glfwGetWindowUserPointer(window));
 
     game->updateProjectionMatrix(width, height);
+
+    if (game->textRenderer) {
+        game->textRenderer->updateScreenSize(width, height);
+    }
 }
