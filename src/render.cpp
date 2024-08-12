@@ -1,6 +1,7 @@
 #include <alchemy/render.h>
 #include <iostream>
 #include <tuple>
+#include <alchemy/frustum.h>
 
 // Default shaders
 const char* Render::defaultVertexShaderSource = R"(
@@ -169,12 +170,18 @@ struct TextureGroupComparator {
 void Render::batchRenderGameObjects(const std::vector<std::shared_ptr<GameObject>>& gameObjects, const glm::mat4& projection) {
     if (gameObjects.empty()) return;
 
+    Frustum frustum;
+    frustum.update(projection);
+
     // Group game objects by texture ID and texture coordinates using std::tuple with a custom comparator
     std::map<std::tuple<GLuint, glm::vec2, glm::vec2>, std::vector<std::shared_ptr<GameObject>>, TextureGroupComparator> textureGroups;
 
     for (const auto& gameObject : gameObjects) {
-        auto groupKey = std::make_tuple(gameObject->getTextureID(), gameObject->getTextureTopLeft(), gameObject->getTextureBottomRight());
-        textureGroups[groupKey].push_back(gameObject);
+        // Check if the game object is within the camera's view
+        if (frustum.isInFrustum(gameObject->getPosition(), gameObject->getBoundingRadius())) {
+            auto groupKey = std::make_tuple(gameObject->getTextureID(), gameObject->getTextureTopLeft(), gameObject->getTextureBottomRight());
+            textureGroups[groupKey].push_back(gameObject);
+        }
     }
 
     // Render each group of objects with the same texture and texture coordinates

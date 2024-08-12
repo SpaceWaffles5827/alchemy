@@ -45,7 +45,6 @@ Game::~Game() {
 }
 
 void Game::init() {
-    // Initialize GLFW, GLEW, and renderer in the constructor
     initGLFW();
     initGLEW();
 
@@ -59,7 +58,7 @@ void Game::init() {
 
     GLuint textureID2 = loadTexture("spriteSheet.png");
 
-    world.initTileView(200, 200, 1.0f, textureID2, textureID2);
+    world.initTileView(1000, 500, 1.0f, textureID2, textureID2);
 }
 
 
@@ -333,11 +332,6 @@ void Game::render() {
 
     auto gameObjects = std::vector<std::shared_ptr<GameObject>>(world.getPlayers().begin(), world.getPlayers().end());
     renderer.batchRenderGameObjects(gameObjects, projection);
-
-    for (const auto& pair : players) {
-        const Player& player = pair.second;
-        player.render(shaderProgram, VAO, projection);
-    }
 }
 
 void Game::cleanup() {

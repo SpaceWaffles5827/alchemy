@@ -38,15 +38,6 @@ public:
         }
     }
 
-    void render(GLuint shaderProgram, GLuint VAO, const glm::mat4& projection) const {
-        for (const auto& obj : objects) {
-            obj->render(shaderProgram, VAO, projection);
-        }
-
-        for (const auto& player : players) {
-            player->render(shaderProgram, VAO, projection);
-        }
-    }
 
     void initTileView(int width, int height, float tileSize, GLuint textureID1, GLuint textureID2) {
         srand(time(NULL));  // Seed the random number generator

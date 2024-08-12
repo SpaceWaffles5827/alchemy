@@ -967,6 +967,9 @@
     <ClInclude Include="include\alchemy\global.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\alchemy\frustum.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="include\glm\gtc\bitfield.inl">

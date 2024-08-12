@@ -13,7 +13,7 @@ public:
     GameObject(const glm::vec3& pos, const glm::vec3& rot, float width, float height, GLuint textureID,
         const glm::vec2& texTopLeft = glm::vec2(0.0f, 1.0f), const glm::vec2& texBottomRight = glm::vec2(1.0f, 0.0f))
         : position(pos), rotation(rot), width(width), height(height), textureID(textureID),
-        textureTopLeft(texTopLeft), textureBottomRight(texBottomRight) {
+        textureTopLeft(texTopLeft), textureBottomRight(texBottomRight), boundingRadius(std::sqrt(width* width + height * height) / 2.0f) {
         scale = glm::vec3(width, height, 1.0f);  // Set scale based on width and height
     }
 
@@ -21,28 +21,6 @@ public:
 
     virtual void update(float deltaTime) {
         // Update logic here (e.g., physics, game logic)
-    }
-
-    virtual void render(GLuint shaderProgram, GLuint VAO, const glm::mat4& projection) const {
-        glUseProgram(shaderProgram);
-
-        glBindTexture(GL_TEXTURE_2D, textureID);
-
-        glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, position);
-        model = glm::rotate(model, glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
-        model = glm::rotate(model, glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
-        model = glm::rotate(model, glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
-        model = glm::scale(model, scale);
-
-        glm::mat4 combined = projection * model;
-
-        GLuint transformLoc = glGetUniformLocation(shaderProgram, "transform");
-        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(combined));
-
-        glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
-        glBindVertexArray(0);
     }
 
     // Getters
@@ -54,6 +32,7 @@ public:
     GLuint getTextureID() const { return textureID; }
     const glm::vec2& getTextureTopLeft() const { return textureTopLeft; }
     const glm::vec2& getTextureBottomRight() const { return textureBottomRight; }
+    float getBoundingRadius() const { return boundingRadius; }
 
     // Setters
     void setPosition(const glm::vec3& pos) { position = pos; }
@@ -62,6 +41,7 @@ public:
         width = w;
         height = h;
         scale = glm::vec3(width, height, 1.0f);
+        updateBoundingRadius();
     }
 
     void setTextureCoords(const glm::vec2& topLeft, const glm::vec2& bottomRight) {
@@ -100,8 +80,14 @@ private:
     float height;
     GLuint textureID;
 
-    glm::vec2 textureTopLeft;   
+    glm::vec2 textureTopLeft;
     glm::vec2 textureBottomRight;
+
+    float boundingRadius;
+
+    void updateBoundingRadius() {
+        boundingRadius = std::sqrt(width * width + height * height) / 2.0f;
+    }
 };
 
 #endif // GAMEOBJECT_H
