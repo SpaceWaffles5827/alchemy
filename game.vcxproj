@@ -76,14 +76,14 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>GLEW_STATIC</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\Jack\source\repos\game\include;;C:\Users\Jack\source\repos\game\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\Jack\source\repos\game\include;;C:\Users\Jack\source\repos\game\include;$(VcpkgRoot)installed\x64-windows\include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\Users\Jack\source\repos\game\lib;</AdditionalLibraryDirectories>
-      <AdditionalDependencies>glew32s.lib;User32.lib;Gdi32.lib;Shell32.lib;Comdlg32.lib;glfw3.lib;OpenGL32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\Users\Jack\source\repos\game\lib;;$(VcpkgRoot)installed\x64-windows\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glew32s.lib;User32.lib;Gdi32.lib;Shell32.lib;Comdlg32.lib;glfw3.lib;OpenGL32.lib;freetype.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -94,7 +94,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>GLEW_STATIC</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\Jack\source\repos\game\include;;C:\Users\Jack\source\repos\game\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\Jack\source\repos\game\include;;C:\Users\Jack\source\repos\game\include;$(VcpkgRoot)installed\x64-windows\include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
@@ -102,8 +102,8 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\Users\Jack\source\repos\game\lib;</AdditionalLibraryDirectories>
-      <AdditionalDependencies>glew32s.lib;User32.lib;Gdi32.lib;Shell32.lib;Comdlg32.lib;glfw3.lib;OpenGL32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\Users\Jack\source\repos\game\lib;;$(VcpkgRoot)installed\x64-windows\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glew32s.lib;User32.lib;Gdi32.lib;Shell32.lib;Comdlg32.lib;glfw3.lib;OpenGL32.lib;freetype.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -112,14 +112,14 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>GLEW_STATIC</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\Jack\source\repos\game\include;C:\Users\Jack\source\repos\game\include;%(AdditionalIncludeDirectories);C:\Users\Jack\source\repos\game\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\Jack\source\repos\game\include;C:\Users\Jack\source\repos\game\include;%(AdditionalIncludeDirectories);C:\Users\Jack\source\repos\game\include;$(VcpkgRoot)installed\x64-windows\include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\Users\Jack\source\repos\game\lib;C:\Users\Jack\source\repos\game\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>glew32s.lib;User32.lib;Gdi32.lib;Shell32.lib;Comdlg32.lib;glfw3.lib;OpenGL32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\Users\Jack\source\repos\game\lib;C:\Users\Jack\source\repos\game\lib;%(AdditionalLibraryDirectories);$(VcpkgRoot)installed\x64-windows\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glew32s.lib;User32.lib;Gdi32.lib;Shell32.lib;Comdlg32.lib;glfw3.lib;OpenGL32.lib;freetype.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -130,7 +130,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>GLEW_STATIC</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\Jack\source\repos\game\include;C:\Users\Jack\source\repos\game\include;%(AdditionalIncludeDirectories);C:\Users\Jack\source\repos\game\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\Jack\source\repos\game\include;C:\Users\Jack\source\repos\game\include;%(AdditionalIncludeDirectories);C:\Users\Jack\source\repos\game\include;$(VcpkgRoot)installed\x64-windows\include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
@@ -138,8 +138,8 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\Users\Jack\source\repos\game\lib;C:\Users\Jack\source\repos\game\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>glew32s.lib;User32.lib;Gdi32.lib;Shell32.lib;Comdlg32.lib;glfw3.lib;OpenGL32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\Users\Jack\source\repos\game\lib;C:\Users\Jack\source\repos\game\lib;%(AdditionalLibraryDirectories);$(VcpkgRoot)installed\x64-windows\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glew32s.lib;User32.lib;Gdi32.lib;Shell32.lib;Comdlg32.lib;glfw3.lib;OpenGL32.lib;freetype.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -153,8 +153,10 @@
     <ClCompile Include="src\render.cpp" />
     <ClCompile Include="src\server.cpp" />
     <ClCompile Include="src\stb.cpp" />
+    <ClCompile Include="src\textRenderer.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <Library Include="lib\freetype.lib" />
     <Library Include="lib\glew32.lib" />
     <Library Include="lib\glew32s.lib" />
     <Library Include="lib\glfw3.lib" />
@@ -169,7 +171,106 @@
     <ClInclude Include="include\alchemy\player.h" />
     <ClInclude Include="include\alchemy\render.h" />
     <ClInclude Include="include\alchemy\server.h" />
+    <ClInclude Include="include\alchemy\textRenderer.h" />
     <ClInclude Include="include\alchemy\world.h" />
+    <ClInclude Include="include\freetype\config\integer-types.h" />
+    <ClInclude Include="include\freetype\config\mac-support.h" />
+    <ClInclude Include="include\freetype\config\public-macros.h" />
+    <ClInclude Include="include\freetype\ft2build.h" />
+    <ClInclude Include="include\freetype\config\ftconfig.h" />
+    <ClInclude Include="include\freetype\config\ftheader.h" />
+    <ClInclude Include="include\freetype\config\ftmodule.h" />
+    <ClInclude Include="include\freetype\config\ftoption.h" />
+    <ClInclude Include="include\freetype\config\ftstdlib.h" />
+    <ClInclude Include="include\freetype\freetype.h" />
+    <ClInclude Include="include\freetype\ftadvanc.h" />
+    <ClInclude Include="include\freetype\ftautoh.h" />
+    <ClInclude Include="include\freetype\ftbbox.h" />
+    <ClInclude Include="include\freetype\ftbdf.h" />
+    <ClInclude Include="include\freetype\ftbitmap.h" />
+    <ClInclude Include="include\freetype\ftbzip2.h" />
+    <ClInclude Include="include\freetype\ftcache.h" />
+    <ClInclude Include="include\freetype\ftcffdrv.h" />
+    <ClInclude Include="include\freetype\ftchapters.h" />
+    <ClInclude Include="include\freetype\ftcid.h" />
+    <ClInclude Include="include\freetype\ftcolor.h" />
+    <ClInclude Include="include\freetype\ftdriver.h" />
+    <ClInclude Include="include\freetype\fterrdef.h" />
+    <ClInclude Include="include\freetype\fterrors.h" />
+    <ClInclude Include="include\freetype\ftfntfmt.h" />
+    <ClInclude Include="include\freetype\ftgasp.h" />
+    <ClInclude Include="include\freetype\ftglyph.h" />
+    <ClInclude Include="include\freetype\ftgxval.h" />
+    <ClInclude Include="include\freetype\ftgzip.h" />
+    <ClInclude Include="include\freetype\ftimage.h" />
+    <ClInclude Include="include\freetype\ftincrem.h" />
+    <ClInclude Include="include\freetype\ftlcdfil.h" />
+    <ClInclude Include="include\freetype\ftlist.h" />
+    <ClInclude Include="include\freetype\ftlogging.h" />
+    <ClInclude Include="include\freetype\ftlzw.h" />
+    <ClInclude Include="include\freetype\ftmac.h" />
+    <ClInclude Include="include\freetype\ftmm.h" />
+    <ClInclude Include="include\freetype\ftmodapi.h" />
+    <ClInclude Include="include\freetype\ftmoderr.h" />
+    <ClInclude Include="include\freetype\ftotval.h" />
+    <ClInclude Include="include\freetype\ftoutln.h" />
+    <ClInclude Include="include\freetype\ftparams.h" />
+    <ClInclude Include="include\freetype\ftpfr.h" />
+    <ClInclude Include="include\freetype\ftrender.h" />
+    <ClInclude Include="include\freetype\ftsizes.h" />
+    <ClInclude Include="include\freetype\ftsnames.h" />
+    <ClInclude Include="include\freetype\ftstroke.h" />
+    <ClInclude Include="include\freetype\ftsynth.h" />
+    <ClInclude Include="include\freetype\ftsystem.h" />
+    <ClInclude Include="include\freetype\fttrigon.h" />
+    <ClInclude Include="include\freetype\ftttdrv.h" />
+    <ClInclude Include="include\freetype\fttypes.h" />
+    <ClInclude Include="include\freetype\ftwinfnt.h" />
+    <ClInclude Include="include\freetype\internal\autohint.h" />
+    <ClInclude Include="include\freetype\internal\ftcalc.h" />
+    <ClInclude Include="include\freetype\internal\ftdebug.h" />
+    <ClInclude Include="include\freetype\internal\ftdriver.h" />
+    <ClInclude Include="include\freetype\internal\ftgloadr.h" />
+    <ClInclude Include="include\freetype\internal\fthash.h" />
+    <ClInclude Include="include\freetype\internal\ftmemory.h" />
+    <ClInclude Include="include\freetype\internal\ftobjs.h" />
+    <ClInclude Include="include\freetype\internal\ftpic.h" />
+    <ClInclude Include="include\freetype\internal\ftrfork.h" />
+    <ClInclude Include="include\freetype\internal\ftserv.h" />
+    <ClInclude Include="include\freetype\internal\ftstream.h" />
+    <ClInclude Include="include\freetype\internal\fttrace.h" />
+    <ClInclude Include="include\freetype\internal\ftvalid.h" />
+    <ClInclude Include="include\freetype\internal\internal.h" />
+    <ClInclude Include="include\freetype\internal\psaux.h" />
+    <ClInclude Include="include\freetype\internal\pshints.h" />
+    <ClInclude Include="include\freetype\internal\services\svbdf.h" />
+    <ClInclude Include="include\freetype\internal\services\svcid.h" />
+    <ClInclude Include="include\freetype\internal\services\svfntfmt.h" />
+    <ClInclude Include="include\freetype\internal\services\svgldict.h" />
+    <ClInclude Include="include\freetype\internal\services\svgxval.h" />
+    <ClInclude Include="include\freetype\internal\services\svkern.h" />
+    <ClInclude Include="include\freetype\internal\services\svmm.h" />
+    <ClInclude Include="include\freetype\internal\services\svotval.h" />
+    <ClInclude Include="include\freetype\internal\services\svpfr.h" />
+    <ClInclude Include="include\freetype\internal\services\svpostnm.h" />
+    <ClInclude Include="include\freetype\internal\services\svprop.h" />
+    <ClInclude Include="include\freetype\internal\services\svpscmap.h" />
+    <ClInclude Include="include\freetype\internal\services\svpsinfo.h" />
+    <ClInclude Include="include\freetype\internal\services\svsfnt.h" />
+    <ClInclude Include="include\freetype\internal\services\svttcmap.h" />
+    <ClInclude Include="include\freetype\internal\services\svtteng.h" />
+    <ClInclude Include="include\freetype\internal\services\svttglyf.h" />
+    <ClInclude Include="include\freetype\internal\services\svwinfnt.h" />
+    <ClInclude Include="include\freetype\internal\sfnt.h" />
+    <ClInclude Include="include\freetype\internal\t1types.h" />
+    <ClInclude Include="include\freetype\internal\tttypes.h" />
+    <ClInclude Include="include\freetype\otsvg.h" />
+    <ClInclude Include="include\freetype\t1tables.h" />
+    <ClInclude Include="include\freetype\ttnameid.h" />
+    <ClInclude Include="include\freetype\tttables.h" />
+    <ClInclude Include="include\freetype\tttags.h" />
+    <ClInclude Include="include\freetype\ttunpat.h" />
+    <ClInclude Include="include\ft2build.h" />
     <ClInclude Include="include\GLEW\eglew.h" />
     <ClInclude Include="include\GLEW\glew.h" />
     <ClInclude Include="include\GLEW\glxew.h" />
@@ -621,6 +722,11 @@
     <Image Include="spruce_log.png" />
     <Image Include="stone_bricks.png" />
     <Image Include="wizard.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Font Include="..\..\..\Downloads\arial.ttf" />
+    <Font Include="fonts\arial.ttf" />
+    <Font Include="fonts\Minecraft.ttf" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

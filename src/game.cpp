@@ -4,6 +4,7 @@
 #include <ctime>
 #include <GLFW/glfw3.h>
 #include <alchemy/networkManager.h>
+#include <alchemy/textRenderer.h>
 
 const char* Game::vertexShaderSource = "#version 330 core\n"
 "layout (location = 0) in vec3 aPos;\n"
@@ -59,6 +60,9 @@ void Game::init() {
     GLuint textureID2 = loadTexture("spriteSheet.png");
 
     world.initTileView(1000, 500, 1.0f, textureID2, textureID2);
+
+    textRenderer = std::make_unique<TextRenderer>(800, 800);
+    textRenderer->loadFont("fonts/minecraft.ttf", 24);
 }
 
 
@@ -332,6 +336,9 @@ void Game::render() {
 
     auto gameObjects = std::vector<std::shared_ptr<GameObject>>(world.getPlayers().begin(), world.getPlayers().end());
     renderer.batchRenderGameObjects(gameObjects, projection);
+
+    // Render the text "Hello"
+    textRenderer->renderText("Hello", 25.0f, 25.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
 }
 
 void Game::cleanup() {
@@ -388,7 +395,7 @@ void Game::checkCompileErrors(GLuint shader, std::string type) {
 }
 
 NetworkManager& Game::getNetworkManager() {
-    return networkManager; 
+    return networkManager;
 }
 
 World& Game::getWorld() {

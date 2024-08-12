@@ -11,6 +11,8 @@
 #include <unordered_map>
 #include <alchemy/world.h>
 #include <alchemy/render.h>
+#include <alchemy/textRenderer.h>
+#include <memory>
 
 enum class Mode {
     Game,
@@ -66,6 +68,8 @@ private:
     float cameraZoom;
     Mode currentMode;
     Render renderer;
+
+    std::unique_ptr<TextRenderer> textRenderer; // Unique pointer to manage TextRenderer instance
 };
 
 #endif // GAME_H
