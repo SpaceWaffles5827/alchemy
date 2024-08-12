@@ -6,8 +6,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include "networkManager.h"
-#include "player.h"
+#include <alchemy/networkManager.h>
+#include <alchemy/Player.h>
 #include <unordered_map>
 #include <alchemy/world.h>
 #include <alchemy/render.h>
@@ -24,6 +24,11 @@ public:
 
     void run();
     void init();
+
+    GLuint loadTexture(const char* path);
+    NetworkManager& getNetworkManager();
+    World& getWorld();
+    GLFWwindow& getWindow();
 
 private:
     void initGLFW();
@@ -56,7 +61,6 @@ private:
     static const char* vertexShaderSource;
     static const char* fragmentShaderSource;
     static const char* redFragmentShaderSource;
-    GLuint loadTexture(const char* path);
     GLuint textureID1;
 
     float cameraZoom;

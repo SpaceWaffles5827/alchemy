@@ -2,6 +2,8 @@
 #include <iostream>
 #include <cstdlib>
 #include <ctime>
+#include <GLFW/glfw3.h>
+#include <alchemy/networkManager.h>
 
 const char* Game::vertexShaderSource = "#version 330 core\n"
 "layout (location = 0) in vec3 aPos;\n"
@@ -188,7 +190,7 @@ void Game::mouse_button_callback(GLFWwindow* window, int button, int action, int
             float snappedY = std::round(worldCoords.y);
 
             float tileWidth = 1.0f;
-            float tileHeight = 1.0f; // this is equal to one tile
+            float tileHeight = 1.0f;
 
             std::shared_ptr<GameObject> gameObjectAdding = std::make_shared<GameObject>(
                 glm::vec3(snappedX, snappedY, 0.0f),
@@ -298,79 +300,13 @@ void Game::setupBuffers() {
 }
 
 void Game::processInput() {
-    static GLuint runningTextureID = loadTexture("aniwooRunning.png");
-    static GLuint idleTextureID = loadTexture("andiwooIdle.png");
+    std::shared_ptr<Player> player = world.getPlayerById(clientId);
 
-    bool positionUpdated = false;
-    bool isMoving = false;
-
-    auto player = world.getPlayerById(clientId);
-    if (!player) return;
-
-    glm::vec3 position = player->getPosition();
-    float speed = 0.12f;
-
-    static int frame = 0;
-    static double lastTime = glfwGetTime();
-    double currentTime = glfwGetTime();
-    double frameDuration = 0.075;
-
-    static int lastDirection = 0;
-    glm::vec3 direction(0.0f);
-
-    if (currentTime - lastTime >= frameDuration) {
-        frame = (frame + 1) % 8;
-        lastTime = currentTime;
-    }
-
-    bool moveUp = glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS;
-    bool moveDown = glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS;
-    bool moveLeft = glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS;
-    bool moveRight = glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS;
-
-    if (moveUp && !moveDown) {
-        direction.y += 1.0f;
-        lastDirection = 3;
-        isMoving = true;
-    }
-    else if (moveDown && !moveUp) {
-        direction.y -= 1.0f;
-        lastDirection = 0;
-        isMoving = true;
-    }
-
-    if (moveLeft && !moveRight) {
-        direction.x -= 1.0f;
-        lastDirection = 1;
-        isMoving = true;
-    }
-    else if (moveRight && !moveLeft) {
-        direction.x += 1.0f;
-        lastDirection = 2;
-        isMoving = true;
-    }
-
-    if (isMoving) {
-        if (direction.x != 0 || direction.y != 0) {
-            direction = glm::normalize(direction);
-            position += direction * speed;
-            positionUpdated = true;
-
-            player->setTexture(runningTextureID);
-            player->setTextureTile(frame, lastDirection, 8, 512, 512, 64, 128);
-        }
+    if (player) {
+        player->handleInput();
     }
     else {
-        player->setTexture(idleTextureID);
-        player->setTextureTile(frame, lastDirection, 8, 512, 512, 64, 128);
-    }
-
-    if (positionUpdated) {
-        world.updatePlayerPosition(clientId, position);
-        networkManager.sendPlayerMovement(clientId, position.x, position.y);
-    }
-    else {
-        networkManager.sendHeatBeat(clientId);
+        std::cerr << "Player with ID " << clientId << " not found." << std::endl;
     }
 }
 
@@ -455,6 +391,18 @@ void Game::checkCompileErrors(GLuint shader, std::string type) {
             std::cout << "| ERROR::Program: Link-time error: Type: " << type << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
         }
     }
+}
+
+NetworkManager& Game::getNetworkManager() {
+    return networkManager; 
+}
+
+World& Game::getWorld() {
+    return world;
+}
+
+GLFWwindow& Game::getWindow() {
+    return *window;
 }
 
 void Game::updateProjectionMatrix(int width, int height) {

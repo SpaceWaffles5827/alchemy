@@ -16,6 +16,8 @@ public:
 
     int getClientId() const;
 
+    void handleInput();
+
 private:
     int clientId;
 };
