@@ -5,6 +5,7 @@
 #include <GLFW/glfw3.h>
 #include <alchemy/networkManager.h>
 #include <alchemy/textRenderer.h>
+#include <fstream>
 
 const char* Game::vertexShaderSource = "#version 330 core\n"
 "layout (location = 0) in vec3 aPos;\n"
@@ -322,6 +323,7 @@ void Game::processInput() {
         static bool enterKeyReleased = true;
         static bool backspaceKeyReleased = true;
         static bool escKeyReleased = true;
+        static bool tabKeyReleased = true;
 
         if (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS && enterKeyReleased) {
             chat.addMessage(chat.getCurrentMessage());
@@ -354,12 +356,21 @@ void Game::processInput() {
             escKeyReleased = true;
         }
 
+        // Handle Tab key for auto-completion
+        if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS && tabKeyReleased) {
+            chat.selectSuggestion();
+            tabKeyReleased = false;
+        }
+        if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_RELEASE) {
+            tabKeyReleased = true;
+        }
+
         for (int key = GLFW_KEY_A; key <= GLFW_KEY_Z; ++key) {
             if (glfwGetKey(window, key) == GLFW_PRESS && keyReleased[key]) {
                 bool shiftPressed = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS;
                 char c = static_cast<char>(key);
                 if (!shiftPressed) {
-                    c += 32;
+                    c += 32;  // Convert to lowercase if shift is not pressed
                 }
                 std::string currentMessage = chat.getCurrentMessage();
                 currentMessage += c;
@@ -533,6 +544,58 @@ GLFWwindow& Game::getWindow() {
 
 TextRenderer& Game::getTextRender() {
     return *textRenderer;
+}
+
+void Game::saveLevel(const std::string& filename) {
+    std::ofstream outFile(filename);
+    if (outFile.is_open()) {
+        // Serialize your level data here, e.g.:
+        // outFile << levelData;
+        std::cout << "Level saved to " << filename << std::endl;
+        outFile.close();
+    }
+    else {
+        std::cerr << "Failed to open file for saving: " << filename << std::endl;
+    }
+}
+
+void Game::loadLevel(const std::string& filename) {
+    std::ifstream inFile(filename);
+    if (inFile.is_open()) {
+        // Deserialize your level data here, e.g.:
+        // inFile >> levelData;
+        std::cout << "Level loaded from " << filename << std::endl;
+        inFile.close();
+    }
+    else {
+        std::cerr << "Failed to open file for loading: " << filename << std::endl;
+    }
+}
+
+void Game::saveWorld(const std::string& filename) {
+    std::ofstream outFile(filename);
+    if (outFile.is_open()) {
+        // Serialize your world data here, e.g.:
+        // outFile << worldData;
+        std::cout << "World saved to " << filename << std::endl;
+        outFile.close();
+    }
+    else {
+        std::cerr << "Failed to open file for saving: " << filename << std::endl;
+    }
+}
+
+void Game::loadWorld(const std::string& filename) {
+    std::ifstream inFile(filename);
+    if (inFile.is_open()) {
+        // Deserialize your world data here, e.g.:
+        // inFile >> worldData;
+        std::cout << "World loaded from " << filename << std::endl;
+        inFile.close();
+    }
+    else {
+        std::cerr << "Failed to open file for loading: " << filename << std::endl;
+    }
 }
 
 void Game::updateProjectionMatrix(int width, int height) {

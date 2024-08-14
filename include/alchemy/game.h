@@ -17,7 +17,10 @@
 
 enum class Mode {
     Game,
-    LevelEdit
+    LevelEdit,
+    Play,
+    Pause,
+    Resume
 };
 
 class Game {
@@ -33,6 +36,13 @@ public:
     World& getWorld();
     GLFWwindow& getWindow();
     TextRenderer& getTextRender();
+
+    void saveLevel(const std::string& filename);  // Save level to a file
+    void loadLevel(const std::string& filename);  // Load level from a file
+    void saveWorld(const std::string& filename);  // Save world to a file
+    void loadWorld(const std::string& filename);  // Load world from a file
+
+    void setCurrentMode(Mode mode) { currentMode = mode; }  // Set the current game mode
 
 private:
     void initGLFW();
