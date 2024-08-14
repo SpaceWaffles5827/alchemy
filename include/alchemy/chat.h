@@ -27,6 +27,7 @@ private:
     bool isChatMode;
 
     void trimMessages();
+    bool processCommand();  // Updated to handle commands with arguments
 };
 
 #endif // CHAT_H

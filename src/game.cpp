@@ -37,6 +37,10 @@ Game::Game(Mode mode)
     : window(nullptr), VAO(0), VBO(0), shaderProgram(0), redShaderProgram(0), clientId(std::rand()), tickRate(1.0 / 64.0),
     projection(1.0f), cameraZoom(1.0f), currentMode(mode), chat(800, 800) {
 
+    for (int i = 0; i < GLFW_KEY_LAST; ++i) {
+        keyReleased[i] = true;
+    }
+
     networkManager.setupUDPClient();
 }
 
@@ -313,17 +317,16 @@ void Game::setupBuffers() {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 }
-
 void Game::processInput() {
     if (chat.isChatModeActive()) {
-        // Process chat input
         static bool enterKeyReleased = true;
         static bool backspaceKeyReleased = true;
+        static bool escKeyReleased = true;
 
         if (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS && enterKeyReleased) {
             chat.addMessage(chat.getCurrentMessage());
-            chat.setCurrentMessage("");  // Reset current message after sending
-            chat.setChatModeActive(false);  // Exit chat mode
+            chat.setCurrentMessage("");
+            chat.setChatModeActive(false);
             enterKeyReleased = false;
         }
         if (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_RELEASE) {
@@ -342,14 +345,21 @@ void Game::processInput() {
             backspaceKeyReleased = true;
         }
 
-        // Handle character input
-        static bool keyReleased[GLFW_KEY_LAST] = { true };
+        if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS && escKeyReleased) {
+            chat.setCurrentMessage("");
+            chat.setChatModeActive(false);
+            escKeyReleased = false;
+        }
+        if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_RELEASE) {
+            escKeyReleased = true;
+        }
+
         for (int key = GLFW_KEY_A; key <= GLFW_KEY_Z; ++key) {
             if (glfwGetKey(window, key) == GLFW_PRESS && keyReleased[key]) {
                 bool shiftPressed = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS;
                 char c = static_cast<char>(key);
                 if (!shiftPressed) {
-                    c += 32;  // Convert to lowercase
+                    c += 32;
                 }
                 std::string currentMessage = chat.getCurrentMessage();
                 currentMessage += c;
@@ -388,7 +398,6 @@ void Game::processInput() {
 
     }
     else {
-        // General game input
         std::shared_ptr<Player> player = world.getPlayerById(clientId);
         if (player) {
             player->handleInput();
@@ -399,12 +408,29 @@ void Game::processInput() {
 
         // Enter chat mode
         static bool tKeyReleased = true;
+        static bool slashKeyReleased = true;
+
         if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS && tKeyReleased) {
-            chat.setChatModeActive(true);  // Enter chat mode when 'T' is pressed
+            chat.setChatModeActive(true);
             tKeyReleased = false;
+
+            // Ensure T key does not type in chat
+            keyReleased[GLFW_KEY_T] = false;
         }
         if (glfwGetKey(window, GLFW_KEY_T) == GLFW_RELEASE) {
             tKeyReleased = true;
+            keyReleased[GLFW_KEY_T] = true; // Reset keyReleased state for T key
+        }
+
+        if (glfwGetKey(window, GLFW_KEY_SLASH) == GLFW_PRESS && slashKeyReleased) {
+            chat.setChatModeActive(true);
+            std::string currentMessage = chat.getCurrentMessage();
+            currentMessage += '/';
+            chat.setCurrentMessage(currentMessage);
+            slashKeyReleased = false;
+        }
+        if (glfwGetKey(window, GLFW_KEY_SLASH) == GLFW_RELEASE) {
+            slashKeyReleased = true;
         }
     }
 }
