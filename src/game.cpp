@@ -36,7 +36,7 @@ const char* Game::redFragmentShaderSource = "#version 330 core\n"
 
 Game::Game(Mode mode)
     : window(nullptr), VAO(0), VBO(0), shaderProgram(0), redShaderProgram(0), clientId(std::rand()), tickRate(1.0 / 64.0),
-    projection(1.0f), cameraZoom(1.0f), currentMode(mode), chat(800, 800) {
+    projection(1.0f), cameraZoom(1.0f), currentMode(mode), chat(800, 800), selectedTileX(0), selectedTileY(0), tileSelectionVisible(false) {
 
     for (int i = 0; i < GLFW_KEY_LAST; ++i) {
         keyReleased[i] = true;
@@ -44,7 +44,6 @@ Game::Game(Mode mode)
 
     networkManager.setupUDPClient();
 }
-
 
 Game::~Game() {
     cleanup();
@@ -56,7 +55,6 @@ void Game::init() {
 
     renderer.initialize();
 
-    // Initialize the TextRenderer
     textRenderer = std::make_unique<TextRenderer>(800, 800);
 
     if (!textRenderer) {
@@ -66,19 +64,14 @@ void Game::init() {
         std::cout << "TextRenderer initialized successfully!" << std::endl;
     }
 
-    // Load the font for the TextRenderer
     textRenderer->loadFont("fonts/minecraft.ttf", 24);
 
-    // Initialize the Chat component after TextRenderer is ready
-    // chat = Chat(800, 800);
-
-    // Initialize clientPlayer within the world
-    GLuint textureID1 = loadTexture("aniwooRunning.png");
+    textureID1 = loadTexture("aniwooRunning.png");
     std::shared_ptr<Player> clientPlayer = std::make_shared<Player>(clientId, glm::vec3(1.0f, 0.5f, 0.2f), 0.0f, 0.0f, 1.0f, 2.0f, textureID1);
     clientPlayer->setTextureTile(0, 0, 8, 512, 512, 64, 128);
     world.addPlayer(clientPlayer);
 
-    GLuint textureID2 = loadTexture("spriteSheet.png");
+    textureID2 = loadTexture("spriteSheet.png");
 
     world.initTileView(10, 10, 1.0f, textureID2, textureID2);
 }
@@ -101,7 +94,6 @@ void Game::run() {
         fpsTime += elapsed;
         frameCount++;
 
-        // Calculate FPS every second
         if (fpsTime >= 1.0) {
             double fps = frameCount / fpsTime;
             std::cout << "FPS: " << fps << " | Frame Time: " << (fpsTime / frameCount) * 1000.0 << " ms" << std::endl;
@@ -129,16 +121,13 @@ GLuint Game::loadTexture(const char* path) {
     glGenTextures(1, &textureID);
     glBindTexture(GL_TEXTURE_2D, textureID);
 
-    // Set the texture wrapping parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // S (X-axis) wrapping
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); // T (Y-axis) wrapping
-    // Set texture filtering parameters
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    // Load the image
     int width, height, nrChannels;
-    stbi_set_flip_vertically_on_load(true); // Flip the image vertically (optional)
+    stbi_set_flip_vertically_on_load(true);
     unsigned char* data = stbi_load(path, &width, &height, &nrChannels, 0);
     if (data) {
         GLenum format;
@@ -171,7 +160,7 @@ void Game::initGLFW() {
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
-    window = glfwCreateWindow(800, 800, "Moving Square", NULL, NULL);
+    window = glfwCreateWindow(800, 800, "Tile Picker", NULL, NULL);
     if (!window) {
         std::cerr << "Failed to create GLFW window!" << std::endl;
         glfwTerminate();
@@ -193,13 +182,35 @@ void Game::mouse_button_callback(GLFWwindow* window, int button, int action, int
     Game* game = static_cast<Game*>(glfwGetWindowUserPointer(window));
 
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+        double xpos, ypos;
+        glfwGetCursorPos(window, &xpos, &ypos);
+
+        int width, height;
+        glfwGetWindowSize(window, &width, &height);
+
+        // Check if clicking within the tile selection UI
+        const float uiSize = 200.0f; // Size of the UI in pixels
+        const int gridSizeX = 8;
+        const int gridSizeY = 8;
+        const float tileWidth = uiSize / gridSizeX;
+        const float tileHeight = uiSize / gridSizeY;
+
+        if (game->tileSelectionVisible && xpos < uiSize && ypos > height - uiSize) {
+            int tileX = static_cast<int>(xpos / tileWidth);
+            int tileY = static_cast<int>((ypos - (height - uiSize)) / tileHeight);
+
+            if (tileX < gridSizeX && tileY < gridSizeY) {
+                game->selectedTileX = tileX;
+                game->selectedTileY = tileY;
+
+                // No need to invert the Y-coordinate
+                std::cout << "Selected tile: (" << tileX << ", " << tileY << ")" << std::endl;
+            }
+            return;
+        }
+
+        // Place the selected tile in the world
         if (game->currentMode == Mode::LevelEdit) {
-            double xpos, ypos;
-            glfwGetCursorPos(window, &xpos, &ypos);
-
-            int width, height;
-            glfwGetWindowSize(window, &width, &height);
-
             float xNDC = static_cast<float>((2.0 * xpos) / width - 1.0);
             float yNDC = static_cast<float>(1.0 - (2.0 * ypos) / height);
 
@@ -209,27 +220,14 @@ void Game::mouse_button_callback(GLFWwindow* window, int button, int action, int
             float snappedX = std::round(worldCoords.x);
             float snappedY = std::round(worldCoords.y);
 
-            GLuint textureID = game->loadTexture("spriteSheet.png");
-            if (textureID == 0) {
-                std::cerr << "Failed to load texture for placement!" << std::endl;
-                return;
-            }
-
-            float tileWidth = 1.0f;
-            float tileHeight = 1.0f;
-
             std::shared_ptr<GameObject> gameObjectAdding = std::make_shared<GameObject>(
                 glm::vec3(snappedX, snappedY, 0.0f),
                 glm::vec3(0.0f),
-                tileWidth,
-                tileHeight,
-                textureID
-            );
+                1.0f,
+                1.0f,
+                game->textureID2);
 
-            int randomTileX = rand() % 8;
-            int randomTileY = rand() % 8;
-
-            gameObjectAdding->setTextureTile(randomTileX, randomTileY, 8, 256, 256, 32, 32);
+            gameObjectAdding->setTextureTile(game->selectedTileX, game->selectedTileY, gridSizeX, 256, 256, 32, 32);
 
             game->world.addObject(gameObjectAdding);
         }
@@ -344,6 +342,51 @@ void Game::setupBuffers() {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 }
+
+void Game::renderTileSelectionUI() {
+    if (!tileSelectionVisible || currentMode != Mode::LevelEdit) return;
+
+    // Set the fixed UI size in pixels
+    const float uiSize = 200.0f;
+    const int gridSizeX = 8; // Number of tiles in the X direction
+    const int gridSizeY = 8; // Number of tiles in the Y direction
+
+    // Calculate the tile size based on the UI size and grid size
+    const float tileWidth = uiSize / gridSizeX;
+    const float tileHeight = uiSize / gridSizeY;
+
+    int width, height;
+    glfwGetWindowSize(window, &width, &height);
+
+    // Adjust start position to remove the gap at the bottom
+    const float uiStartX = 0.0f; // Fixed pixel position from the left edge
+    const float uiStartY = height - uiSize + tileHeight; // Adjust to align with the bottom edge
+
+    std::vector<std::shared_ptr<GameObject>> tiles;
+
+    for (int y = 0; y < gridSizeY; ++y) {
+        for (int x = 0; x < gridSizeX; ++x) {
+            // Convert pixel positions to normalized device coordinates (NDC)
+            float xNDC = (uiStartX + x * tileWidth) / width * 2.0f - 1.0f;
+            float yNDC = 1.0f - (uiStartY + y * tileHeight) / height * 2.0f;
+
+            glm::vec3 position(xNDC, yNDC, 0.0f);
+
+            auto tile = std::make_shared<GameObject>(
+                position,
+                glm::vec3(0.0f),
+                tileWidth / width * 2.0f, tileHeight / height * 2.0f,
+                textureID2
+            );
+
+            tile->setTextureTile(x, y, gridSizeX, 256, 256, 32, 32);
+            tiles.push_back(tile);
+        }
+    }
+
+    renderer.batchRenderGameObjects(tiles, glm::mat4(1.0f));
+}
+
 void Game::processInput() {
     if (chat.isChatModeActive()) {
         static bool enterKeyReleased = true;
@@ -382,7 +425,6 @@ void Game::processInput() {
             escKeyReleased = true;
         }
 
-        // Handle Tab key for auto-completion
         if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS && tabKeyReleased) {
             chat.selectSuggestion();
             tabKeyReleased = false;
@@ -396,7 +438,7 @@ void Game::processInput() {
                 bool shiftPressed = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS;
                 char c = static_cast<char>(key);
                 if (!shiftPressed) {
-                    c += 32;  // Convert to lowercase if shift is not pressed
+                    c += 32;
                 }
                 std::string currentMessage = chat.getCurrentMessage();
                 currentMessage += c;
@@ -408,7 +450,6 @@ void Game::processInput() {
             }
         }
 
-        // Handle number input
         for (int key = GLFW_KEY_0; key <= GLFW_KEY_9; ++key) {
             if (glfwGetKey(window, key) == GLFW_PRESS && keyReleased[key]) {
                 char c = static_cast<char>(key);
@@ -422,7 +463,6 @@ void Game::processInput() {
             }
         }
 
-        // Handle space input
         if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && keyReleased[GLFW_KEY_SPACE]) {
             std::string currentMessage = chat.getCurrentMessage();
             currentMessage += ' ';
@@ -443,20 +483,19 @@ void Game::processInput() {
             std::cerr << "Player with ID " << clientId << " not found." << std::endl;
         }
 
-        // Enter chat mode
         static bool tKeyReleased = true;
         static bool slashKeyReleased = true;
+        static bool bKeyReleased = true;  // Toggle key for tile selection UI
 
         if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS && tKeyReleased) {
             chat.setChatModeActive(true);
             tKeyReleased = false;
 
-            // Ensure T key does not type in chat
             keyReleased[GLFW_KEY_T] = false;
         }
         if (glfwGetKey(window, GLFW_KEY_T) == GLFW_RELEASE) {
             tKeyReleased = true;
-            keyReleased[GLFW_KEY_T] = true; // Reset keyReleased state for T key
+            keyReleased[GLFW_KEY_T] = true;
         }
 
         if (glfwGetKey(window, GLFW_KEY_SLASH) == GLFW_PRESS && slashKeyReleased) {
@@ -468,6 +507,14 @@ void Game::processInput() {
         }
         if (glfwGetKey(window, GLFW_KEY_SLASH) == GLFW_RELEASE) {
             slashKeyReleased = true;
+        }
+
+        if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS && bKeyReleased) {  // Toggle visibility
+            tileSelectionVisible = !tileSelectionVisible;
+            bKeyReleased = false;
+        }
+        if (glfwGetKey(window, GLFW_KEY_B) == GLFW_RELEASE) {
+            bKeyReleased = true;
         }
     }
 }
@@ -491,32 +538,31 @@ void Game::render() {
 
     updateProjectionMatrix(width, height);
 
+    // Render game world objects
     renderer.batchRenderGameObjects(world.getObjects(), projection);
 
+    // Render player objects
     auto gameObjects = std::vector<std::shared_ptr<GameObject>>(world.getPlayers().begin(), world.getPlayers().end());
     renderer.batchRenderGameObjects(gameObjects, projection);
 
-    // Render the text "Hello"
-    // textRenderer->renderText("Hello This Is A Test Msg", 25.0f, 25.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
-
-    // Render chat messages
+    // Render the chat
     chat.render();
+
+    // Render the tile selection UI if visible
+    renderTileSelectionUI();
 }
 
 void Game::cleanup() {
-    // Check if VAO was generated before attempting to delete it
     if (VAO) {
         glDeleteVertexArrays(1, &VAO);
         VAO = 0;
     }
 
-    // Check if VBO was generated before attempting to delete it
     if (VBO) {
         glDeleteBuffers(1, &VBO);
         VBO = 0;
     }
 
-    // Check if the shader programs were created before attempting to delete them
     if (shaderProgram) {
         glDeleteProgram(shaderProgram);
         shaderProgram = 0;
@@ -527,13 +573,11 @@ void Game::cleanup() {
         redShaderProgram = 0;
     }
 
-    // Properly terminate GLFW if the window is valid
     if (window) {
         glfwDestroyWindow(window);
         window = nullptr;
     }
 
-    // Terminate GLFW if it's been initialized
     glfwTerminate();
 }
 
@@ -575,8 +619,6 @@ TextRenderer& Game::getTextRender() {
 void Game::saveLevel(const std::string& filename) {
     std::ofstream outFile(filename);
     if (outFile.is_open()) {
-        // Serialize your level data here, e.g.:
-        // outFile << levelData;
         std::cout << "Level saved to " << filename << std::endl;
         outFile.close();
     }
@@ -588,8 +630,6 @@ void Game::saveLevel(const std::string& filename) {
 void Game::loadLevel(const std::string& filename) {
     std::ifstream inFile(filename);
     if (inFile.is_open()) {
-        // Deserialize your level data here, e.g.:
-        // inFile >> levelData;
         std::cout << "Level loaded from " << filename << std::endl;
         inFile.close();
     }
@@ -601,8 +641,6 @@ void Game::loadLevel(const std::string& filename) {
 void Game::saveWorld(const std::string& filename) {
     std::ofstream outFile(filename);
     if (outFile.is_open()) {
-        // Serialize your world data here, e.g.:
-        // outFile << worldData;
         std::cout << "World saved to " << filename << std::endl;
         outFile.close();
     }
@@ -614,8 +652,6 @@ void Game::saveWorld(const std::string& filename) {
 void Game::loadWorld(const std::string& filename) {
     std::ifstream inFile(filename);
     if (inFile.is_open()) {
-        // Deserialize your world data here, e.g.:
-        // inFile >> worldData;
         std::cout << "World loaded from " << filename << std::endl;
         inFile.close();
     }
@@ -630,7 +666,7 @@ void Game::updateProjectionMatrix(int width, int height) {
     float viewHeight = viewWidth / aspectRatio;
 
     auto player = world.getPlayerById(clientId);
-    if (!player) return; // Ensure the player exists
+    if (!player) return;
 
     glm::vec2 playerPos = player->getPosition();
 
@@ -641,17 +677,25 @@ void Game::updateProjectionMatrix(int width, int height) {
     );
 
     GLuint transformLoc = glGetUniformLocation(shaderProgram, "transform");
+    glUseProgram(shaderProgram);  // Ensure the correct shader program is in use
     glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(projection));
 }
 
 void Game::framebuffer_size_callback(GLFWwindow* window, int width, int height) {
-    glViewport(0, 0, width, height);
+    glViewport(0, 0, width, height); // Update the OpenGL viewport to the new window size
 
     Game* game = static_cast<Game*>(glfwGetWindowUserPointer(window));
 
+    // Recalculate the projection matrix with the new window size
     game->updateProjectionMatrix(width, height);
 
+    // If a text renderer exists, update its screen size to match the new dimensions
     if (game->textRenderer) {
         game->textRenderer->updateScreenSize(width, height);
+    }
+
+    // If the tile selection UI is visible, ensure it's also updated
+    if (game->tileSelectionVisible && game->currentMode == Mode::LevelEdit) {
+        game->renderTileSelectionUI();  // Redraw or adjust the tile selection UI based on the new size
     }
 }

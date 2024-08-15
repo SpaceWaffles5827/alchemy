@@ -12,7 +12,7 @@
 #include <alchemy/world.h>
 #include <alchemy/render.h>
 #include <alchemy/textRenderer.h>
-#include <alchemy/chat.h> 
+#include <alchemy/chat.h>
 #include <memory>
 
 enum class Mode {
@@ -37,12 +37,12 @@ public:
     GLFWwindow& getWindow();
     TextRenderer& getTextRender();
 
-    void saveLevel(const std::string& filename);  // Save level to a file
-    void loadLevel(const std::string& filename);  // Load level from a file
-    void saveWorld(const std::string& filename);  // Save world to a file
-    void loadWorld(const std::string& filename);  // Load world from a file
+    void saveLevel(const std::string& filename);
+    void loadLevel(const std::string& filename);
+    void saveWorld(const std::string& filename);
+    void loadWorld(const std::string& filename);
 
-    void setCurrentMode(Mode mode) { currentMode = mode; }  // Set the current game mode
+    void setCurrentMode(Mode mode) { currentMode = mode; }
 
 private:
     void initGLFW();
@@ -55,10 +55,15 @@ private:
     void cleanup();
     void checkCompileErrors(GLuint shader, std::string type);
     void updateProjectionMatrix(int width, int height);
+    void renderTileSelectionUI();
     static void scroll_callback(GLFWwindow* window, double xOffset, double yOffset);
     static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
     static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
+
     bool keyReleased[GLFW_KEY_LAST];
+    int selectedTileX;
+    int selectedTileY;
+    bool tileSelectionVisible;  // Add this line to declare the variable
 
     GLFWwindow* window;
     GLuint VAO, VBO;
@@ -77,14 +82,15 @@ private:
     static const char* fragmentShaderSource;
     static const char* redFragmentShaderSource;
     GLuint textureID1;
-    GLuint textureID2;  // Declare textureID2 here
+    GLuint textureID2;
 
     float cameraZoom;
     Mode currentMode;
     Render renderer;
 
-    std::unique_ptr<TextRenderer> textRenderer;  // TextRenderer should be initialized first
-    Chat chat;  // Chat should be initialized after TextRenderer
+    std::unique_ptr<TextRenderer> textRenderer;
+    Chat chat;
 };
+
 
 #endif // GAME_H
