@@ -38,7 +38,6 @@ public:
         }
     }
 
-
     void initTileView(int width, int height, float tileSize, GLuint textureID1, GLuint textureID2) {
         srand(time(NULL));  // Seed the random number generator
 
@@ -54,7 +53,7 @@ public:
                     glm::vec3(0.0f), // Rotation
                     tileSize, tileSize, // Width and Height
                     selectedTexture
-                    );
+                );
 
                 tile->setTextureTile(randomTileX, randomTileY, 8, 256, 256, 32, 32);
 
@@ -89,6 +88,22 @@ public:
         }
 
         return nullptr; // Return nullptr if the player with the given clientId is not found
+    }
+
+    // Erase an object by its position
+    void eraseObject(const glm::vec3& position) {
+        auto it = std::remove_if(objects.begin(), objects.end(),
+            [&position](const std::shared_ptr<GameObject>& obj) {
+                return obj->getPosition() == position;
+            });
+
+        if (it != objects.end()) {
+            objects.erase(it, objects.end());
+            std::cout << "Object at position (" << position.x << ", " << position.y << ", " << position.z << ") deleted." << std::endl;
+        }
+        else {
+            std::cout << "No object found at position (" << position.x << ", " << position.y << ", " << position.z << ")." << std::endl;
+        }
     }
 
 private:

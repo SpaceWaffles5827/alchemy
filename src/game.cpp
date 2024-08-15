@@ -190,9 +190,9 @@ void Game::initGLFW() {
 }
 
 void Game::mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
-    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
-        Game* game = static_cast<Game*>(glfwGetWindowUserPointer(window));
+    Game* game = static_cast<Game*>(glfwGetWindowUserPointer(window));
 
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
         if (game->currentMode == Mode::LevelEdit) {
             double xpos, ypos;
             glfwGetCursorPos(window, &xpos, &ypos);
@@ -209,7 +209,6 @@ void Game::mouse_button_callback(GLFWwindow* window, int button, int action, int
             float snappedX = std::round(worldCoords.x);
             float snappedY = std::round(worldCoords.y);
 
-            // Load the texture each time an object is placed
             GLuint textureID = game->loadTexture("spriteSheet.png");
             if (textureID == 0) {
                 std::cerr << "Failed to load texture for placement!" << std::endl;
@@ -224,15 +223,35 @@ void Game::mouse_button_callback(GLFWwindow* window, int button, int action, int
                 glm::vec3(0.0f),
                 tileWidth,
                 tileHeight,
-                textureID // Use the newly loaded texture ID
+                textureID
             );
 
-            int randomTileX = rand() % 8; // Random x between 0 and 7
-            int randomTileY = rand() % 8; // Random y between 0 and 7
+            int randomTileX = rand() % 8;
+            int randomTileY = rand() % 8;
 
-            gameObjectAdding->setTextureTile(randomTileX, randomTileY, 8, 256, 256, 32, 32);  // Ensure this is correctly set
+            gameObjectAdding->setTextureTile(randomTileX, randomTileY, 8, 256, 256, 32, 32);
 
             game->world.addObject(gameObjectAdding);
+        }
+    }
+    else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
+        if (game->currentMode == Mode::LevelEdit) {
+            double xpos, ypos;
+            glfwGetCursorPos(window, &xpos, &ypos);
+
+            int width, height;
+            glfwGetWindowSize(window, &width, &height);
+
+            float xNDC = static_cast<float>((2.0 * xpos) / width - 1.0);
+            float yNDC = static_cast<float>(1.0 - (2.0 * ypos) / height);
+
+            glm::vec4 ndcCoords = glm::vec4(xNDC, yNDC, 0.0f, 1.0f);
+            glm::vec4 worldCoords = glm::inverse(game->projection) * ndcCoords;
+
+            float snappedX = std::round(worldCoords.x);
+            float snappedY = std::round(worldCoords.y);
+
+            game->world.eraseObject(glm::vec3(snappedX, snappedY, 0.0f));
         }
     }
 }
