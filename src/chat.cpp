@@ -4,6 +4,9 @@
 #include <sstream>
 #include <algorithm>
 #include <fstream>
+#include <filesystem>
+
+namespace fs = std::filesystem;
 
 std::string toLowerCase(const std::string& str) {
     std::string lowerStr = str;
@@ -16,7 +19,7 @@ Chat::Chat(GLuint screenWidth, GLuint screenHeight)
 
     commandMap = {
         {"setmode", {"leveledit", "play", "pause"}},
-        {"saveworld", {}},  
+        {"saveworld", {}},
         {"loadworld", {}}
     };
 }
@@ -109,20 +112,27 @@ bool Chat::processCommand() {
         }
 
         if (command == "saveworld") {
-            saveWorld();  // No arguments needed
-            std::cout << "World saved." << std::endl;
+            std::string worldName;
+            iss >> worldName;
+            if (!worldName.empty()) {
+                saveWorld(worldName);
+                std::cout << "World saved as: " << worldName << std::endl;
+            }
+            else {
+                std::cout << "No world name provided for saving." << std::endl;
+            }
             return true;
         }
 
         if (command == "loadworld") {
-            std::string id;
-            iss >> id;
-            if (!id.empty()) {
-                loadWorld(id);
-                std::cout << "World loaded with ID: " << id << std::endl;
+            std::string worldName;
+            iss >> worldName;
+            if (!worldName.empty()) {
+                loadWorld(worldName);
+                std::cout << "World loaded with name: " << worldName << std::endl;
             }
             else {
-                std::cout << "No ID specified for loading world." << std::endl;
+                std::cout << "No world name specified for loading." << std::endl;
             }
             return true;
         }
@@ -156,7 +166,21 @@ void Chat::updateSuggestions() {
     }
 
     // Auto-complete command arguments if a command is fully typed
-    if (commandMap.find(command) != commandMap.end()) {
+    if (command == "loadworld") {
+        std::string partialWorldName;
+        iss >> partialWorldName;
+        partialWorldName = toLowerCase(partialWorldName);  // Convert partialWorldName to lowercase
+
+        for (const auto& entry : fs::directory_iterator(".")) {
+            if (entry.path().extension() == ".txt" && entry.path().filename().string().find("worldData_") == 0) {
+                std::string worldName = entry.path().stem().string().substr(10);  // Extract world name from "worldData_<name>.txt"
+                if (worldName.find(partialWorldName) == 0) {
+                    suggestions.push_back("/loadworld " + worldName);
+                }
+            }
+        }
+    }
+    else if (commandMap.find(command) != commandMap.end()) {
         std::string partialArg;
         iss >> partialArg;
         partialArg = toLowerCase(partialArg);  // Convert partialArg to lowercase
@@ -201,24 +225,111 @@ void Chat::loadLevel(const std::string& filename) {
     }
 }
 
-void Chat::saveWorld() {
-    std::ofstream outFile("worldData.txt");
+void Chat::saveWorld(const std::string& worldName) {
+    std::string filename = "worldData_" + worldName + ".txt";
+    std::ofstream outFile(filename);
     if (outFile.is_open()) {
-        // Serialize your world data here, e.g.:
-        // outFile << worldData;
+        // Save all game objects
+        outFile << "Objects:\n";
+        for (const auto& object : game.getWorld().getObjects()) {
+            glm::vec3 pos = object->getPosition();
+            glm::vec3 scale = object->getScale();
+            glm::vec3 rot = object->getRotation();
+            GLuint texID = object->getTextureID();
+
+            outFile << pos.x << "," << pos.y << "," << pos.z << ","
+                << scale.x << "," << scale.y << "," << scale.z << ","
+                << rot.x << "," << rot.y << "," << rot.z << ","
+                << texID << ","
+                << object->getTextureTopLeft().x << "," << object->getTextureTopLeft().y << ","
+                << object->getTextureBottomRight().x << "," << object->getTextureBottomRight().y << "\n";
+        }
+
+        // Save all players
+        outFile << "Players:\n";
+        for (const auto& player : game.getWorld().getPlayers()) {
+            glm::vec3 pos = player->getPosition();
+            float width = player->getWidth();
+            float height = player->getHeight();
+            GLuint texID = player->getTextureID();
+
+            outFile << player->getClientId() << ","
+                << pos.x << "," << pos.y << ","
+                << width << "," << height << ","
+                << texID << "\n";
+        }
+
+        std::cout << "World saved to " << filename << std::endl;
         outFile.close();
     }
     else {
-        std::cerr << "Failed to open file for saving: worldData.txt" << std::endl;
+        std::cerr << "Failed to open file for saving: " << filename << std::endl;
     }
 }
 
-void Chat::loadWorld(const std::string& id) {
-    std::string filename = "worldData_" + id + ".txt";
+void Chat::loadWorld(const std::string& worldName) {
+    std::string filename = "worldData_" + worldName + ".txt";
     std::ifstream inFile(filename);
     if (inFile.is_open()) {
-        // Deserialize your world data here, e.g.:
-        // inFile >> worldData;
+        game.getWorld().clearObjects();
+
+        std::string line;
+        bool loadingObjects = false;
+
+        while (std::getline(inFile, line)) {
+            if (line == "Objects:") {
+                loadingObjects = true;
+                continue;
+            }
+            if (line == "Players:") {
+                loadingObjects = false;
+                continue;
+            }
+
+            if (loadingObjects) {
+                std::istringstream iss(line);
+                std::string token;
+                std::vector<float> values;
+
+                while (std::getline(iss, token, ',')) {
+                    values.push_back(std::stof(token));
+                }
+
+                if (values.size() == 14) {  // Ensure the correct number of values
+                    glm::vec3 pos(values[0], values[1], values[2]);
+                    glm::vec3 scale(values[3], values[4], values[5]);
+                    glm::vec3 rot(values[6], values[7], values[8]);
+                    GLuint texID = static_cast<GLuint>(values[9]);
+                    glm::vec2 texTopLeft(values[10], values[11]);
+                    glm::vec2 texBottomRight(values[12], values[13]);
+
+                    auto object = std::make_shared<GameObject>(pos, rot, scale.x, scale.y, texID, texTopLeft, texBottomRight);
+                    game.getWorld().addObject(object);
+                }
+            }
+            else {
+                std::istringstream iss(line);
+                std::string token;
+                std::vector<float> values;
+
+                while (std::getline(iss, token, ',')) {
+                    values.push_back(std::stof(token));
+                }
+
+                if (values.size() == 7) {  // Ensure the correct number of values for players
+                    int clientId = static_cast<int>(values[0]);
+                    glm::vec3 pos(values[1], values[2], 0.0f);  // Assuming players are 2D and Z is 0
+                    float width = values[3];
+                    float height = values[4];
+                    GLuint texID = static_cast<GLuint>(values[5]);
+
+                    auto player = std::make_shared<Player>(clientId, pos, 0.0f, 0.0f, width, height, texID);
+                    game.getWorld().addPlayer(player);
+                }
+            }
+        }
+
+        std::cout << "World loaded from " << filename << std::endl;
         inFile.close();
     }
     else {

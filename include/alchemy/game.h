@@ -77,6 +77,7 @@ private:
     static const char* fragmentShaderSource;
     static const char* redFragmentShaderSource;
     GLuint textureID1;
+    GLuint textureID2;  // Declare textureID2 here
 
     float cameraZoom;
     Mode currentMode;

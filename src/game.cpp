@@ -80,7 +80,7 @@ void Game::init() {
 
     GLuint textureID2 = loadTexture("spriteSheet.png");
 
-    world.initTileView(1000, 500, 1.0f, textureID2, textureID2);
+    world.initTileView(10, 10, 1.0f, textureID2, textureID2);
 }
 
 void Game::run() {
@@ -209,6 +209,13 @@ void Game::mouse_button_callback(GLFWwindow* window, int button, int action, int
             float snappedX = std::round(worldCoords.x);
             float snappedY = std::round(worldCoords.y);
 
+            // Load the texture each time an object is placed
+            GLuint textureID = game->loadTexture("spriteSheet.png");
+            if (textureID == 0) {
+                std::cerr << "Failed to load texture for placement!" << std::endl;
+                return;
+            }
+
             float tileWidth = 1.0f;
             float tileHeight = 1.0f;
 
@@ -217,13 +224,13 @@ void Game::mouse_button_callback(GLFWwindow* window, int button, int action, int
                 glm::vec3(0.0f),
                 tileWidth,
                 tileHeight,
-                game->textureID1
-                );
+                textureID // Use the newly loaded texture ID
+            );
 
             int randomTileX = rand() % 8; // Random x between 0 and 7
             int randomTileY = rand() % 8; // Random y between 0 and 7
 
-            std::cout << "Placing on: (" << randomTileX << ", " << randomTileY << ")" << std::endl;
+            gameObjectAdding->setTextureTile(randomTileX, randomTileY, 8, 256, 256, 32, 32);  // Ensure this is correctly set
 
             game->world.addObject(gameObjectAdding);
         }

@@ -2,11 +2,9 @@
 #define CHAT_H
 
 #include <GLEW/glew.h>
-#include <glm/glm.hpp>
-#include <vector>
 #include <string>
-#include <memory>
-#include <unordered_map>
+#include <vector>
+#include <map>
 
 class Chat {
 public:
@@ -19,25 +17,27 @@ public:
     void setCurrentMessage(const std::string& message);
     bool isChatModeActive() const;
     void setChatModeActive(bool active);
-    void selectSuggestion();
+
+    void saveWorld(const std::string& worldName); // Updated method declaration
+    void loadWorld(const std::string& id);
+    void selectSuggestion(); // Make this method public
 
 private:
-    std::vector<std::string> messages;
-    GLuint screenWidth, screenHeight;
+    GLuint screenWidth;
+    GLuint screenHeight;
     GLfloat lineHeight;
-    std::string currentMessage;
     bool isChatMode;
+    std::string currentMessage;
+    std::vector<std::string> messages;
     std::vector<std::string> suggestions;
-    std::unordered_map<std::string, std::vector<std::string>> commandMap;
+    std::map<std::string, std::vector<std::string>> commandMap;
 
-    void trimMessages();
     bool processCommand();
     void updateSuggestions();
+    void trimMessages();
 
     void saveLevel(const std::string& filename);
     void loadLevel(const std::string& filename);
-    void saveWorld();  // No parameters needed now
-    void loadWorld(const std::string& id);  // Takes an id as a parameter
 };
 
 #endif // CHAT_H

@@ -63,6 +63,14 @@ public:
         }
     }
 
+    void clearObjects() {
+        objects.clear();
+    }
+
+    void clearPlayers() {
+        players.clear();
+    }
+
     const std::vector<std::shared_ptr<GameObject>>& getObjects() const {
         return objects;
     }

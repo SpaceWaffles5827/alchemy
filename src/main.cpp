@@ -8,8 +8,7 @@ void displayMenu() {
     std::cout << "Please select an option:\n";
     std::cout << "1. Start Game\n";
     std::cout << "2. Start Server\n";
-    std::cout << "3. Start Level Editor\n";
-    std::cout << "4. Exit\n";
+    std::cout << "3. Exit\n";
     std::cout << "Enter your choice: ";
 }
 
@@ -32,12 +31,6 @@ int main() {
             break;
         }
         else if (choice == "3") {
-            std::cout << "Starting Level Editor...\n";
-            game.init(); 
-            game.run();
-            break;
-        }
-        else if (choice == "4") {
             std::cout << "Exiting...\n";
             break;
         }
