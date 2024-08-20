@@ -6,8 +6,9 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
+#include "Renderable.h"
 
-class GameObject {
+class GameObject : public Renderable {
 public:
     // Constructor with default texture coordinates
     GameObject(const glm::vec3& pos, const glm::vec3& rot, float width, float height, GLuint textureID,
@@ -19,20 +20,22 @@ public:
 
     virtual ~GameObject() = default;
 
-    virtual void update(float deltaTime) {
-        // Update logic here (e.g., physics, game logic)
+    void update(float deltaTime) {
+        // Implementation of the update method
     }
 
-    // Getters
-    const glm::vec3& getPosition() const { return position; }
-    const glm::vec3& getRotation() const { return rotation; }
-    const glm::vec3& getScale() const { return scale; }
+    // Getters (Override from Renderable base class)
+    virtual const glm::vec3& getPosition() const override { return position; }
+    virtual const glm::vec3& getRotation() const override { return rotation; }
+    virtual const glm::vec3& getScale() const override { return scale; }
+    virtual GLuint getTextureID() const override { return textureID; }
+    virtual const glm::vec2& getTextureTopLeft() const override { return textureTopLeft; }
+    virtual const glm::vec2& getTextureBottomRight() const override { return textureBottomRight; }
+    virtual float getBoundingRadius() const override { return boundingRadius; }
+
+    // Reintroducing the width and height getters
     float getWidth() const { return width; }
     float getHeight() const { return height; }
-    GLuint getTextureID() const { return textureID; }
-    const glm::vec2& getTextureTopLeft() const { return textureTopLeft; }
-    const glm::vec2& getTextureBottomRight() const { return textureBottomRight; }
-    float getBoundingRadius() const { return boundingRadius; }
 
     // Setters
     void setPosition(const glm::vec3& pos) { position = pos; }

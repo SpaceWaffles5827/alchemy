@@ -167,20 +167,20 @@ struct TextureGroupComparator {
     }
 };
 
-void Render::batchRenderGameObjects(const std::vector<std::shared_ptr<GameObject>>& gameObjects, const glm::mat4& projection) {
-    if (gameObjects.empty()) return;
+void Render::batchRenderGameObjects(const std::vector<std::shared_ptr<Renderable>>& renderables, const glm::mat4& projection) {
+    if (renderables.empty()) return;
 
     Frustum frustum;
     frustum.update(projection);
 
-    // Group game objects by texture ID and texture coordinates using std::tuple with a custom comparator
-    std::map<std::tuple<GLuint, glm::vec2, glm::vec2>, std::vector<std::shared_ptr<GameObject>>, TextureGroupComparator> textureGroups;
+    // Group renderable objects by texture ID and texture coordinates using std::tuple with a custom comparator
+    std::map<std::tuple<GLuint, glm::vec2, glm::vec2>, std::vector<std::shared_ptr<Renderable>>, TextureGroupComparator> textureGroups;
 
-    for (const auto& gameObject : gameObjects) {
-        // Check if the game object is within the camera's view
-        if (frustum.isInFrustum(gameObject->getPosition(), gameObject->getBoundingRadius())) {
-            auto groupKey = std::make_tuple(gameObject->getTextureID(), gameObject->getTextureTopLeft(), gameObject->getTextureBottomRight());
-            textureGroups[groupKey].push_back(gameObject);
+    for (const auto& renderable : renderables) {
+        // Check if the renderable object is within the camera's view
+        if (frustum.isInFrustum(renderable->getPosition(), renderable->getBoundingRadius())) {
+            auto groupKey = std::make_tuple(renderable->getTextureID(), renderable->getTextureTopLeft(), renderable->getTextureBottomRight());
+            textureGroups[groupKey].push_back(renderable);
         }
     }
 
@@ -193,9 +193,9 @@ void Render::batchRenderGameObjects(const std::vector<std::shared_ptr<GameObject
 
         if (objects.empty()) continue;
 
-        size_t totalGameObjects = objects.size();
+        size_t totalObjects = objects.size();
         size_t maxInstances = maxVerticesPerBatch / 6;
-        size_t numBatches = (totalGameObjects + maxInstances - 1) / maxInstances;
+        size_t numBatches = (totalObjects + maxInstances - 1) / maxInstances;
 
         glUseProgram(shaderProgram);
         glBindVertexArray(VAO);
@@ -224,17 +224,17 @@ void Render::batchRenderGameObjects(const std::vector<std::shared_ptr<GameObject
 
         for (size_t batchIndex = 0; batchIndex < numBatches; ++batchIndex) {
             size_t startIdx = batchIndex * maxInstances;
-            size_t endIdx = std::min(startIdx + maxInstances, totalGameObjects);
+            size_t endIdx = std::min(startIdx + maxInstances, totalObjects);
 
             instanceTransforms.clear();
             for (size_t i = startIdx; i < endIdx; ++i) {
-                const auto& gameObject = objects[i];
+                const auto& renderable = objects[i];
                 glm::mat4 model = glm::mat4(1.0f);
-                model = glm::translate(model, gameObject->getPosition());
-                model = glm::rotate(model, glm::radians(gameObject->getRotation().x), glm::vec3(1.0f, 0.0f, 0.0f));
-                model = glm::rotate(model, glm::radians(gameObject->getRotation().y), glm::vec3(0.0f, 1.0f, 0.0f));
-                model = glm::rotate(model, glm::radians(gameObject->getRotation().z), glm::vec3(0.0f, 0.0f, 1.0f));
-                model = glm::scale(model, gameObject->getScale());
+                model = glm::translate(model, renderable->getPosition());
+                model = glm::rotate(model, glm::radians(renderable->getRotation().x), glm::vec3(1.0f, 0.0f, 0.0f));
+                model = glm::rotate(model, glm::radians(renderable->getRotation().y), glm::vec3(0.0f, 1.0f, 0.0f));
+                model = glm::rotate(model, glm::radians(renderable->getRotation().z), glm::vec3(0.0f, 0.0f, 1.0f));
+                model = glm::scale(model, renderable->getScale());
 
                 glm::mat4 combined = projection * model;
                 instanceTransforms.push_back(combined);

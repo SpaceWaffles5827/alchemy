@@ -17,8 +17,7 @@ public:
 
     void initialize();
     void renderGameObject(const GameObject& gameObject, const glm::mat4& projection);
-    void batchRenderGameObjects(const std::vector<std::shared_ptr<GameObject>>& gameObjects, const glm::mat4& projection);
-
+    void batchRenderGameObjects(const std::vector<std::shared_ptr<Renderable>>& renderables, const glm::mat4& projection);
     void setShaderProgram(GLuint shaderProgram);
 
 private:

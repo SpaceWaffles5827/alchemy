@@ -172,6 +172,7 @@
     <ClInclude Include="include\alchemy\network_protocol.h" />
     <ClInclude Include="include\alchemy\player.h" />
     <ClInclude Include="include\alchemy\render.h" />
+    <ClInclude Include="include\alchemy\renderable.h" />
     <ClInclude Include="include\alchemy\server.h" />
     <ClInclude Include="include\alchemy\textRenderer.h" />
     <ClInclude Include="include\alchemy\world.h" />

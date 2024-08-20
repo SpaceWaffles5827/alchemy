@@ -362,7 +362,7 @@ void Game::renderTileSelectionUI() {
     const float uiStartX = 0.0f; // Fixed pixel position from the left edge
     const float uiStartY = height - uiSize + tileHeight; // Adjust to align with the bottom edge
 
-    std::vector<std::shared_ptr<GameObject>> tiles;
+    std::vector<std::shared_ptr<Renderable>> tiles;
 
     for (int y = 0; y < gridSizeY; ++y) {
         for (int x = 0; x < gridSizeX; ++x) {
@@ -539,11 +539,16 @@ void Game::render() {
     updateProjectionMatrix(width, height);
 
     // Render game world objects
-    renderer.batchRenderGameObjects(world.getObjects(), projection);
+    {
+        std::vector<std::shared_ptr<Renderable>> renderables(world.getObjects().begin(), world.getObjects().end());
+        renderer.batchRenderGameObjects(renderables, projection);
+    }
 
     // Render player objects
-    auto gameObjects = std::vector<std::shared_ptr<GameObject>>(world.getPlayers().begin(), world.getPlayers().end());
-    renderer.batchRenderGameObjects(gameObjects, projection);
+    {
+        std::vector<std::shared_ptr<Renderable>> renderables(world.getPlayers().begin(), world.getPlayers().end());
+        renderer.batchRenderGameObjects(renderables, projection);
+    }
 
     // Render the chat
     chat.render();
