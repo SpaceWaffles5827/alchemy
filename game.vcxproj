@@ -175,6 +175,7 @@
     <ClInclude Include="include\alchemy\renderable.h" />
     <ClInclude Include="include\alchemy\server.h" />
     <ClInclude Include="include\alchemy\textRenderer.h" />
+    <ClInclude Include="include\alchemy\UIObject.h" />
     <ClInclude Include="include\alchemy\world.h" />
     <ClInclude Include="include\freetype\config\integer-types.h" />
     <ClInclude Include="include\freetype\config\mac-support.h" />
@@ -721,6 +722,7 @@
     <Image Include="andiwooRunning.png" />
     <Image Include="aniwooRunning.png" />
     <Image Include="grass.png" />
+    <Image Include="inventory.png" />
     <Image Include="spriteSheet.png" />
     <Image Include="spruce_log.png" />
     <Image Include="stone_bricks.png" />

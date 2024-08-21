@@ -1277,6 +1277,12 @@
     <ClInclude Include="include\alchemy\chat.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\alchemy\renderable.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\alchemy\UIObject.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="include\glm\gtc\bitfield.inl">
@@ -1723,6 +1729,9 @@
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="andiwooIdle.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="inventory.png">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

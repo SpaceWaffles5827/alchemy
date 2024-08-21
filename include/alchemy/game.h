@@ -13,6 +13,7 @@
 #include <alchemy/render.h>
 #include <alchemy/textRenderer.h>
 #include <alchemy/chat.h>
+#include <alchemy/UIObject.h>
 #include <memory>
 
 enum class Mode {
@@ -47,14 +48,14 @@ public:
 private:
     void initGLFW();
     void initGLEW();
-    void setupShaders();
-    void setupBuffers();
     void processInput();
     void update(double deltaTime);
     void render();
+    void renderUI(int width, int height);
     void cleanup();
     void checkCompileErrors(GLuint shader, std::string type);
     void updateProjectionMatrix(int width, int height);
+    void updateUiProjectionMatrix(int width, int height);
     void renderTileSelectionUI();
     static void scroll_callback(GLFWwindow* window, double xOffset, double yOffset);
     static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -63,7 +64,8 @@ private:
     bool keyReleased[GLFW_KEY_LAST];
     int selectedTileX;
     int selectedTileY;
-    bool tileSelectionVisible;  // Add this line to declare the variable
+    bool tileSelectionVisible;
+    bool displayInventory;
 
     GLFWwindow* window;
     GLuint VAO, VBO;
@@ -76,13 +78,12 @@ private:
     World world;
 
     glm::mat4 projection;
+    glm::mat4 projectionUi;
     std::unordered_map<int, Player> players;
 
-    static const char* vertexShaderSource;
-    static const char* fragmentShaderSource;
-    static const char* redFragmentShaderSource;
     GLuint textureID1;
     GLuint textureID2;
+    GLuint inventoryTextureID;
 
     float cameraZoom;
     Mode currentMode;
@@ -90,7 +91,8 @@ private:
 
     std::unique_ptr<TextRenderer> textRenderer;
     Chat chat;
-};
 
+    std::shared_ptr<UIObject> inventoryUIObject;
+};
 
 #endif // GAME_H

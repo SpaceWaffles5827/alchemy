@@ -7,33 +7,6 @@
 #include <alchemy/textRenderer.h>
 #include <fstream>
 
-const char* Game::vertexShaderSource = "#version 330 core\n"
-"layout (location = 0) in vec3 aPos;\n"
-"layout (location = 1) in vec2 aTexCoord;\n"
-"out vec2 TexCoord;\n"
-"uniform mat4 transform;\n"
-"void main()\n"
-"{\n"
-"   gl_Position = transform * vec4(aPos, 1.0);\n"
-"   TexCoord = aTexCoord;\n"
-"}\0";
-
-const char* Game::fragmentShaderSource = "#version 330 core\n"
-"out vec4 FragColor;\n"
-"in vec2 TexCoord;\n"
-"uniform sampler2D ourTexture;\n"
-"void main()\n"
-"{\n"
-"   FragColor = texture(ourTexture, TexCoord);\n"
-"}\0";
-
-const char* Game::redFragmentShaderSource = "#version 330 core\n"
-"out vec4 FragColor;\n"
-"void main()\n"
-"{\n"
-"   FragColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);\n"
-"}\0";
-
 Game::Game(Mode mode)
     : window(nullptr), VAO(0), VBO(0), shaderProgram(0), redShaderProgram(0), clientId(std::rand()), tickRate(1.0 / 64.0),
     projection(1.0f), cameraZoom(1.0f), currentMode(mode), chat(800, 800), selectedTileX(0), selectedTileY(0), tileSelectionVisible(false) {
@@ -73,13 +46,37 @@ void Game::init() {
 
     textureID2 = loadTexture("spriteSheet.png");
 
+    inventoryTextureID = loadTexture("inventory.png");
+
+    inventoryUIObject = std::make_shared<UIObject>(
+        glm::vec3(0.0f, 0.0f, 0.0f),
+        glm::vec3(0.0f),
+        400.0f / 40.0f,
+        400.0f / 40.0f,
+        inventoryTextureID);
+
     world.initTileView(10, 10, 1.0f, textureID2, textureID2);
 }
 
-void Game::run() {
-    setupShaders();
-    setupBuffers();
+void Game::renderUI(int width, int height) {
+    float aspectRatio = static_cast<float>(width) / height;
+    float viewHeight = 20.0f; // This is a constant height for the UI
+    float viewWidth = viewHeight * aspectRatio;
 
+    glm::mat4 projectionUI = glm::ortho(
+        -viewWidth / 2.0f,  // left
+        viewWidth / 2.0f,   // right
+        -viewHeight / 2.0f, // bottom
+        viewHeight / 2.0f,  // top
+        -1.0f,              // near
+        1.0f                // far
+    );
+
+    renderer.batchRenderGameObjects({ inventoryUIObject }, projectionUI);
+}
+
+
+void Game::run() {
     double previousTime = glfwGetTime();
     double lag = 0.0;
     int frameCount = 0;
@@ -278,75 +275,10 @@ void Game::initGLEW() {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
-void Game::setupShaders() {
-    GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-    glCompileShader(vertexShader);
-    checkCompileErrors(vertexShader, "VERTEX");
-
-    GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-    glCompileShader(fragmentShader);
-    checkCompileErrors(fragmentShader, "FRAGMENT");
-
-    GLuint redFragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(redFragmentShader, 1, &redFragmentShaderSource, NULL);
-    glCompileShader(redFragmentShader);
-    checkCompileErrors(redFragmentShader, "FRAGMENT");
-
-    shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
-    checkCompileErrors(shaderProgram, "PROGRAM");
-
-    redShaderProgram = glCreateProgram();
-    glAttachShader(redShaderProgram, vertexShader);
-    glAttachShader(redShaderProgram, redFragmentShader);
-    glLinkProgram(redShaderProgram);
-    checkCompileErrors(redShaderProgram, "PROGRAM");
-
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
-    glDeleteShader(redFragmentShader);
-
-    int width, height;
-    glfwGetWindowSize(window, &width, &height);
-
-    updateProjectionMatrix(width, height);
-}
-
-void Game::setupBuffers() {
-    GLfloat vertices[] = {
-        -0.1f, -0.1f, 0.0f,  0.0f, 0.0f,
-         0.1f, -0.1f, 0.0f,  1.0f, 0.0f,
-         0.1f,  0.1f, 0.0f,  1.0f, 1.0f,
-         0.1f,  0.1f, 0.0f,  1.0f, 1.0f,
-        -0.1f,  0.1f, 0.0f,  0.0f, 1.0f,
-        -0.1f, -0.1f, 0.0f,  0.0f, 0.0f
-    };
-
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
-}
 
 void Game::renderTileSelectionUI() {
     if (!tileSelectionVisible || currentMode != Mode::LevelEdit) return;
 
-    // Set the fixed UI size in pixels
     const float uiSize = 200.0f;
     const int gridSizeX = 8; // Number of tiles in the X direction
     const int gridSizeY = 8; // Number of tiles in the Y direction
@@ -388,11 +320,13 @@ void Game::renderTileSelectionUI() {
 }
 
 void Game::processInput() {
+    static bool tabKeyReleased = true;
+    static bool escKeyReleased = true;
+
+    // Handle input when chat mode is active
     if (chat.isChatModeActive()) {
         static bool enterKeyReleased = true;
         static bool backspaceKeyReleased = true;
-        static bool escKeyReleased = true;
-        static bool tabKeyReleased = true;
 
         if (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS && enterKeyReleased) {
             chat.addMessage(chat.getCurrentMessage());
@@ -426,19 +360,20 @@ void Game::processInput() {
         }
 
         if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS && tabKeyReleased) {
-            chat.selectSuggestion();
+            chat.selectSuggestion(); // Handle tab in chat mode
             tabKeyReleased = false;
         }
         if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_RELEASE) {
             tabKeyReleased = true;
         }
 
+        // Process letter keys for chat
         for (int key = GLFW_KEY_A; key <= GLFW_KEY_Z; ++key) {
             if (glfwGetKey(window, key) == GLFW_PRESS && keyReleased[key]) {
                 bool shiftPressed = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS;
                 char c = static_cast<char>(key);
                 if (!shiftPressed) {
-                    c += 32;
+                    c += 32; // Convert to lowercase if shift is not pressed
                 }
                 std::string currentMessage = chat.getCurrentMessage();
                 currentMessage += c;
@@ -450,6 +385,7 @@ void Game::processInput() {
             }
         }
 
+        // Process number keys for chat
         for (int key = GLFW_KEY_0; key <= GLFW_KEY_9; ++key) {
             if (glfwGetKey(window, key) == GLFW_PRESS && keyReleased[key]) {
                 char c = static_cast<char>(key);
@@ -463,6 +399,7 @@ void Game::processInput() {
             }
         }
 
+        // Process space key for chat
         if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && keyReleased[GLFW_KEY_SPACE]) {
             std::string currentMessage = chat.getCurrentMessage();
             currentMessage += ' ';
@@ -472,9 +409,8 @@ void Game::processInput() {
         if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_RELEASE) {
             keyReleased[GLFW_KEY_SPACE] = true;
         }
-
     }
-    else {
+    else { // Handle input when chat mode is not active
         std::shared_ptr<Player> player = world.getPlayerById(clientId);
         if (player) {
             player->handleInput();
@@ -485,17 +421,14 @@ void Game::processInput() {
 
         static bool tKeyReleased = true;
         static bool slashKeyReleased = true;
-        static bool bKeyReleased = true;  // Toggle key for tile selection UI
+        static bool bKeyReleased = true;
 
         if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS && tKeyReleased) {
             chat.setChatModeActive(true);
             tKeyReleased = false;
-
-            keyReleased[GLFW_KEY_T] = false;
         }
         if (glfwGetKey(window, GLFW_KEY_T) == GLFW_RELEASE) {
             tKeyReleased = true;
-            keyReleased[GLFW_KEY_T] = true;
         }
 
         if (glfwGetKey(window, GLFW_KEY_SLASH) == GLFW_PRESS && slashKeyReleased) {
@@ -509,12 +442,40 @@ void Game::processInput() {
             slashKeyReleased = true;
         }
 
-        if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS && bKeyReleased) {  // Toggle visibility
+        if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS && bKeyReleased) {
             tileSelectionVisible = !tileSelectionVisible;
+            displayInventory = false;
+            chat.setChatModeActive(false);
             bKeyReleased = false;
         }
         if (glfwGetKey(window, GLFW_KEY_B) == GLFW_RELEASE) {
             bKeyReleased = true;
+        }
+
+        if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS && tabKeyReleased) {
+            displayInventory = !displayInventory; // Toggle inventory visibility
+            chat.setChatModeActive(false);
+            tileSelectionVisible = false;
+            tabKeyReleased = false;
+        }
+        if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_RELEASE) {
+            tabKeyReleased = true;
+        }
+
+        if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS && escKeyReleased) {
+            if (displayInventory) {
+                displayInventory = false;
+            }
+            else if (tileSelectionVisible) {
+                tileSelectionVisible = false;
+            }
+            else {
+                chat.setChatModeActive(false);
+            }
+            escKeyReleased = false;
+        }
+        if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_RELEASE) {
+            escKeyReleased = true;
         }
     }
 }
@@ -554,7 +515,12 @@ void Game::render() {
     chat.render();
 
     // Render the tile selection UI if visible
-    renderTileSelectionUI();
+    // renderTileSelectionUI();
+
+    // Render the UI elements (like inventory)
+    if (displayInventory) {
+        renderUI(width, height);
+    }
 }
 
 void Game::cleanup() {
@@ -665,6 +631,22 @@ void Game::loadWorld(const std::string& filename) {
     }
 }
 
+void Game::updateUiProjectionMatrix(int width, int height) {
+    float aspectRatio = static_cast<float>(width) / height;
+    float viewWidth = 20.0f * cameraZoom;
+    float viewHeight = viewWidth / aspectRatio;
+
+    projection = glm::ortho(
+        viewWidth / 2.0f, viewWidth / 2.0f,
+        viewHeight / 2.0f, viewHeight / 2.0f,
+        -1.0f, 1.0f
+    );
+
+    GLuint transformLoc = glGetUniformLocation(shaderProgram, "transform");
+    glUseProgram(shaderProgram);
+    glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(projection));
+}
+
 void Game::updateProjectionMatrix(int width, int height) {
     float aspectRatio = static_cast<float>(width) / height;
     float viewWidth = 20.0f * cameraZoom;
@@ -682,7 +664,7 @@ void Game::updateProjectionMatrix(int width, int height) {
     );
 
     GLuint transformLoc = glGetUniformLocation(shaderProgram, "transform");
-    glUseProgram(shaderProgram);  // Ensure the correct shader program is in use
+    glUseProgram(shaderProgram);
     glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(projection));
 }
 
