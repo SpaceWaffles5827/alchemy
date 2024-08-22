@@ -7,9 +7,11 @@
 #include <alchemy/textRenderer.h>
 #include <fstream>
 
+using namespace std;
+
 Game::Game(Mode mode)
     : window(nullptr), VAO(0), VBO(0), shaderProgram(0), redShaderProgram(0), clientId(std::rand()), tickRate(1.0 / 64.0),
-    projection(1.0f), cameraZoom(1.0f), currentMode(mode), chat(800, 800), selectedTileX(0), selectedTileY(0), tileSelectionVisible(false) {
+    projection(1.0f), cameraZoom(1.0f), currentMode(mode), chat(800, 800), selectedTileX(0), selectedTileY(0), tileSelectionVisible(false), displayInventory(false) {
 
     for (int i = 0; i < GLFW_KEY_LAST; ++i) {
         keyReleased[i] = true;
@@ -97,7 +99,6 @@ void Game::renderUI(int width, int height) {
         renderer.batchRenderGameObjects(renderables, projectionUI);
     }
 }
-
 
 void Game::run() {
     double previousTime = glfwGetTime();
@@ -208,69 +209,89 @@ void Game::mouse_button_callback(GLFWwindow* window, int button, int action, int
         int width, height;
         glfwGetWindowSize(window, &width, &height);
 
-        // Check if clicking within the tile selection UI
-        const float uiSize = 200.0f; // Size of the UI in pixels
-        const int gridSizeX = 8;
-        const int gridSizeY = 8;
-        const float tileWidth = uiSize / gridSizeX;
-        const float tileHeight = uiSize / gridSizeY;
+        // Convert screen coordinates to world coordinates
+        // Assume that 40 pixels correspond to 1 unit in your world space
+        const float pixelsPerUnit = 40.0f;
 
-        if (game->tileSelectionVisible && xpos < uiSize && ypos > height - uiSize) {
-            int tileX = static_cast<int>(xpos / tileWidth);
-            int tileY = static_cast<int>((ypos - (height - uiSize)) / tileHeight);
+        // Map screen coordinates to world coordinates
+        float worldX = (xpos - width / 2) / pixelsPerUnit;
+        float worldY = (height / 2 - ypos) / pixelsPerUnit;
 
-            if (tileX < gridSizeX && tileY < gridSizeY) {
-                game->selectedTileX = tileX;
-                game->selectedTileY = tileY;
+        std::cout << "worldX: " << worldX << std::endl;
+        std::cout << "worldY: " << worldY << std::endl;
 
-                // No need to invert the Y-coordinate
-                std::cout << "Selected tile: (" << tileX << ", " << tileY << ")" << std::endl;
+        // Check if the inventory is currently displayed and handle the click
+        if (game->displayInventory) {
+            int slotIndex = game->playerInventory.getSlotIndexAt(worldX, worldY);
+            if (slotIndex != -1) {
+                game->handleInventorySlotClick(slotIndex);
+                return; // Exit after handling the inventory slot click
             }
-            return;
         }
 
-        // Place the selected tile in the world
-        if (game->currentMode == Mode::LevelEdit) {
-            float xNDC = static_cast<float>((2.0 * xpos) / width - 1.0);
-            float yNDC = static_cast<float>(1.0 - (2.0 * ypos) / height);
-
-            glm::vec4 ndcCoords = glm::vec4(xNDC, yNDC, 0.0f, 1.0f);
-            glm::vec4 worldCoords = glm::inverse(game->projection) * ndcCoords;
-
-            float snappedX = std::round(worldCoords.x);
-            float snappedY = std::round(worldCoords.y);
-
-            std::shared_ptr<GameObject> gameObjectAdding = std::make_shared<GameObject>(
-                glm::vec3(snappedX, snappedY, 0.0f),
-                glm::vec3(0.0f),
-                1.0f,
-                1.0f,
-                game->textureID2);
-
-            gameObjectAdding->setTextureTile(game->selectedTileX, game->selectedTileY, gridSizeX, 256, 256, 32, 32);
-
-            game->world.addObject(gameObjectAdding);
-        }
+        // Handle other game interactions
+        game->handleWorldInteraction(worldX, worldY, width, height);
     }
     else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
-        if (game->currentMode == Mode::LevelEdit) {
-            double xpos, ypos;
-            glfwGetCursorPos(window, &xpos, &ypos);
+        game->handleRightClickInteraction();
+    }
+}
 
-            int width, height;
-            glfwGetWindowSize(window, &width, &height);
 
-            float xNDC = static_cast<float>((2.0 * xpos) / width - 1.0);
-            float yNDC = static_cast<float>(1.0 - (2.0 * ypos) / height);
-
-            glm::vec4 ndcCoords = glm::vec4(xNDC, yNDC, 0.0f, 1.0f);
-            glm::vec4 worldCoords = glm::inverse(game->projection) * ndcCoords;
-
-            float snappedX = std::round(worldCoords.x);
-            float snappedY = std::round(worldCoords.y);
-
-            game->world.eraseObject(glm::vec3(snappedX, snappedY, 0.0f));
+void Game::handleInventorySlotClick(int slotIndex) {
+    if (slotIndex >= 0 && slotIndex < playerInventory.getInventorySlots().size()) {
+        InventorySlot& slot = playerInventory.getInventorySlots()[slotIndex];
+        std::cout << "Clicked on inventory slot " << slotIndex << std::endl;
+        if (!slot.isEmpty()) {
+            std::cout << "Item in slot " << slotIndex << ": " << slot.getItem() << std::endl;
         }
+        else {
+            std::cout << "Slot " << slotIndex << " is empty." << std::endl;
+        }
+    }
+}
+
+void Game::handleWorldInteraction(double xpos, double ypos, int width, int height) {
+    if (currentMode == Mode::LevelEdit) {
+        float xNDC = static_cast<float>((2.0 * xpos) / width - 1.0);
+        float yNDC = static_cast<float>(1.0 - (2.0 * ypos) / height);
+
+        glm::vec4 ndcCoords = glm::vec4(xNDC, yNDC, 0.0f, 1.0f);
+        glm::vec4 worldCoords = glm::inverse(projection) * ndcCoords;
+
+        float snappedX = std::round(worldCoords.x);
+        float snappedY = std::round(worldCoords.y);
+
+        std::shared_ptr<GameObject> gameObjectAdding = std::make_shared<GameObject>(
+            glm::vec3(snappedX, snappedY, 0.0f),
+            glm::vec3(0.0f),
+            1.0f,
+            1.0f,
+            textureID2);
+
+        gameObjectAdding->setTextureTile(selectedTileX, selectedTileY, 8, 256, 256, 32, 32);
+        world.addObject(gameObjectAdding);
+    }
+}
+
+void Game::handleRightClickInteraction() {
+    if (currentMode == Mode::LevelEdit) {
+        double xpos, ypos;
+        glfwGetCursorPos(window, &xpos, &ypos);
+
+        int width, height;
+        glfwGetWindowSize(window, &width, &height);
+
+        float xNDC = static_cast<float>((2.0 * xpos) / width - 1.0);
+        float yNDC = static_cast<float>(1.0 - (2.0 * ypos) / height);
+
+        glm::vec4 ndcCoords = glm::vec4(xNDC, yNDC, 0.0f, 1.0f);
+        glm::vec4 worldCoords = glm::inverse(projection) * ndcCoords;
+
+        float snappedX = std::round(worldCoords.x);
+        float snappedY = std::round(worldCoords.y);
+
+        world.eraseObject(glm::vec3(snappedX, snappedY, 0.0f));
     }
 }
 
@@ -297,7 +318,6 @@ void Game::initGLEW() {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
-
 
 void Game::renderTileSelectionUI() {
     if (!tileSelectionVisible || currentMode != Mode::LevelEdit) return;

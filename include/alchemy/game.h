@@ -67,11 +67,16 @@ private:
     static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
     static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 
+    void handleInventorySlotClick(int slotIndex);
+    void handleWorldInteraction(double xpos, double ypos, int width, int height);
+    void handleRightClickInteraction();
+
     bool keyReleased[GLFW_KEY_LAST];
     int selectedTileX;
     int selectedTileY;
     bool tileSelectionVisible;
     bool displayInventory;
+    bool showFps;
 
     GLFWwindow* window;
     GLuint VAO, VBO;

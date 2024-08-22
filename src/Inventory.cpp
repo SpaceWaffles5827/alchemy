@@ -11,7 +11,7 @@ Inventory::Inventory(const glm::vec3& pos, const glm::vec3& rot, float width, fl
     // Initialize slots with the given grid dimensions
     float slotWidth = width / cols;
     float slotHeight = height / rows;
-    initializeSlots(3, 9, 1.0f, 1.0f, 15.0f / 40.0f, 15.0f / 40.0f, -220.0f / 40.0f, -150.0f / 40.0f);
+    initializeSlots(3, 9, 16.0f * 2 / 40.0f, 16.0f * 2 / 40.0f, 22.0f / 40.0f, 21.0f / 40.0f, -217.0f / 40.0f, -136.0f / 40.0f);
 }
 
 // Destructor definition
@@ -27,6 +27,9 @@ void Inventory::initializeSlots(int rows, int cols, float slotWidth, float slotH
             float x = xOffset + position.x + col * (slotWidth + horizontalGap);
             float y = yOffset + position.y + row * (slotHeight + verticalGap);
             slots[index] = InventorySlot(glm::vec3(x, y, 0.0f), glm::vec3(0.0f), slotWidth, slotHeight, textureID, glm::vec2(0.0f, 1.0f), glm::vec2(1.0f, 0.0f));
+
+            // Print the position of each slot
+            std::cout << "Slot " << index << " placed at position (" << x << ", " << y << ")" << std::endl;
         }
     }
 }

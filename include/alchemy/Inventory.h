@@ -40,6 +40,15 @@ public:
     const glm::vec2& getTextureBottomRight() const override;
     float getBoundingRadius() const override;
 
+    int getSlotIndexAt(float x, float y) const {
+        for (int i = 0; i < slots.size(); ++i) {
+            if (slots[i].containsPoint(x, y)) {
+                return i; // Return the index of the slot if the point is within its bounds
+            }
+        }
+        return -1; // Return -1 if no slot contains the point
+    }
+
     // Setters for rendering properties
     void setPosition(const glm::vec3& pos);
     void setRotation(const glm::vec3& rot);

@@ -42,6 +42,15 @@ public:
         textureID = newTextureID;
     }
 
+    bool containsPoint(float x, float y) const {
+        float slotLeft = position.x - scale.x / 2.0f;
+        float slotRight = position.x + scale.x / 2.0f;
+        float slotBottom = position.y - scale.y / 2.0f;
+        float slotTop = position.y + scale.y / 2.0f;
+
+        return x >= slotLeft && x <= slotRight && y >= slotBottom && y <= slotTop;
+    }
+
 private:
     glm::vec3 position;
     glm::vec3 rotation;
