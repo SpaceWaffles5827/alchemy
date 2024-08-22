@@ -54,6 +54,15 @@
     <ClCompile Include="src\chat.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="include\alchemy\InventorySlot.h">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Inventory.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\InventorySlot.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Library Include="lib\glfw3.lib" />
@@ -1283,6 +1292,9 @@
     <ClInclude Include="include\alchemy\UIObject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\alchemy\Inventory.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="include\glm\gtc\bitfield.inl">
@@ -1732,6 +1744,9 @@
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="inventory.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="wtf.png">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

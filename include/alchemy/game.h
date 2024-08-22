@@ -15,6 +15,8 @@
 #include <alchemy/chat.h>
 #include <alchemy/UIObject.h>
 #include <memory>
+#include <vector>
+#include <alchemy/Inventory.h>
 
 enum class Mode {
     Game,
@@ -93,6 +95,8 @@ private:
     Chat chat;
 
     std::shared_ptr<UIObject> inventoryUIObject;
+
+    Inventory playerInventory;
 };
 
 #endif // GAME_H

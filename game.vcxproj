@@ -143,11 +143,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="include\alchemy\InventorySlot.h" />
     <ClCompile Include="src\chat.cpp" />
     <ClCompile Include="src\game.cpp" />
     <ClCompile Include="include\glm\detail\glm.cpp" />
     <ClCompile Include="include\glm\glm.cppm" />
     <ClCompile Include="src\global.cpp" />
+    <ClCompile Include="src\Inventory.cpp" />
+    <ClCompile Include="src\InventorySlot.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\networkManager.cpp" />
     <ClCompile Include="src\player.cpp" />
@@ -168,6 +171,7 @@
     <ClInclude Include="include\alchemy\game.h" />
     <ClInclude Include="include\alchemy\gameObject.h" />
     <ClInclude Include="include\alchemy\global.h" />
+    <ClInclude Include="include\alchemy\Inventory.h" />
     <ClInclude Include="include\alchemy\networkManager.h" />
     <ClInclude Include="include\alchemy\network_protocol.h" />
     <ClInclude Include="include\alchemy\player.h" />
@@ -727,6 +731,7 @@
     <Image Include="spruce_log.png" />
     <Image Include="stone_bricks.png" />
     <Image Include="wizard.png" />
+    <Image Include="wtf.png" />
   </ItemGroup>
   <ItemGroup>
     <Font Include="..\..\..\Downloads\arial.ttf" />

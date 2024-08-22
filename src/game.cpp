@@ -45,22 +45,17 @@ void Game::init() {
     world.addPlayer(clientPlayer);
 
     textureID2 = loadTexture("spriteSheet.png");
-
     inventoryTextureID = loadTexture("inventory.png");
 
-    inventoryUIObject = std::make_shared<UIObject>(
-        glm::vec3(0.0f, 0.0f, 0.0f),
-        glm::vec3(0.0f),
-        400.0f / 40.0f,
-        400.0f / 40.0f,
-        inventoryTextureID);
+    playerInventory = Inventory(glm::vec3(0.0f), glm::vec3(0.0f), 176.0f * 3 / 40.0f, 166.0f * 3 / 40.0f, inventoryTextureID,
+        glm::vec2(0.0f, 1.0f), glm::vec2(1.0f, 0.0f), 9, 3);
 
     world.initTileView(10, 10, 1.0f, textureID2, textureID2);
 }
 
 void Game::renderUI(int width, int height) {
     float aspectRatio = static_cast<float>(width) / height;
-    float viewHeight = 20.0f; // This is a constant height for the UI
+    float viewHeight = 20.0f;
     float viewWidth = viewHeight * aspectRatio;
 
     glm::mat4 projectionUI = glm::ortho(
@@ -72,9 +67,19 @@ void Game::renderUI(int width, int height) {
         1.0f                // far
     );
 
-    renderer.batchRenderGameObjects({ inventoryUIObject }, projectionUI);
-}
+    if (displayInventory) {
+        std::shared_ptr<Renderable> inventoryRenderable = std::make_shared<Inventory>(playerInventory);
 
+        // Log the size of the inventory slots
+        std::cout << "Size: " << playerInventory.getInventorySlots().size() << std::endl;
+
+        // for (int i = 0; i < playerInventory.getInventorySlots().size(); i++) {
+        //     std::cout << "Test: " << playerInventory.getInventorySlots()[i].getPosition().x << std::endl;
+        // }
+
+        renderer.batchRenderGameObjects({ inventoryRenderable }, projectionUI);
+    }
+}
 
 void Game::run() {
     double previousTime = glfwGetTime();
@@ -453,7 +458,7 @@ void Game::processInput() {
         }
 
         if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS && tabKeyReleased) {
-            displayInventory = !displayInventory; // Toggle inventory visibility
+            displayInventory = !displayInventory;
             chat.setChatModeActive(false);
             tileSelectionVisible = false;
             tabKeyReleased = false;
