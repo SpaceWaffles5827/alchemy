@@ -18,8 +18,9 @@ public:
         GLuint textureID = 0,
         const glm::vec2& texTopLeft = glm::vec2(0.0f, 1.0f),
         const glm::vec2& texBottomRight = glm::vec2(1.0f, 0.0f),
-        int rows = 9,
-        int cols = 3);
+        int rows = 2,
+        int cols = 2
+    );
 
     ~Inventory();
 
@@ -47,18 +48,23 @@ public:
     void setTextureCoords(const glm::vec2& topLeft, const glm::vec2& bottomRight);
     void setTextureTile(int tileX, int tileY, int tilesPerRow, int textureWidth, int textureHeight, int tileWidth, int tileHeight);
 
-private:
-    std::vector<InventorySlot> slots;
-    glm::vec3 position;
-    glm::vec3 rotation;
-    glm::vec3 scale;
-    GLuint textureID;
-    glm::vec2 textureTopLeft;
-    glm::vec2 textureBottomRight;
-    float boundingRadius;
+    void setSlotTexture(int slotIndex, GLuint newTextureID);
 
+private:
+    std::vector<InventorySlot> slots;  // Vector of inventory slots
+    glm::vec3 position;                // Position of the inventory
+    glm::vec3 rotation;                // Rotation of the inventory
+    glm::vec3 scale;                   // Scale of the inventory
+    GLuint textureID;                  // Texture ID for the inventory
+    glm::vec2 textureTopLeft;          // Top-left texture coordinate
+    glm::vec2 textureBottomRight;      // Bottom-right texture coordinate
+    float boundingRadius;              // Bounding radius for rendering
+
+    // Method to update bounding radius based on the scale
     void updateBoundingRadius();
-    void initializeSlots(int rows, int cols, float slotWidth, float slotHeight);
+
+    // Method to initialize slots in the inventory grid
+    void initializeSlots(int rows, int cols, float slotWidth, float slotHeight, float horizontalGap, float verticalGap, float xOffset, float yOffset);
 };
 
 #endif // INVENTORY_H

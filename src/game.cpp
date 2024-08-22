@@ -48,7 +48,14 @@ void Game::init() {
     inventoryTextureID = loadTexture("inventory.png");
 
     playerInventory = Inventory(glm::vec3(0.0f), glm::vec3(0.0f), 176.0f * 3 / 40.0f, 166.0f * 3 / 40.0f, inventoryTextureID,
-        glm::vec2(0.0f, 1.0f), glm::vec2(1.0f, 0.0f), 9, 3);
+        glm::vec2(0.0f, 1.0f), glm::vec2(1.0f, 0.0f), 2, 2);
+
+    // Change the texture of the first slot to a different texture
+    GLuint specialTextureID = loadTexture("stone_bricks.png");
+    playerInventory.setSlotTexture(0, specialTextureID);
+    playerInventory.setSlotTexture(1, specialTextureID);
+    playerInventory.setSlotTexture(2, specialTextureID);
+    playerInventory.setSlotTexture(3, specialTextureID);
 
     world.initTileView(10, 10, 1.0f, textureID2, textureID2);
 }
@@ -68,18 +75,29 @@ void Game::renderUI(int width, int height) {
     );
 
     if (displayInventory) {
+        std::vector<std::shared_ptr<Renderable>> renderables;
+
+        // Render the inventory background
         std::shared_ptr<Renderable> inventoryRenderable = std::make_shared<Inventory>(playerInventory);
-
-        // Log the size of the inventory slots
-        std::cout << "Size: " << playerInventory.getInventorySlots().size() << std::endl;
-
-        // for (int i = 0; i < playerInventory.getInventorySlots().size(); i++) {
-        //     std::cout << "Test: " << playerInventory.getInventorySlots()[i].getPosition().x << std::endl;
-        // }
-
         renderer.batchRenderGameObjects({ inventoryRenderable }, projectionUI);
+
+        // Render the inventory slots separately
+        for (auto& slot : playerInventory.getInventorySlots()) {
+            auto slotRenderable = std::make_shared<InventorySlot>(
+                slot.getPosition(),
+                slot.getRotation(),
+                slot.getScale().x, slot.getScale().y,
+                slot.getTextureID(),  // Use the texture of the slot itself
+                slot.getTextureTopLeft(),
+                slot.getTextureBottomRight()
+            );
+            renderables.push_back(slotRenderable);
+        }
+
+        renderer.batchRenderGameObjects(renderables, projectionUI);
     }
 }
+
 
 void Game::run() {
     double previousTime = glfwGetTime();

@@ -8,7 +8,19 @@
 
 class InventorySlot : public Renderable {
 public:
+    // Default constructor
     InventorySlot();
+
+    // Constructor with parameters to match usage in renderUI
+    InventorySlot(const glm::vec3& pos,
+        const glm::vec3& rot,
+        float width,
+        float height,
+        GLuint textureID,
+        const glm::vec2& texTopLeft,
+        const glm::vec2& texBottomRight
+    );
+
     ~InventorySlot();
 
     void setPosition(float x, float y);
@@ -26,6 +38,10 @@ public:
     const glm::vec2& getTextureBottomRight() const override;
     float getBoundingRadius() const override;
 
+    void setTexture(GLuint newTextureID) {
+        textureID = newTextureID;
+    }
+
 private:
     glm::vec3 position;
     glm::vec3 rotation;
@@ -35,6 +51,9 @@ private:
     glm::vec2 textureBottomRight;
     float boundingRadius;
     std::string item;
+
+    // Method to update the bounding radius based on the scale
+    void updateBoundingRadius();
 };
 
 #endif // INVENTORYSLOT_H

@@ -11,10 +11,7 @@ Inventory::Inventory(const glm::vec3& pos, const glm::vec3& rot, float width, fl
     // Initialize slots with the given grid dimensions
     float slotWidth = width / cols;
     float slotHeight = height / rows;
-    initializeSlots(rows, cols, slotWidth, slotHeight);
-
-    // Log to verify initialization
-    std::cout << "Initialized Inventory with " << slots.size() << " slots." << std::endl;
+    initializeSlots(3, 9, 1.0f, 1.0f, 15.0f / 40.0f, 15.0f / 40.0f, -220.0f / 40.0f, -150.0f / 40.0f);
 }
 
 // Destructor definition
@@ -22,14 +19,14 @@ Inventory::~Inventory() {
     // Cleanup if necessary
 }
 
-void Inventory::initializeSlots(int rows, int cols, float slotWidth, float slotHeight) {
+void Inventory::initializeSlots(int rows, int cols, float slotWidth, float slotHeight, float horizontalGap, float verticalGap, float xOffset, float yOffset) {
     slots.resize(rows * cols);
     for (int row = 0; row < rows; ++row) {
         for (int col = 0; col < cols; ++col) {
             int index = row * cols + col;
-            float x = position.x + col * slotWidth;
-            float y = position.y + row * slotHeight;
-            slots[index].setPosition(x, y);
+            float x = xOffset + position.x + col * (slotWidth + horizontalGap);
+            float y = yOffset + position.y + row * (slotHeight + verticalGap);
+            slots[index] = InventorySlot(glm::vec3(x, y, 0.0f), glm::vec3(0.0f), slotWidth, slotHeight, textureID, glm::vec2(0.0f, 1.0f), glm::vec2(1.0f, 0.0f));
         }
     }
 }
@@ -45,7 +42,7 @@ void Inventory::removeItemFromSlot(int slotIndex) {
     if (slotIndex < 0 || slotIndex >= slots.size()) {
         throw std::out_of_range("Invalid slot index");
     }
-    slots[slotIndex].setItem(""); // Clear the item from the slot
+    slots[slotIndex].setItem("");
 }
 
 const std::string& Inventory::getItemInSlot(int slotIndex) const {
@@ -77,6 +74,13 @@ const glm::vec3& Inventory::getScale() const {
 
 GLuint Inventory::getTextureID() const {
     return textureID;
+}
+
+void Inventory::setSlotTexture(int slotIndex, GLuint newTextureID) {
+    if (slotIndex < 0 || slotIndex >= slots.size()) {
+        throw std::out_of_range("Invalid slot index");
+    }
+    slots[slotIndex].setTexture(newTextureID);
 }
 
 const glm::vec2& Inventory::getTextureTopLeft() const {

@@ -1,7 +1,15 @@
+#define GLM_ENABLE_EXPERIMENTAL
 #include <alchemy/InventorySlot.h>
+#include <glm/gtx/quaternion.hpp> // Ensure this comes after the experimental define
 
 InventorySlot::InventorySlot()
     : position(0.0f), rotation(0.0f), scale(1.0f), textureID(0), boundingRadius(1.0f), item("") {
+    updateBoundingRadius();
+}
+
+InventorySlot::InventorySlot(const glm::vec3& pos, const glm::vec3& rot, float width, float height, GLuint textureID, const glm::vec2& texTopLeft, const glm::vec2& texBottomRight)
+    : position(pos), rotation(rot), scale(glm::vec3(width, height, 1.0f)), textureID(textureID), textureTopLeft(texTopLeft), textureBottomRight(texBottomRight) {
+    updateBoundingRadius();
 }
 
 InventorySlot::~InventorySlot() {
@@ -24,7 +32,6 @@ bool InventorySlot::isEmpty() const {
     return item.empty();
 }
 
-// Implement the pure virtual methods from Renderable
 const glm::vec3& InventorySlot::getPosition() const {
     return position;
 }
@@ -51,4 +58,8 @@ const glm::vec2& InventorySlot::getTextureBottomRight() const {
 
 float InventorySlot::getBoundingRadius() const {
     return boundingRadius;
+}
+
+void InventorySlot::updateBoundingRadius() {
+    boundingRadius = glm::length(glm::vec2(scale.x, scale.y)) / 2.0f;
 }

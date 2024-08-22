@@ -47,6 +47,10 @@ public:
 
     void setCurrentMode(Mode mode) { currentMode = mode; }
 
+    GLuint getTheTexture() {
+        return textureID1;
+    }
+
 private:
     void initGLFW();
     void initGLEW();
