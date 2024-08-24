@@ -7,11 +7,10 @@
 #include <alchemy/textRenderer.h>
 #include <fstream>
 
-using namespace std;
-
 Game::Game(Mode mode)
     : window(nullptr), VAO(0), VBO(0), shaderProgram(0), redShaderProgram(0), clientId(std::rand()), tickRate(1.0 / 64.0),
-    projection(1.0f), cameraZoom(1.0f), currentMode(mode), chat(800, 800), selectedTileX(0), selectedTileY(0), tileSelectionVisible(false), displayInventory(false) {
+    projection(1.0f), cameraZoom(1.0f), currentMode(mode), chat(800, 800), selectedTileX(0), selectedTileY(0),
+    tileSelectionVisible(false), displayInventory(false), showFps(false) {
 
     for (int i = 0; i < GLFW_KEY_LAST; ++i) {
         keyReleased[i] = true;
@@ -53,11 +52,17 @@ void Game::init() {
         glm::vec2(0.0f, 1.0f), glm::vec2(1.0f, 0.0f), 2, 2);
 
     // Change the texture of the first slot to a different texture
+    std::vector<InventorySlot> & invSlot = playerInventory.getInventorySlots();
+
     GLuint specialTextureID = loadTexture("stone_bricks.png");
-    playerInventory.setSlotTexture(0, specialTextureID);
-    playerInventory.setSlotTexture(1, specialTextureID);
-    playerInventory.setSlotTexture(2, specialTextureID);
-    playerInventory.setSlotTexture(3, specialTextureID);
+    invSlot[0].setTexture(specialTextureID);
+    invSlot[0].setItem("Stone");
+    invSlot[1].setTexture(specialTextureID);
+    invSlot[1].setItem("Stone");
+    invSlot[2].setTexture(specialTextureID);
+    invSlot[2].setItem("Stone");
+    invSlot[3].setTexture(specialTextureID);
+    invSlot[3].setItem("Stone");
 
     world.initTileView(10, 10, 1.0f, textureID2, textureID2);
 }
@@ -97,6 +102,28 @@ void Game::renderUI(int width, int height) {
         }
 
         renderer.batchRenderGameObjects(renderables, projectionUI);
+
+        // Render the dragged item if dragging
+        if (isDragging) {
+            double xpos, ypos;
+            glfwGetCursorPos(window, &xpos, &ypos);
+
+            const float pixelsPerUnit = 40.0f;
+            float worldX = (xpos - width / 2) / pixelsPerUnit;
+            float worldY = (height / 2 - ypos) / pixelsPerUnit;
+
+            auto draggedItemRenderable = std::make_shared<InventorySlot>(
+                glm::vec3(worldX, worldY, 0.0f),
+                glm::vec3(0.0f),
+                playerInventory.getInventorySlots()[selectedSlotIndex].getScale().x,
+                playerInventory.getInventorySlots()[selectedSlotIndex].getScale().y,
+                draggedTextureID,
+                playerInventory.getInventorySlots()[selectedSlotIndex].getTextureTopLeft(),
+                playerInventory.getInventorySlots()[selectedSlotIndex].getTextureBottomRight()
+            );
+
+            renderer.batchRenderGameObjects({ draggedItemRenderable }, projectionUI);
+        }
     }
 }
 
@@ -116,8 +143,10 @@ void Game::run() {
         frameCount++;
 
         if (fpsTime >= 1.0) {
-            double fps = frameCount / fpsTime;
-            std::cout << "FPS: " << fps << " | Frame Time: " << (fpsTime / frameCount) * 1000.0 << " ms" << std::endl;
+            if (showFps) { // Print FPS only if showFps is true
+                double fps = frameCount / fpsTime;
+                std::cout << "FPS: " << fps << " | Frame Time: " << (fpsTime / frameCount) * 1000.0 << " ms" << std::endl;
+            }
             frameCount = 0;
             fpsTime = 0.0;
         }
@@ -202,52 +231,59 @@ void Game::initGLFW() {
 void Game::mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
     Game* game = static_cast<Game*>(glfwGetWindowUserPointer(window));
 
-    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
-        double xpos, ypos;
-        glfwGetCursorPos(window, &xpos, &ypos);
+    double xpos, ypos;
+    glfwGetCursorPos(window, &xpos, &ypos);
 
-        int width, height;
-        glfwGetWindowSize(window, &width, &height);
+    int width, height;
+    glfwGetWindowSize(window, &width, &height);
 
-        // Convert screen coordinates to world coordinates
-        // Assume that 40 pixels correspond to 1 unit in your world space
-        const float pixelsPerUnit = 40.0f;
+    const float pixelsPerUnit = 40.0f;
+    float worldX = (xpos - width / 2) / pixelsPerUnit;
+    float worldY = (height / 2 - ypos) / pixelsPerUnit;
 
-        // Map screen coordinates to world coordinates
-        float worldX = (xpos - width / 2) / pixelsPerUnit;
-        float worldY = (height / 2 - ypos) / pixelsPerUnit;
-
-        std::cout << "worldX: " << worldX << std::endl;
-        std::cout << "worldY: " << worldY << std::endl;
-
-        // Check if the inventory is currently displayed and handle the click
-        if (game->displayInventory) {
-            int slotIndex = game->playerInventory.getSlotIndexAt(worldX, worldY);
-            if (slotIndex != -1) {
-                game->handleInventorySlotClick(slotIndex);
-                return; // Exit after handling the inventory slot click
+    if (button == GLFW_MOUSE_BUTTON_LEFT) {
+        if (action == GLFW_PRESS) {
+            if (game->displayInventory) {
+                int slotIndex = game->playerInventory.getSlotIndexAt(worldX, worldY);
+                if (slotIndex != -1 && !game->isDragging) {
+                    // Begin dragging
+                    game->selectedSlotIndex = slotIndex;
+                    game->draggedTextureID = game->playerInventory.getInventorySlots()[slotIndex].getTextureID();
+                    game->draggedItemName = game->playerInventory.getItemInSlot(slotIndex);
+                    game->isDragging = true;
+                    game->dragStartPosition = glm::vec2(worldX, worldY);
+                }
             }
         }
+        else if (action == GLFW_RELEASE && game->isDragging) {
+            if (game->displayInventory) {
+                int slotIndex = game->playerInventory.getSlotIndexAt(worldX, worldY);
+                if (slotIndex != -1 && slotIndex != game->selectedSlotIndex) {
+                    // Swap the items between the slots
+                    auto& sourceSlot = game->playerInventory.getInventorySlots()[game->selectedSlotIndex];
+                    auto& targetSlot = game->playerInventory.getInventorySlots()[slotIndex];
 
-        // Handle other game interactions
-        game->handleWorldInteraction(worldX, worldY, width, height);
+                    // Swap textures
+                    GLuint tempTextureID = targetSlot.getTextureID();
+                    targetSlot.setTexture(sourceSlot.getTextureID());
+                    sourceSlot.setTexture(tempTextureID);
+
+                    // Swap item names
+                    std::string tempItemName = targetSlot.getItem();
+                    targetSlot.setItem(sourceSlot.getItem());
+                    sourceSlot.setItem(tempItemName);
+                }
+
+                // Reset dragging state
+                game->isDragging = false;
+                game->selectedSlotIndex = -1;
+                game->draggedTextureID = 0;
+                game->draggedItemName.clear();
+            }
+        }
     }
     else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
         game->handleRightClickInteraction();
-    }
-}
-
-
-void Game::handleInventorySlotClick(int slotIndex) {
-    if (slotIndex >= 0 && slotIndex < playerInventory.getInventorySlots().size()) {
-        InventorySlot& slot = playerInventory.getInventorySlots()[slotIndex];
-        std::cout << "Clicked on inventory slot " << slotIndex << std::endl;
-        if (!slot.isEmpty()) {
-            std::cout << "Item in slot " << slotIndex << ": " << slot.getItem() << std::endl;
-        }
-        else {
-            std::cout << "Slot " << slotIndex << " is empty." << std::endl;
-        }
     }
 }
 

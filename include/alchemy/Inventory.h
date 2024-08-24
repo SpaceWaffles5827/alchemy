@@ -10,7 +10,6 @@
 
 class Inventory : public Renderable {
 public:
-    // Constructor with default texture coordinates and slot grid dimensions
     Inventory(const glm::vec3& pos = glm::vec3(0.0f),
         const glm::vec3& rot = glm::vec3(0.0f),
         float width = 1.0f,
@@ -29,7 +28,7 @@ public:
     const std::string& getItemInSlot(int slotIndex) const;
 
     void setSlotPosition(int slotIndex, float x, float y);
-    std::vector<InventorySlot> getInventorySlots();
+    std::vector<InventorySlot>& getInventorySlots();
 
     // Implement pure virtual methods from Renderable
     const glm::vec3& getPosition() const override;

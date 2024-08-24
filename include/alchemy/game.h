@@ -67,6 +67,12 @@ private:
     static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
     static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 
+    bool isDragging = false;            // Whether the user is currently dragging an item
+    int selectedSlotIndex = -1;         // The index of the slot being dragged
+    GLuint draggedTextureID = 0;        // The texture ID of the dragged item
+    std::string draggedItemName;        // The name of the dragged item
+    glm::vec2 dragStartPosition;        // The starting position of the drag
+
     void handleInventorySlotClick(int slotIndex);
     void handleWorldInteraction(double xpos, double ypos, int width, int height);
     void handleRightClickInteraction();

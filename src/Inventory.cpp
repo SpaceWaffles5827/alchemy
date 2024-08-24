@@ -27,9 +27,6 @@ void Inventory::initializeSlots(int rows, int cols, float slotWidth, float slotH
             float x = xOffset + position.x + col * (slotWidth + horizontalGap);
             float y = yOffset + position.y + row * (slotHeight + verticalGap);
             slots[index] = InventorySlot(glm::vec3(x, y, 0.0f), glm::vec3(0.0f), slotWidth, slotHeight, textureID, glm::vec2(0.0f, 1.0f), glm::vec2(1.0f, 0.0f));
-
-            // Print the position of each slot
-            std::cout << "Slot " << index << " placed at position (" << x << ", " << y << ")" << std::endl;
         }
     }
 }
@@ -121,7 +118,7 @@ void Inventory::setTextureCoords(const glm::vec2& topLeft, const glm::vec2& bott
     textureBottomRight = bottomRight;
 }
 
-std::vector<InventorySlot> Inventory::getInventorySlots() {
+std::vector<InventorySlot>& Inventory::getInventorySlots() {
     return slots;
 }
 
