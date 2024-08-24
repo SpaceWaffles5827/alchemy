@@ -8,9 +8,11 @@ InventorySlot::InventorySlot()
 }
 
 InventorySlot::InventorySlot(const glm::vec3& pos, const glm::vec3& rot, float width, float height, GLuint textureID, const glm::vec2& texTopLeft, const glm::vec2& texBottomRight)
-    : position(pos), rotation(rot), scale(glm::vec3(width, height, 1.0f)), textureID(textureID), textureTopLeft(texTopLeft), textureBottomRight(texBottomRight) {
+    : position(pos), rotation(rot), scale(glm::vec3(width, height, 1.0f)), textureID(textureID),
+    textureTopLeft(texTopLeft),
+    textureBottomRight(texBottomRight) {
     updateBoundingRadius();
-}
+}   
 
 InventorySlot::~InventorySlot() {
     // Cleanup if necessary

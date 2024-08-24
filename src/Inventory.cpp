@@ -10,9 +10,7 @@ Inventory::Inventory(const glm::vec3& pos, const glm::vec3& rot, float width, fl
     textureBottomRight(glm::vec2(texBottomRight.x, 1.0f - texBottomRight.y)),   // Flip the y-coordinates
     boundingRadius(std::sqrt(width* width + height * height) / 2.0f) {
 
-    float slotWidth = width / cols;
-    float slotHeight = height / rows;
-    // initializeSlots(rows, cols, slotWidth, slotHeight);
+    initializeSlots(rows, cols, 48, 48, 6, 6);
 }
 
 
@@ -21,13 +19,17 @@ Inventory::~Inventory() {
     // Cleanup if necessary
 }
 
-void Inventory::initializeSlots(int rows, int cols, float slotWidth, float slotHeight) {
+void Inventory::initializeSlots(int rows, int cols, float slotWidth, float slotHeight, float horizontalGap, float verticalGap) {
+    float xOffset = -216.0f;
+    float yOffset = 27.0f;
     slots.resize(rows * cols);
+
     for (int row = 0; row < rows; ++row) {
         for (int col = 0; col < cols; ++col) {
             int index = row * cols + col;
-            float x = position.x + col * slotWidth;
-            float y = position.y + row * slotHeight;
+            float x = position.x + xOffset + col * (slotWidth + horizontalGap);
+            float y = position.y + yOffset + row * (slotHeight + verticalGap);
+            std::cout << "Placing: (" << x << ", " << y << ")\n";
             slots[index] = InventorySlot(glm::vec3(x, y, 0.0f), glm::vec3(0.0f), slotWidth, slotHeight, textureID, glm::vec2(0.0f, 1.0f), glm::vec2(1.0f, 0.0f));
         }
     }

@@ -48,21 +48,21 @@ void Game::init() {
     textureID2 = loadTexture("spriteSheet.png");
     inventoryTextureID = loadTexture("inventory.png");
 
-    playerInventory = Inventory(glm::vec3(400.0f, 400.0f, 0.0f), glm::vec3(0.0f), 176.0f, 166.0f, inventoryTextureID,
-        glm::vec2(0.0f, 1.0f), glm::vec2(1.0f, 0.0f), 2, 2);
+    playerInventory = Inventory(glm::vec3(400.0f, 400.0f, 0.0f), glm::vec3(0.0f), 176.0f * 3, 166.0f * 3, inventoryTextureID,
+        glm::vec2(0.0f, 1.0f), glm::vec2(1.0f, 0.0f), 3, 9);
 
     // Change the texture of the first slot to a different texture
     std::vector<InventorySlot> & invSlot = playerInventory.getInventorySlots();
 
-    // GLuint specialTextureID = loadTexture("stone_bricks.png");
-    // invSlot[0].setTexture(specialTextureID);
-    // invSlot[0].setItem("Stone");
-    // invSlot[1].setTexture(specialTextureID);
-    // invSlot[1].setItem("Stone");
-    // invSlot[2].setTexture(specialTextureID);
-    // invSlot[2].setItem("Stone");
-    // invSlot[3].setTexture(specialTextureID);
-    // invSlot[3].setItem("Stone");
+    GLuint specialTextureID = loadTexture("stone_bricks.png");
+    invSlot[0].setTexture(specialTextureID);
+    invSlot[0].setItem("Stone");
+    invSlot[1].setTexture(specialTextureID);
+    invSlot[1].setItem("Stone");
+    invSlot[2].setTexture(specialTextureID);
+    invSlot[2].setItem("Stone");
+    invSlot[3].setTexture(specialTextureID);
+    invSlot[3].setItem("Stone");
 
     world.initTileView(10, 10, 1.0f, textureID2, textureID2);
 }
@@ -132,7 +132,7 @@ void Game::run() {
         frameCount++;
 
         if (fpsTime >= 1.0) {
-            if (showFps) { // Print FPS only if showFps is true
+            if (showFps) {
                 double fps = frameCount / fpsTime;
                 std::cout << "FPS: " << fps << " | Frame Time: " << (fpsTime / frameCount) * 1000.0 << " ms" << std::endl;
             }
@@ -226,9 +226,11 @@ void Game::mouse_button_callback(GLFWwindow* window, int button, int action, int
     int width, height;
     glfwGetWindowSize(window, &width, &height);
 
-    const float pixelsPerUnit = 40.0f;
-    float worldX = (xpos - width / 2) / pixelsPerUnit;
-    float worldY = (height / 2 - ypos) / pixelsPerUnit;
+    // Convert screen coordinates to the inventory UI coordinate system
+    float worldX = static_cast<float>(xpos);
+    float worldY = static_cast<float>(ypos);
+
+    std::cout << "Clicking: " << worldX << ", " << worldY << "\n";
 
     if (button == GLFW_MOUSE_BUTTON_LEFT) {
         if (action == GLFW_PRESS) {
