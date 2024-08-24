@@ -6,26 +6,28 @@
 Inventory::Inventory(const glm::vec3& pos, const glm::vec3& rot, float width, float height, GLuint textureID,
     const glm::vec2& texTopLeft, const glm::vec2& texBottomRight, int rows, int cols)
     : position(pos), rotation(rot), scale(glm::vec3(width, height, 1.0f)), textureID(textureID),
-    textureTopLeft(texTopLeft), textureBottomRight(texBottomRight), boundingRadius(std::sqrt(width* width + height * height) / 2.0f) {
+    textureTopLeft(glm::vec2(texTopLeft.x, 1.0f - texTopLeft.y)),   // Flip the y-coordinates
+    textureBottomRight(glm::vec2(texBottomRight.x, 1.0f - texBottomRight.y)),   // Flip the y-coordinates
+    boundingRadius(std::sqrt(width* width + height * height) / 2.0f) {
 
-    // Initialize slots with the given grid dimensions
     float slotWidth = width / cols;
     float slotHeight = height / rows;
-    initializeSlots(3, 9, 16.0f * 2 / 40.0f, 16.0f * 2 / 40.0f, 22.0f / 40.0f, 21.0f / 40.0f, -217.0f / 40.0f, -136.0f / 40.0f);
+    // initializeSlots(rows, cols, slotWidth, slotHeight);
 }
+
 
 // Destructor definition
 Inventory::~Inventory() {
     // Cleanup if necessary
 }
 
-void Inventory::initializeSlots(int rows, int cols, float slotWidth, float slotHeight, float horizontalGap, float verticalGap, float xOffset, float yOffset) {
+void Inventory::initializeSlots(int rows, int cols, float slotWidth, float slotHeight) {
     slots.resize(rows * cols);
     for (int row = 0; row < rows; ++row) {
         for (int col = 0; col < cols; ++col) {
             int index = row * cols + col;
-            float x = xOffset + position.x + col * (slotWidth + horizontalGap);
-            float y = yOffset + position.y + row * (slotHeight + verticalGap);
+            float x = position.x + col * slotWidth;
+            float y = position.y + row * slotHeight;
             slots[index] = InventorySlot(glm::vec3(x, y, 0.0f), glm::vec3(0.0f), slotWidth, slotHeight, textureID, glm::vec2(0.0f, 1.0f), glm::vec2(1.0f, 0.0f));
         }
     }

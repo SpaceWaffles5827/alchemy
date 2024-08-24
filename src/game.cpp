@@ -48,37 +48,30 @@ void Game::init() {
     textureID2 = loadTexture("spriteSheet.png");
     inventoryTextureID = loadTexture("inventory.png");
 
-    playerInventory = Inventory(glm::vec3(0.0f), glm::vec3(0.0f), 176.0f * 3 / 40.0f, 166.0f * 3 / 40.0f, inventoryTextureID,
+    playerInventory = Inventory(glm::vec3(400.0f, 400.0f, 0.0f), glm::vec3(0.0f), 176.0f, 166.0f, inventoryTextureID,
         glm::vec2(0.0f, 1.0f), glm::vec2(1.0f, 0.0f), 2, 2);
 
     // Change the texture of the first slot to a different texture
     std::vector<InventorySlot> & invSlot = playerInventory.getInventorySlots();
 
-    GLuint specialTextureID = loadTexture("stone_bricks.png");
-    invSlot[0].setTexture(specialTextureID);
-    invSlot[0].setItem("Stone");
-    invSlot[1].setTexture(specialTextureID);
-    invSlot[1].setItem("Stone");
-    invSlot[2].setTexture(specialTextureID);
-    invSlot[2].setItem("Stone");
-    invSlot[3].setTexture(specialTextureID);
-    invSlot[3].setItem("Stone");
+    // GLuint specialTextureID = loadTexture("stone_bricks.png");
+    // invSlot[0].setTexture(specialTextureID);
+    // invSlot[0].setItem("Stone");
+    // invSlot[1].setTexture(specialTextureID);
+    // invSlot[1].setItem("Stone");
+    // invSlot[2].setTexture(specialTextureID);
+    // invSlot[2].setItem("Stone");
+    // invSlot[3].setTexture(specialTextureID);
+    // invSlot[3].setItem("Stone");
 
     world.initTileView(10, 10, 1.0f, textureID2, textureID2);
 }
 
 void Game::renderUI(int width, int height) {
-    float aspectRatio = static_cast<float>(width) / height;
-    float viewHeight = 20.0f;
-    float viewWidth = viewHeight * aspectRatio;
-
     glm::mat4 projectionUI = glm::ortho(
-        -viewWidth / 2.0f,  // left
-        viewWidth / 2.0f,   // right
-        -viewHeight / 2.0f, // bottom
-        viewHeight / 2.0f,  // top
-        -1.0f,              // near
-        1.0f                // far
+        0.0f, static_cast<float>(width),  // left to right
+        static_cast<float>(height), 0.0f, // top to bottom (note the flip in y)
+        -1.0f, 1.0f
     );
 
     if (displayInventory) {
@@ -94,7 +87,7 @@ void Game::renderUI(int width, int height) {
                 slot.getPosition(),
                 slot.getRotation(),
                 slot.getScale().x, slot.getScale().y,
-                slot.getTextureID(),  // Use the texture of the slot itself
+                slot.getTextureID(),
                 slot.getTextureTopLeft(),
                 slot.getTextureBottomRight()
             );
@@ -108,12 +101,8 @@ void Game::renderUI(int width, int height) {
             double xpos, ypos;
             glfwGetCursorPos(window, &xpos, &ypos);
 
-            const float pixelsPerUnit = 40.0f;
-            float worldX = (xpos - width / 2) / pixelsPerUnit;
-            float worldY = (height / 2 - ypos) / pixelsPerUnit;
-
             auto draggedItemRenderable = std::make_shared<InventorySlot>(
-                glm::vec3(worldX, worldY, 0.0f),
+                glm::vec3(static_cast<float>(xpos), static_cast<float>(ypos), 0.0f),
                 glm::vec3(0.0f),
                 playerInventory.getInventorySlots()[selectedSlotIndex].getScale().x,
                 playerInventory.getInventorySlots()[selectedSlotIndex].getScale().y,

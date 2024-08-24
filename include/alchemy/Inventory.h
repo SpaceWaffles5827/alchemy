@@ -72,7 +72,7 @@ private:
     void updateBoundingRadius();
 
     // Method to initialize slots in the inventory grid
-    void initializeSlots(int rows, int cols, float slotWidth, float slotHeight, float horizontalGap, float verticalGap, float xOffset, float yOffset);
+    void initializeSlots(int rows, int cols, float slotWidth, float slotHeight);
 };
 
 #endif // INVENTORY_H

@@ -38,18 +38,9 @@ public:
     const glm::vec2& getTextureBottomRight() const override;
     float getBoundingRadius() const override;
 
-    void setTexture(GLuint newTextureID) {
-        textureID = newTextureID;
-    }
+    void setTexture(GLuint newTextureID);
 
-    bool containsPoint(float x, float y) const {
-        float slotLeft = position.x - scale.x / 2.0f;
-        float slotRight = position.x + scale.x / 2.0f;
-        float slotBottom = position.y - scale.y / 2.0f;
-        float slotTop = position.y + scale.y / 2.0f;
-
-        return x >= slotLeft && x <= slotRight && y >= slotBottom && y <= slotTop;
-    }
+    bool containsPoint(float x, float y) const;
 
 private:
     glm::vec3 position;
