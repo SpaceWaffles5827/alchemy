@@ -18,8 +18,7 @@ public:
         const glm::vec2& texTopLeft = glm::vec2(0.0f, 1.0f),
         const glm::vec2& texBottomRight = glm::vec2(1.0f, 0.0f),
         int rows = 2,
-        int cols = 2
-    );
+        int cols = 2);
 
     ~Inventory();
 
@@ -30,46 +29,19 @@ public:
     void setSlotPosition(int slotIndex, float x, float y);
     std::vector<InventorySlot>& getInventorySlots();
 
-    // Implement pure virtual methods from Renderable
-    const glm::vec3& getPosition() const override;
-    const glm::vec3& getRotation() const override;
-    const glm::vec3& getScale() const override;
-    GLuint getTextureID() const override;
-    const glm::vec2& getTextureTopLeft() const override;
-    const glm::vec2& getTextureBottomRight() const override;
-    float getBoundingRadius() const override;
-
     int getSlotIndexAt(float x, float y) const {
         for (int i = 0; i < slots.size(); ++i) {
             if (slots[i].containsPoint(x, y)) {
-                return i; // Return the index of the slot if the point is within its bounds
+                return i;
             }
         }
-        return -1; // Return -1 if no slot contains the point
+        return -1;
     }
-
-    // Setters for rendering properties
-    void setPosition(const glm::vec3& pos);
-    void setRotation(const glm::vec3& rot);
-    void setScale(float w, float h);
-    void setTexture(GLuint newTextureID);
-    void setTextureCoords(const glm::vec2& topLeft, const glm::vec2& bottomRight);
-    void setTextureTile(int tileX, int tileY, int tilesPerRow, int textureWidth, int textureHeight, int tileWidth, int tileHeight);
 
     void setSlotTexture(int slotIndex, GLuint newTextureID);
 
 private:
     std::vector<InventorySlot> slots;  // Vector of inventory slots
-    glm::vec3 position;                // Position of the inventory
-    glm::vec3 rotation;                // Rotation of the inventory
-    glm::vec3 scale;                   // Scale of the inventory
-    GLuint textureID;                  // Texture ID for the inventory
-    glm::vec2 textureTopLeft;          // Top-left texture coordinate
-    glm::vec2 textureBottomRight;      // Bottom-right texture coordinate
-    float boundingRadius;              // Bounding radius for rendering
-
-    // Method to update bounding radius based on the scale
-    void updateBoundingRadius();
 
     // Method to initialize slots in the inventory grid
     void initializeSlots(int rows, int cols, float slotWidth, float slotHeight, float horizontalGap, float verticalGap);

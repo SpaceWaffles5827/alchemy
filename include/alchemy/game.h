@@ -17,6 +17,7 @@
 #include <memory>
 #include <vector>
 #include <alchemy/Inventory.h>
+#include <alchemy/Inventory.h>
 
 enum class Mode {
     Game,

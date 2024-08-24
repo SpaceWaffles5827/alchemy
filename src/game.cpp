@@ -69,19 +69,17 @@ void Game::init() {
 
 void Game::renderUI(int width, int height) {
     glm::mat4 projectionUI = glm::ortho(
-        0.0f, static_cast<float>(width),  // left to right
-        static_cast<float>(height), 0.0f, // top to bottom (note the flip in y)
+        0.0f, static_cast<float>(width),
+        static_cast<float>(height), 0.0f,
         -1.0f, 1.0f
     );
 
     if (displayInventory) {
         std::vector<std::shared_ptr<Renderable>> renderables;
 
-        // Render the inventory background
         std::shared_ptr<Renderable> inventoryRenderable = std::make_shared<Inventory>(playerInventory);
         renderer.batchRenderGameObjects({ inventoryRenderable }, projectionUI);
 
-        // Render the inventory slots separately
         for (auto& slot : playerInventory.getInventorySlots()) {
             auto slotRenderable = std::make_shared<InventorySlot>(
                 slot.getPosition(),
@@ -237,7 +235,6 @@ void Game::mouse_button_callback(GLFWwindow* window, int button, int action, int
             if (game->displayInventory) {
                 int slotIndex = game->playerInventory.getSlotIndexAt(worldX, worldY);
                 if (slotIndex != -1 && !game->isDragging) {
-                    // Begin dragging
                     game->selectedSlotIndex = slotIndex;
                     game->draggedTextureID = game->playerInventory.getInventorySlots()[slotIndex].getTextureID();
                     game->draggedItemName = game->playerInventory.getItemInSlot(slotIndex);

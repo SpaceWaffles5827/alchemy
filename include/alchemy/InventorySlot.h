@@ -1,59 +1,38 @@
 #ifndef INVENTORYSLOT_H
 #define INVENTORYSLOT_H
 
-#include <GLEW/glew.h>
 #include <string>
+#include <GLEW/glew.h>
 #include "Renderable.h"
 #include <glm/glm.hpp>
 
 class InventorySlot : public Renderable {
 public:
     // Default constructor
-    InventorySlot();
+    InventorySlot()
+        : Renderable(48.0f, 48.0f, 0),
+        item("") {}
 
-    // Constructor with parameters to match usage in renderUI
-    InventorySlot(const glm::vec3& pos,
-        const glm::vec3& rot,
-        float width,
-        float height,
-        GLuint textureID,
-        const glm::vec2& texTopLeft,
-        const glm::vec2& texBottomRight
-    );
+    // Parameterized constructor with seven parameters
+    InventorySlot(const glm::vec3& position, const glm::vec3& rotation, float width, float height, GLuint textureID, const glm::vec2& texTopLeft, const glm::vec2& texBottomRight)
+        : Renderable(width, height, textureID, glm::vec2(texTopLeft.x, 1.0f - texTopLeft.y), glm::vec2(texBottomRight.x, 1.0f - texBottomRight.y)) {
+        setPosition(position);
+        setRotation(rotation);
+    }
 
-    ~InventorySlot();
+    // Parameterized constructor with four parameters
+    InventorySlot(float x, float y, float width, float height, GLuint textureID);
 
-    void setPosition(float x, float y);
+    ~InventorySlot() = default;
+
     void setItem(const std::string& itemName);
     const std::string& getItem() const;
-
     bool isEmpty() const;
-
-    // Implement pure virtual methods from Renderable
-    const glm::vec3& getPosition() const override;
-    const glm::vec3& getRotation() const override;
-    const glm::vec3& getScale() const override;
-    GLuint getTextureID() const override;
-    const glm::vec2& getTextureTopLeft() const override;
-    const glm::vec2& getTextureBottomRight() const override;
-    float getBoundingRadius() const override;
-
-    void setTexture(GLuint newTextureID);
-
     bool containsPoint(float x, float y) const;
+    glm::vec2 getCenter() const; // Returns the center of the slot
 
 private:
-    glm::vec3 position;
-    glm::vec3 rotation;
-    glm::vec3 scale;
-    GLuint textureID;
-    glm::vec2 textureTopLeft;
-    glm::vec2 textureBottomRight;
-    float boundingRadius;
-    std::string item;
-
-    // Method to update the bounding radius based on the scale
-    void updateBoundingRadius();
+    std::string item; // Item held in this slot
 };
 
 #endif // INVENTORYSLOT_H

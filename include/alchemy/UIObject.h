@@ -24,15 +24,6 @@ public:
         // Implementation of the update method
     }
 
-    // Getters (Override from Renderable base class)
-    virtual const glm::vec3& getPosition() const override { return position; }
-    virtual const glm::vec3& getRotation() const override { return rotation; }
-    virtual const glm::vec3& getScale() const override { return scale; }
-    virtual GLuint getTextureID() const override { return textureID; }
-    virtual const glm::vec2& getTextureTopLeft() const override { return textureTopLeft; }
-    virtual const glm::vec2& getTextureBottomRight() const override { return textureBottomRight; }
-    virtual float getBoundingRadius() const override { return boundingRadius; }
-
     // Reintroducing the width and height getters
     float getWidth() const { return width; }
     float getHeight() const { return height; }
