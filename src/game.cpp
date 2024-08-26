@@ -9,7 +9,7 @@
 
 Game::Game(Mode mode)
     : VAO(0), VBO(0), shaderProgram(0), redShaderProgram(0), clientId(std::rand()), tickRate(1.0 / 64.0),
-    projection(1.0f), currentMode(mode), chat(800, 800), selectedTileX(0), selectedTileY(0),
+    projection(1.0f), currentMode(mode), chat(800, 800),
     displayInventory(false), showFps(false) {
     networkManager.setupUDPClient();
     graphicsContext.setCameraZoom(1.0f);
@@ -19,12 +19,12 @@ Game::~Game() {
     cleanup();
 }
 
-void Game::setCameraZoom(float zoom) {
-    graphicsContext.setCameraZoom(zoom);
-}
-
 void Game::setProjectionMatrix(glm::mat4 projectionMatrix) {
     projection = projectionMatrix;
+}
+
+GLuint Game::gettextureID2() {
+    return textureID2;
 }
 
 void Game::init() {
@@ -55,17 +55,7 @@ void Game::init() {
     playerInventory = Inventory(glm::vec3(400.0f, 400.0f, 0.0f), glm::vec3(0.0f), 176.0f * 3, 166.0f * 3, inventoryTextureID,
         glm::vec2(0.0f, 1.0f), glm::vec2(1.0f, 0.0f), 3, 9);
 
-    std::vector<InventorySlot>& invSlot = playerInventory.getInventorySlots();
-
-    GLuint specialTextureID = graphicsContext.loadTexture("stone_bricks.png");
-    invSlot[0].setTexture(specialTextureID);
-    invSlot[0].setItem("Stone");
-    invSlot[1].setTexture(specialTextureID);
-    invSlot[1].setItem("Stone");
-    invSlot[2].setTexture(specialTextureID);
-    invSlot[2].setItem("Stone");
-    invSlot[3].setTexture(specialTextureID);
-    invSlot[3].setItem("Stone");
+    playerInventory.loadDefaults();
 
     world.initTileView(10, 10, 1.0f, textureID2, textureID2);
 }
@@ -76,6 +66,10 @@ bool Game::getDispalyInventory() {
 
 void Game::setDispalyInventory(bool status) {
     displayInventory = status;
+}
+
+GLuint Game::getDragTextureId() {
+    return draggedTextureID;
 }
 
 void Game::setSelectedSlotIndex(int index) {
@@ -96,52 +90,6 @@ void Game::setDraggingStartPos(glm::vec2 position) {
 
 int Game::getSelectedSlotIndex() {
     return selectedSlotIndex;
-}
-
-void Game::renderUI(int width, int height) {
-    glm::mat4 projectionUI = glm::ortho(
-        0.0f, static_cast<float>(width),
-        static_cast<float>(height), 0.0f,
-        -1.0f, 1.0f
-    );
-
-    if (displayInventory) {
-        std::vector<std::shared_ptr<Renderable>> renderables;
-
-        std::shared_ptr<Renderable> inventoryRenderable = std::make_shared<Inventory>(playerInventory);
-        renderer.batchRenderGameObjects({ inventoryRenderable }, projectionUI);
-
-        for (auto& slot : playerInventory.getInventorySlots()) {
-            auto slotRenderable = std::make_shared<InventorySlot>(
-                slot.getPosition(),
-                slot.getRotation(),
-                slot.getScale().x, slot.getScale().y,
-                slot.getTextureID(),
-                slot.getTextureTopLeft(),
-                slot.getTextureBottomRight()
-            );
-            renderables.push_back(slotRenderable);
-        }
-
-        renderer.batchRenderGameObjects(renderables, projectionUI);
-
-        if (inputManager.getIsDragging()) {
-            double xpos, ypos;
-            glfwGetCursorPos(graphicsContext.getWindow(), &xpos, &ypos);
-
-            auto draggedItemRenderable = std::make_shared<InventorySlot>(
-                glm::vec3(static_cast<float>(xpos), static_cast<float>(ypos), 0.0f),
-                glm::vec3(0.0f),
-                playerInventory.getInventorySlots()[selectedSlotIndex].getScale().x,
-                playerInventory.getInventorySlots()[selectedSlotIndex].getScale().y,
-                draggedTextureID,
-                playerInventory.getInventorySlots()[selectedSlotIndex].getTextureTopLeft(),
-                playerInventory.getInventorySlots()[selectedSlotIndex].getTextureBottomRight()
-            );
-
-            renderer.batchRenderGameObjects({ draggedItemRenderable }, projectionUI);
-        }
-    }
 }
 
 void Game::run() {
@@ -195,29 +143,6 @@ GLuint Game::getShaderProgram() {
     return shaderProgram;
 }
 
-void Game::handleWorldInteraction(double xpos, double ypos, int width, int height) {
-    if (currentMode == Mode::LevelEdit) {
-        float xNDC = static_cast<float>((2.0 * xpos) / width - 1.0);
-        float yNDC = static_cast<float>(1.0 - (2.0 * ypos) / height);
-
-        glm::vec4 ndcCoords = glm::vec4(xNDC, yNDC, 0.0f, 1.0f);
-        glm::vec4 worldCoords = glm::inverse(projection) * ndcCoords;
-
-        float snappedX = std::round(worldCoords.x);
-        float snappedY = std::round(worldCoords.y);
-
-        std::shared_ptr<GameObject> gameObjectAdding = std::make_shared<GameObject>(
-            glm::vec3(snappedX, snappedY, 0.0f),
-            glm::vec3(0.0f),
-            1.0f,
-            1.0f,
-            textureID2);
-
-        gameObjectAdding->setTextureTile(selectedTileX, selectedTileY, 8, 256, 256, 32, 32);
-        world.addObject(gameObjectAdding);
-    }
-}
-
 void Game::update(double deltaTime) {
     if (networkManager.receiveData(players)) {
         for (auto& pair : players) {
@@ -266,8 +191,12 @@ void Game::render() {
 
     // Render the UI elements (like inventory)
     if (displayInventory) {
-        renderUI(width, height);
+        renderer.renderUI(width, height);
     }
+}
+
+InputManager Game::getInputManager() {
+    return inputManager;
 }
 
 void Game::cleanup() {
@@ -331,68 +260,4 @@ GraphicsContext& Game::getGraphicsContext() {
 
 TextRenderer* Game::getTextRender() {
     return textRenderer.get();
-}
-
-void Game::saveLevel(const std::string& filename) {
-    std::ofstream outFile(filename);
-    if (outFile.is_open()) {
-        std::cout << "Level saved to " << filename << std::endl;
-        outFile.close();
-    }
-    else {
-        std::cerr << "Failed to open file for saving: " << filename << std::endl;
-    }
-}
-
-void Game::loadLevel(const std::string& filename) {
-    std::ifstream inFile(filename);
-    if (inFile.is_open()) {
-        std::cout << "Level loaded from " << filename << std::endl;
-        inFile.close();
-    }
-    else {
-        std::cerr << "Failed to open file for loading: " << filename << std::endl;
-    }
-}
-
-void Game::saveWorld(const std::string& filename) {
-    std::ofstream outFile(filename);
-    if (outFile.is_open()) {
-        std::cout << "World saved to " << filename << std::endl;
-        outFile.close();
-    }
-    else {
-        std::cerr << "Failed to open file for saving: " << filename << std::endl;
-    }
-}
-
-void Game::updateUiProjectionMatrix(int width, int height) {
-    float aspectRatio = static_cast<float>(width) / height;
-    float viewWidth = 20.0f * graphicsContext.getCameraZoom();
-    float viewHeight = viewWidth / aspectRatio;
-
-    projection = glm::ortho(
-        viewWidth / 2.0f, viewWidth / 2.0f,
-        viewHeight / 2.0f, viewHeight / 2.0f,
-        -1.0f, 1.0f
-    );
-
-    GLuint transformLoc = glGetUniformLocation(shaderProgram, "transform");
-    glUseProgram(shaderProgram);
-    glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(projection));
-}
-
-void Game::loadWorld(const std::string& filename) {
-    std::ifstream inFile(filename);
-    if (inFile.is_open()) {
-        std::cout << "World loaded from " << filename << std::endl;
-        inFile.close();
-    }
-    else {
-        std::cerr << "Failed to open file for loading: " << filename << std::endl;
-    }
-}
-
-float Game::getCameraZoom() {
-    return graphicsContext.getCameraZoom();
 }

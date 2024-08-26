@@ -38,6 +38,8 @@ public:
         return -1;
     }
 
+    void loadDefaults();
+
     void setSlotTexture(int slotIndex, GLuint newTextureID);
 
 private:

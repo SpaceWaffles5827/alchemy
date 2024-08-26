@@ -2,6 +2,7 @@
 #include <alchemy/InventorySlot.h>
 #include <stdexcept>
 #include <iostream>
+#include <alchemy/global.h>
 
 // Constructor definition
 Inventory::Inventory(const glm::vec3& pos, const glm::vec3& rot, float width, float height, GLuint textureID,
@@ -29,6 +30,18 @@ void Inventory::initializeSlots(int rows, int cols, float slotWidth, float slotH
             slots[index] = InventorySlot(glm::vec3(x, y, 0.0f), glm::vec3(0.0f), slotWidth, slotHeight, getTextureID(), glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 1.0f));
         }
     }
+}
+
+void Inventory::loadDefaults() {
+    GLuint specialTextureID = game.getGraphicsContext().loadTexture("stone_bricks.png");
+    slots[0].setTexture(specialTextureID);
+    slots[0].setItem("Stone");
+    slots[1].setTexture(specialTextureID);
+    slots[1].setItem("Stone");
+    slots[2].setTexture(specialTextureID);
+    slots[2].setItem("Stone");
+    slots[3].setTexture(specialTextureID);
+    slots[3].setItem("Stone");
 }
 
 void Inventory::addItemToSlot(int slotIndex, const std::string& itemName) {

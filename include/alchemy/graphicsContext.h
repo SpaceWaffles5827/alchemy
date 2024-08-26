@@ -22,6 +22,8 @@ public:
     float getCameraZoom();
     void setCameraZoom(float zoom);
 
+    void updateUiProjectionMatrix(int width, int height);
+
 private:
     void initGLFW();
     void initGLEW();

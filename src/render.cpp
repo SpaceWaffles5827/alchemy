@@ -2,6 +2,7 @@
 #include <iostream>
 #include <tuple>
 #include <alchemy/frustum.h>
+#include <alchemy/global.h>
 
 // Default shaders
 const char* Render::defaultVertexShaderSource = R"(
@@ -128,6 +129,52 @@ void Render::renderGameObject(const GameObject& gameObject, const glm::mat4& pro
     glBindVertexArray(0);
 }
 
+void Render::renderUI(int width, int height) {
+    glm::mat4 projectionUI = glm::ortho(
+        0.0f, static_cast<float>(width),
+        static_cast<float>(height), 0.0f,
+        -1.0f, 1.0f
+    );
+
+    if (game.getDispalyInventory()) {
+        std::vector<std::shared_ptr<Renderable>> renderables;
+
+        std::shared_ptr<Renderable> inventoryRenderable = std::make_shared<Inventory>(game.getPlayerInventory());
+        batchRenderGameObjects({ inventoryRenderable }, projectionUI);
+
+        for (auto& slot : game.getPlayerInventory().getInventorySlots()) {
+            auto slotRenderable = std::make_shared<InventorySlot>(
+                slot.getPosition(),
+                slot.getRotation(),
+                slot.getScale().x, slot.getScale().y,
+                slot.getTextureID(),
+                slot.getTextureTopLeft(),
+                slot.getTextureBottomRight()
+            );
+            renderables.push_back(slotRenderable);
+        }
+
+        batchRenderGameObjects(renderables, projectionUI);
+
+        if (game.getInputManager().getIsDragging()) {
+            double xpos, ypos;
+            glfwGetCursorPos(game.getGraphicsContext().getWindow(), &xpos, &ypos);
+
+            auto draggedItemRenderable = std::make_shared<InventorySlot>(
+                glm::vec3(static_cast<float>(xpos), static_cast<float>(ypos), 0.0f),
+                glm::vec3(0.0f),
+                game.getPlayerInventory().getInventorySlots()[game.getSelectedSlotIndex()].getScale().x,
+                game.getPlayerInventory().getInventorySlots()[game.getSelectedSlotIndex()].getScale().y,
+                game.getDragTextureId(),
+                game.getPlayerInventory().getInventorySlots()[game.getSelectedSlotIndex()].getTextureTopLeft(),
+                game.getPlayerInventory().getInventorySlots()[game.getSelectedSlotIndex()].getTextureBottomRight()
+            );
+
+            batchRenderGameObjects({ draggedItemRenderable }, projectionUI);
+        }
+    }
+}
+
 GLuint Render::loadShader(const char* vertexShaderSource, const char* fragmentShaderSource) {
     GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
@@ -224,7 +271,7 @@ void Render::batchRenderGameObjects(const std::vector<std::shared_ptr<Renderable
 
         for (size_t batchIndex = 0; batchIndex < numBatches; ++batchIndex) {
             size_t startIdx = batchIndex * maxInstances;
-            size_t endIdx = std::min(startIdx + maxInstances, totalObjects);
+            size_t endIdx = (std::min)(startIdx + maxInstances, totalObjects);
 
             instanceTransforms.clear();
             for (size_t i = startIdx; i < endIdx; ++i) {

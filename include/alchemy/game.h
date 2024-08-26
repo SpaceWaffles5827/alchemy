@@ -42,11 +42,6 @@ public:
     GraphicsContext& getGraphicsContext();
     TextRenderer* getTextRender();
 
-    void saveLevel(const std::string& filename);
-    void loadLevel(const std::string& filename);
-    void saveWorld(const std::string& filename);
-    void loadWorld(const std::string& filename);
-
     Chat& getChat();
 
     glm::mat4 getProjection();
@@ -61,19 +56,17 @@ public:
 
     Inventory& getPlayerInventory();
 
-    bool getDispalyInventory();
+    bool getDispalyInventory(); // Fix typo
     void setDispalyInventory(bool status);
     int getClientId();
-
-    void setCameraZoom(float zoom);
-
-    float getCameraZoom();
 
     void setSelectedSlotIndex(int slotIndex);
 
     int getSelectedSlotIndex();
 
     void setDraggingTextureId(GLuint textureId);
+
+    GLuint getDragTextureId();
 
     void setDraggingItemName(std::string name);
 
@@ -83,23 +76,22 @@ public:
 
     GLuint getShaderProgram();
 
+    GLuint gettextureID2();
+
+    InputManager getInputManager();
+
 private:
     void update(double deltaTime);
     void render();
-    void renderUI(int width, int height);
+    
     void cleanup();
     void checkCompileErrors(GLuint shader, std::string type);
-    void updateUiProjectionMatrix(int width, int height);
 
     int selectedSlotIndex = -1;         // The index of the slot being dragged
     GLuint draggedTextureID = 0;        // The texture ID of the dragged item
     std::string draggedItemName;        // The name of the dragged item
     glm::vec2 dragStartPosition;        // The starting position of the drag
 
-    void handleWorldInteraction(double xpos, double ypos, int width, int height);
-
-    int selectedTileX;
-    int selectedTileY;
     bool showFps;
     bool displayInventory;
 

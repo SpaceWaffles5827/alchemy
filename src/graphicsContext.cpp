@@ -1,7 +1,7 @@
 #include <GLEW/glew.h>
 #include <GLFW/glfw3.h>
 #include <alchemy/graphicsContext.h>
-#include <stb/stb_image.h>  // Assuming this is for image loading
+#include <stb/stb_image.h>
 #include <iostream>
 #include <alchemy/global.h>
 
@@ -117,4 +117,20 @@ float GraphicsContext::getCameraZoom() {
 
 void GraphicsContext::setCameraZoom(float zoom) {
     cameraZoom = zoom;
+}
+
+void GraphicsContext::updateUiProjectionMatrix(int width, int height) {
+    float aspectRatio = static_cast<float>(width) / height;
+    float viewWidth = 20.0f * cameraZoom;
+    float viewHeight = viewWidth / aspectRatio;
+
+    glm::mat4 projection = glm::ortho(
+        viewWidth / 2.0f, viewWidth / 2.0f,
+        viewHeight / 2.0f, viewHeight / 2.0f,
+        -1.0f, 1.0f
+    );
+
+    GLuint transformLoc = glGetUniformLocation(game.getShaderProgram(), "transform");
+    glUseProgram(game.getShaderProgram());
+    glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(projection));
 }

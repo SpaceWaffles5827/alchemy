@@ -35,9 +35,9 @@ void InputManager::framebuffer_size_callback(GLFWwindow* window, int width, int 
 }
 
 void InputManager::scroll_callback(GLFWwindow* window, double xOffset, double yOffset) {
-    game.setCameraZoom(game.getCameraZoom() + yOffset * -0.1f);
-    if (game.getCameraZoom() < 0.1f) game.setCameraZoom(0.1f);
-    if (game.getCameraZoom() > 99.0f) game.setCameraZoom(99.0f);
+    game.getGraphicsContext().setCameraZoom(game.getGraphicsContext().getCameraZoom() + yOffset * -0.1f);
+    if (game.getGraphicsContext().getCameraZoom() < 0.1f) game.getGraphicsContext().setCameraZoom(0.1f);
+    if (game.getGraphicsContext().getCameraZoom() > 99.0f) game.getGraphicsContext().setCameraZoom(99.0f);
 
     int width, height;
     glfwGetWindowSize(window, &width, &height);
@@ -46,7 +46,7 @@ void InputManager::scroll_callback(GLFWwindow* window, double xOffset, double yO
 }
 
 void InputManager::mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
-    InputManager* inputManager = static_cast<InputManager*>(glfwGetWindowUserPointer(window)); // Get the InputManager instance
+    InputManager* inputManager = static_cast<InputManager*>(glfwGetWindowUserPointer(window));
 
     double xpos, ypos;
     glfwGetCursorPos(window, &xpos, &ypos);
@@ -54,7 +54,6 @@ void InputManager::mouse_button_callback(GLFWwindow* window, int button, int act
     int width, height;
     glfwGetWindowSize(window, &width, &height);
 
-    // Convert screen coordinates to the inventory UI coordinate system
     float worldX = static_cast<float>(xpos);
     float worldY = static_cast<float>(ypos);
 
@@ -344,5 +343,29 @@ void InputManager::handleInput() {
         if (glfwGetKey(game.getGraphicsContext().getWindow(), GLFW_KEY_ESCAPE) == GLFW_RELEASE) {
             escKeyReleased = true;
         }
+    }
+}
+
+void InputManager::handleWorldInteraction(double xpos, double ypos, int width, int height) {
+    if (game.getGameMode() == Mode::LevelEdit) {
+        float xNDC = static_cast<float>((2.0 * xpos) / width - 1.0);
+        float yNDC = static_cast<float>(1.0 - (2.0 * ypos) / height);
+
+        glm::vec4 ndcCoords = glm::vec4(xNDC, yNDC, 0.0f, 1.0f);
+        glm::vec4 worldCoords = glm::inverse(game.getProjection()) * ndcCoords;
+
+        float snappedX = std::round(worldCoords.x);
+        float snappedY = std::round(worldCoords.y);
+
+        std::shared_ptr<GameObject> gameObjectAdding = std::make_shared<GameObject>(
+            glm::vec3(snappedX, snappedY, 0.0f),
+            glm::vec3(0.0f),
+            1.0f,
+            1.0f,
+            game.gettextureID2());
+
+        // update this later to use the propper texture chords
+        gameObjectAdding->setTextureTile(0, 0, 8, 256, 256, 32, 32);
+        game.getWorld().addObject(gameObjectAdding);
     }
 }

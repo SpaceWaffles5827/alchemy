@@ -8,8 +8,7 @@
 #include "GameObject.h"
 #include <vector>
 #include <memory>
-#include <map>  // Add this include for std::map
-
+#include <map> 
 class Render {
 public:
     Render();
@@ -19,6 +18,7 @@ public:
     void renderGameObject(const GameObject& gameObject, const glm::mat4& projection);
     void batchRenderGameObjects(const std::vector<std::shared_ptr<Renderable>>& renderables, const glm::mat4& projection);
     void setShaderProgram(GLuint shaderProgram);
+    void renderUI(int width, int height);
 
 private:
     GLuint shaderProgram;

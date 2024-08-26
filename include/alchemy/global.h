@@ -1,8 +1,5 @@
-#ifndef GLOBAL_H
-#define GLOBAL_H
+#pragma once
 
-#include <alchemy/game.h> // Ensure Game is included
+#include <alchemy/game.h>
 
-extern Game game; // Correctly declare the global game object
-
-#endif // GLOBAL_H
+extern Game game;

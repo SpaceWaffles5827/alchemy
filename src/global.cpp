@@ -1,3 +1,3 @@
-#include <alchemy/global.h>
+#include <alchemy/game.h>
 
-Game game(Mode::Game); // Properly define the global game object
+Game game(Mode::Game);

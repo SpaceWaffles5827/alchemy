@@ -30,6 +30,7 @@ public:
 
 private:
     bool isDragging;
+    void handleWorldInteraction(double xpos, double ypos, int width, int height);
 };
 
 #endif // INPUTMANAGER_H
