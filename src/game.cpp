@@ -31,6 +31,7 @@ void Game::init() {
     graphicsContext.initialize();
     inputManager.registerCallbacks();
 
+    Render& renderer = Render::getInstance();
     renderer.initialize();
 
     textRenderer = std::make_unique<TextRenderer>(800, 800);
@@ -173,6 +174,8 @@ void Game::render() {
     glfwGetWindowSize(graphicsContext.getWindow(), &width, &height);
 
     graphicsContext.updateProjectionMatrix(width, height);
+
+    Render& renderer = Render::getInstance();
 
     // Render game world objects
     {

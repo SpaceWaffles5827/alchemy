@@ -83,7 +83,7 @@ public:
 private:
     void update(double deltaTime);
     void render();
-    
+
     void cleanup();
     void checkCompileErrors(GLuint shader, std::string type);
 
@@ -117,7 +117,6 @@ private:
     GLuint inventoryTextureID;
 
     Mode currentMode;
-    Render renderer;
 
     std::unique_ptr<TextRenderer> textRenderer;
     Chat chat;

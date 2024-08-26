@@ -8,11 +8,17 @@
 #include "GameObject.h"
 #include <vector>
 #include <memory>
-#include <map> 
+#include <map>
+
 class Render {
 public:
-    Render();
-    ~Render();
+    static Render& getInstance() {
+        static Render instance;
+        return instance;
+    }
+
+    Render(Render const&) = delete;
+    void operator=(Render const&) = delete;
 
     void initialize();
     void renderGameObject(const GameObject& gameObject, const glm::mat4& projection);
@@ -21,13 +27,16 @@ public:
     void renderUI(int width, int height);
 
 private:
-    GLuint shaderProgram;
-    GLuint VAO, VBO, EBO;
-    GLuint instanceVBO;  // Added instance VBO for batch rendering
+    Render();
+    ~Render();
 
     void setupBuffers();
     GLuint loadShader(const char* vertexShaderSource, const char* fragmentShaderSource);
     void checkCompileErrors(GLuint shader, const std::string& type);
+
+    GLuint shaderProgram;
+    GLuint VAO, VBO, EBO;
+    GLuint instanceVBO;
 
     static const char* defaultVertexShaderSource;
     static const char* defaultFragmentShaderSource;
