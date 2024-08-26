@@ -26,7 +26,7 @@ void InputManager::framebuffer_size_callback(GLFWwindow* window, int width, int 
     glViewport(0, 0, width, height);
 
     // Recalculate the projection matrix with the new window size
-    game.updateProjectionMatrix(width, height);
+    game.getGraphicsContext().updateProjectionMatrix(width, height);
 
     // If a text renderer exists, update its screen size to match the new dimensions
     if (game.getTextRender()) {
@@ -42,7 +42,7 @@ void InputManager::scroll_callback(GLFWwindow* window, double xOffset, double yO
     int width, height;
     glfwGetWindowSize(window, &width, &height);
 
-    game.updateProjectionMatrix(width, height);
+    game.getGraphicsContext().updateProjectionMatrix(width, height);
 }
 
 void InputManager::mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
@@ -286,7 +286,6 @@ void InputManager::handleInput() {
             else {
                 game.getNetworkManager().sendHeatBeat(game.getClientId());
             }
-            // End Here
         }
         else {
             std::cerr << "Player with ID " << game.getClientId() << " not found." << std::endl;

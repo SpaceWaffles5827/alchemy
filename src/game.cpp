@@ -9,9 +9,10 @@
 
 Game::Game(Mode mode)
     : VAO(0), VBO(0), shaderProgram(0), redShaderProgram(0), clientId(std::rand()), tickRate(1.0 / 64.0),
-    projection(1.0f), cameraZoom(1.0f), currentMode(mode), chat(800, 800), selectedTileX(0), selectedTileY(0),
+    projection(1.0f), currentMode(mode), chat(800, 800), selectedTileX(0), selectedTileY(0),
     displayInventory(false), showFps(false) {
     networkManager.setupUDPClient();
+    graphicsContext.setCameraZoom(1.0f);
 }
 
 Game::~Game() {
@@ -19,7 +20,7 @@ Game::~Game() {
 }
 
 void Game::setCameraZoom(float zoom) {
-    cameraZoom = zoom;
+    graphicsContext.setCameraZoom(zoom);
 }
 
 void Game::setProjectionMatrix(glm::mat4 projectionMatrix) {
@@ -54,8 +55,7 @@ void Game::init() {
     playerInventory = Inventory(glm::vec3(400.0f, 400.0f, 0.0f), glm::vec3(0.0f), 176.0f * 3, 166.0f * 3, inventoryTextureID,
         glm::vec2(0.0f, 1.0f), glm::vec2(1.0f, 0.0f), 3, 9);
 
-    // Change the texture of the first slot to a different texture
-    std::vector<InventorySlot> & invSlot = playerInventory.getInventorySlots();
+    std::vector<InventorySlot>& invSlot = playerInventory.getInventorySlots();
 
     GLuint specialTextureID = graphicsContext.loadTexture("stone_bricks.png");
     invSlot[0].setTexture(specialTextureID);
@@ -73,6 +73,7 @@ void Game::init() {
 bool Game::getDispalyInventory() {
     return displayInventory;
 }
+
 void Game::setDispalyInventory(bool status) {
     displayInventory = status;
 }
@@ -123,7 +124,7 @@ void Game::renderUI(int width, int height) {
         }
 
         renderer.batchRenderGameObjects(renderables, projectionUI);
-        
+
         if (inputManager.getIsDragging()) {
             double xpos, ypos;
             glfwGetCursorPos(graphicsContext.getWindow(), &xpos, &ypos);
@@ -246,7 +247,7 @@ void Game::render() {
     int width, height;
     glfwGetWindowSize(graphicsContext.getWindow(), &width, &height);
 
-    // graphicsContext.updateProjectionMatrix(width, height);
+    graphicsContext.updateProjectionMatrix(width, height);
 
     // Render game world objects
     {
@@ -292,7 +293,6 @@ void Game::cleanup() {
 
     if (graphicsContext.getWindow()) {
         glfwDestroyWindow(graphicsContext.getWindow());
-        // window = nullptr;
     }
 
     glfwTerminate();
@@ -368,33 +368,12 @@ void Game::saveWorld(const std::string& filename) {
 
 void Game::updateUiProjectionMatrix(int width, int height) {
     float aspectRatio = static_cast<float>(width) / height;
-    float viewWidth = 20.0f * cameraZoom;
+    float viewWidth = 20.0f * graphicsContext.getCameraZoom();
     float viewHeight = viewWidth / aspectRatio;
 
     projection = glm::ortho(
         viewWidth / 2.0f, viewWidth / 2.0f,
         viewHeight / 2.0f, viewHeight / 2.0f,
-        -1.0f, 1.0f
-    );
-
-    GLuint transformLoc = glGetUniformLocation(shaderProgram, "transform");
-    glUseProgram(shaderProgram);
-    glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(projection));
-}
-
-void Game::updateProjectionMatrix(int width, int height) {
-    float aspectRatio = static_cast<float>(width) / height;
-    float viewWidth = 20.0f * cameraZoom;
-    float viewHeight = viewWidth / aspectRatio;
-
-    auto player = world.getPlayerById(clientId);
-    if (!player) return;
-
-    glm::vec2 playerPos = player->getPosition();
-
-    projection = glm::ortho(
-        playerPos.x - viewWidth / 2.0f, playerPos.x + viewWidth / 2.0f,
-        playerPos.y - viewHeight / 2.0f, playerPos.y + viewHeight / 2.0f,
         -1.0f, 1.0f
     );
 
@@ -415,5 +394,5 @@ void Game::loadWorld(const std::string& filename) {
 }
 
 float Game::getCameraZoom() {
-    return cameraZoom;
+    return graphicsContext.getCameraZoom();
 }

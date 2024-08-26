@@ -48,7 +48,8 @@ public:
     void loadWorld(const std::string& filename);
 
     Chat& getChat();
-    void updateProjectionMatrix(int width, int height);
+
+    glm::mat4 getProjection();
 
     void setCurrentMode(Mode mode) { currentMode = mode; }
 
@@ -72,8 +73,6 @@ public:
 
     int getSelectedSlotIndex();
 
-    glm::mat4 getProjection();
-
     void setDraggingTextureId(GLuint textureId);
 
     void setDraggingItemName(std::string name);
@@ -92,7 +91,6 @@ private:
     void checkCompileErrors(GLuint shader, std::string type);
     void updateUiProjectionMatrix(int width, int height);
 
-
     int selectedSlotIndex = -1;         // The index of the slot being dragged
     GLuint draggedTextureID = 0;        // The texture ID of the dragged item
     std::string draggedItemName;        // The name of the dragged item
@@ -105,10 +103,9 @@ private:
     bool showFps;
     bool displayInventory;
 
-    // GLFWwindow* window;
     GraphicsContext graphicsContext;
 
-    GLuint VAO, VBO; // move this to graphics context 
+    GLuint VAO, VBO;
     GLuint shaderProgram, redShaderProgram;
 
     NetworkManager networkManager;
@@ -127,7 +124,6 @@ private:
     GLuint textureID2;
     GLuint inventoryTextureID;
 
-    float cameraZoom;
     Mode currentMode;
     Render renderer;
 

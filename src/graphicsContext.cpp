@@ -3,9 +3,10 @@
 #include <alchemy/graphicsContext.h>
 #include <stb/stb_image.h>  // Assuming this is for image loading
 #include <iostream>
+#include <alchemy/global.h>
 
 GraphicsContext::GraphicsContext(const std::string& title)
-    : window(nullptr), title(title) {}
+    : window(nullptr), title(title), cameraZoom(1.0f) {}
 
 GraphicsContext::~GraphicsContext() {
     // cleanup();
@@ -84,4 +85,36 @@ GLuint GraphicsContext::loadTexture(const char* path) {
     stbi_image_free(data); // Free the image memory
 
     return textureID;
+}
+
+void GraphicsContext::updateProjectionMatrix(int width, int height) {
+    float aspectRatio = static_cast<float>(width) / height;
+    float viewWidth = 20.0f * cameraZoom;
+    float viewHeight = viewWidth / aspectRatio;
+
+    // Retrieve the player position
+    auto player = game.getWorld().getPlayerById(game.getClientId());
+    if (!player) return;
+
+    glm::vec2 playerPos = player->getPosition();
+
+    glm::mat4 projection = glm::ortho(
+        playerPos.x - viewWidth / 2.0f, playerPos.x + viewWidth / 2.0f,
+        playerPos.y - viewHeight / 2.0f, playerPos.y + viewHeight / 2.0f,
+        -1.0f, 1.0f
+    );
+
+    game.setProjectionMatrix(projection);
+
+    GLuint transformLoc = glGetUniformLocation(game.getShaderProgram(), "transform");
+    glUseProgram(game.getShaderProgram());
+    glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(projection));
+}
+
+float GraphicsContext::getCameraZoom() {
+    return cameraZoom;
+}
+
+void GraphicsContext::setCameraZoom(float zoom) {
+    cameraZoom = zoom;
 }

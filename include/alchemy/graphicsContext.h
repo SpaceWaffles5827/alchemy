@@ -17,11 +17,16 @@ public:
 
     GLuint loadTexture(const char* path);
 
-    // void updateProjectionMatrix(int width, int height);
+    void updateProjectionMatrix(int width, int height);
+
+    float getCameraZoom();
+    void setCameraZoom(float zoom);
 
 private:
     void initGLFW();
     void initGLEW();
+
+    float cameraZoom;
 
     GLFWwindow* window;
     std::string title;
