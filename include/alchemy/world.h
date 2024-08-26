@@ -5,7 +5,7 @@
 #include <memory>
 #include <algorithm>
 #include "GameObject.h"
-#include "Player.h"
+#include <alchemy/Player.h>
 #include <glm/glm.hpp>
 
 class World {
@@ -39,7 +39,7 @@ public:
     }
 
     void initTileView(int width, int height, float tileSize, GLuint textureID1, GLuint textureID2) {
-        srand(time(NULL));  // Seed the random number generator
+        srand(time(NULL));
 
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
@@ -49,9 +49,9 @@ public:
                 GLuint selectedTexture = (x + y) % 2 == 0 ? textureID1 : textureID2;
 
                 auto tile = std::make_shared<GameObject>(
-                    glm::vec3(x * tileSize, y * tileSize, 0.0f), // Position
-                    glm::vec3(0.0f), // Rotation
-                    tileSize, tileSize, // Width and Height
+                    glm::vec3(x * tileSize, y * tileSize, 0.0f),
+                    glm::vec3(0.0f),
+                    tileSize, tileSize,
                     selectedTexture
                 );
 

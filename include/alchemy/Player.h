@@ -2,12 +2,13 @@
 #define PLAYER_H
 
 #include <GLEW/glew.h>
+#include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <stb/stb_image.h>
 #include <iostream>
-#include <alchemy/gameObject.h>
+#include <alchemy/gameObject.h>     
 
 class Player : public GameObject {
 public:
@@ -20,6 +21,7 @@ public:
 
 private:
     int clientId;
+    bool keyReleased[GLFW_KEY_LAST];
 };
 
 #endif // PLAYER_H

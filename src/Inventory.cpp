@@ -8,8 +8,6 @@ Inventory::Inventory(const glm::vec3& pos, const glm::vec3& rot, float width, fl
     const glm::vec2& texTopLeft, const glm::vec2& texBottomRight, int rows, int cols)
     : Renderable(width, height, textureID, glm::vec2(texTopLeft.x, 1.0f - texTopLeft.y), glm::vec2(texBottomRight.x, 1.0f - texBottomRight.y), pos, rot) {
 
-    std::cout << "Init Inventory\n";
-
     initializeSlots(rows, cols, 48, 48, 6, 6);
 }
 

@@ -18,6 +18,8 @@
 #include <vector>
 #include <alchemy/Inventory.h>
 #include <alchemy/Inventory.h>
+#include <alchemy/graphicsContext.h>
+#include <alchemy/inputManager.h>
 
 enum class Mode {
     Game,
@@ -35,16 +37,18 @@ public:
     void run();
     void init();
 
-    GLuint loadTexture(const char* path);
     NetworkManager& getNetworkManager();
     World& getWorld();
-    GLFWwindow& getWindow();
-    TextRenderer& getTextRender();
+    GraphicsContext& getGraphicsContext();
+    TextRenderer* getTextRender();
 
     void saveLevel(const std::string& filename);
     void loadLevel(const std::string& filename);
     void saveWorld(const std::string& filename);
     void loadWorld(const std::string& filename);
+
+    Chat& getChat();
+    void updateProjectionMatrix(int width, int height);
 
     void setCurrentMode(Mode mode) { currentMode = mode; }
 
@@ -52,41 +56,59 @@ public:
         return textureID1;
     }
 
+    Mode getGameMode();
+
+    Inventory& getPlayerInventory();
+
+    bool getDispalyInventory();
+    void setDispalyInventory(bool status);
+    int getClientId();
+
+    void setCameraZoom(float zoom);
+
+    float getCameraZoom();
+
+    void setSelectedSlotIndex(int slotIndex);
+
+    int getSelectedSlotIndex();
+
+    glm::mat4 getProjection();
+
+    void setDraggingTextureId(GLuint textureId);
+
+    void setDraggingItemName(std::string name);
+
+    void setDraggingStartPos(glm::vec2);
+
+    void setProjectionMatrix(glm::mat4 projectionMatrix);
+
+    GLuint getShaderProgram();
+
 private:
-    void initGLFW();
-    void initGLEW();
-    void processInput();
     void update(double deltaTime);
     void render();
     void renderUI(int width, int height);
     void cleanup();
     void checkCompileErrors(GLuint shader, std::string type);
-    void updateProjectionMatrix(int width, int height);
     void updateUiProjectionMatrix(int width, int height);
-    void renderTileSelectionUI();
-    static void scroll_callback(GLFWwindow* window, double xOffset, double yOffset);
-    static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-    static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 
-    bool isDragging = false;            // Whether the user is currently dragging an item
+
     int selectedSlotIndex = -1;         // The index of the slot being dragged
     GLuint draggedTextureID = 0;        // The texture ID of the dragged item
     std::string draggedItemName;        // The name of the dragged item
     glm::vec2 dragStartPosition;        // The starting position of the drag
 
-    void handleInventorySlotClick(int slotIndex);
     void handleWorldInteraction(double xpos, double ypos, int width, int height);
-    void handleRightClickInteraction();
 
-    bool keyReleased[GLFW_KEY_LAST];
     int selectedTileX;
     int selectedTileY;
-    bool tileSelectionVisible;
-    bool displayInventory;
     bool showFps;
+    bool displayInventory;
 
-    GLFWwindow* window;
-    GLuint VAO, VBO;
+    // GLFWwindow* window;
+    GraphicsContext graphicsContext;
+
+    GLuint VAO, VBO; // move this to graphics context 
     GLuint shaderProgram, redShaderProgram;
 
     NetworkManager networkManager;
@@ -98,6 +120,8 @@ private:
     glm::mat4 projection;
     glm::mat4 projectionUi;
     std::unordered_map<int, Player> players;
+
+    InputManager inputManager;
 
     GLuint textureID1;
     GLuint textureID2;

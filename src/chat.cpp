@@ -38,20 +38,20 @@ void Chat::addMessage(const std::string& message) {
 void Chat::render() {
     GLfloat y = screenHeight - lineHeight;  // Start rendering from the bottom
     for (const auto& message : messages) {
-        game.getTextRender().renderText(message, 10.0f, y, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));  // White text
+        game.getTextRender()->renderText(message, 10.0f, y, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));  // White text
         y -= lineHeight;
     }
 
     // Render the current message being typed if chat mode is active
     if (isChatMode) {
-        game.getTextRender().renderText("> " + currentMessage, 10.0f, 10.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));  // White text
+        game.getTextRender()->renderText("> " + currentMessage, 10.0f, 10.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));  // White text
     }
 
     // Render suggestions if available
     if (!suggestions.empty()) {
         GLfloat suggestionY = 50.0f;
         for (const auto& suggestion : suggestions) {
-            game.getTextRender().renderText(suggestion, 10.0f, suggestionY, 0.8f, glm::vec3(0.7f, 0.7f, 0.7f));  // Grey text
+            game.getTextRender()->renderText(suggestion, 10.0f, suggestionY, 0.8f, glm::vec3(0.7f, 0.7f, 0.7f));  // Grey text
             suggestionY += lineHeight;
         }
     }
@@ -295,7 +295,7 @@ void Chat::loadWorld(const std::string& worldName) {
                     values.push_back(std::stof(token));
                 }
 
-                if (values.size() == 14) {  // Ensure the correct number of values
+                if (values.size() == 14) {
                     glm::vec3 pos(values[0], values[1], values[2]);
                     glm::vec3 scale(values[3], values[4], values[5]);
                     glm::vec3 rot(values[6], values[7], values[8]);

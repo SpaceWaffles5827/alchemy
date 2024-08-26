@@ -3,15 +3,18 @@
 
 Player::Player(int clientId, const glm::vec3& color, float x, float y, float width, float height, GLuint textureID)
     : GameObject(glm::vec3(x, y, 0.0f), glm::vec3(0.0f), width, height, textureID), clientId(clientId) {
-    // Additional initialization if needed
+
+    for (int i = 0; i < GLFW_KEY_LAST; ++i) {
+        keyReleased[i] = true;
+    }
 }
 
 Player::~Player() {
 }
 
 void Player::handleInput() {
-    static GLuint runningTextureID = game.loadTexture("aniwooRunning.png");
-    static GLuint idleTextureID = game.loadTexture("andiwooIdle.png");
+    static GLuint runningTextureID = game.getGraphicsContext().loadTexture("aniwooRunning.png");
+    static GLuint idleTextureID = game.getGraphicsContext().loadTexture("andiwooIdle.png");
 
     bool positionUpdated = false;
     bool isMoving = false;
@@ -35,10 +38,10 @@ void Player::handleInput() {
         lastTime = currentTime;
     }
 
-    bool moveUp = glfwGetKey(&game.getWindow(), GLFW_KEY_W) == GLFW_PRESS;
-    bool moveDown = glfwGetKey(&game.getWindow(), GLFW_KEY_S) == GLFW_PRESS;
-    bool moveLeft = glfwGetKey(&game.getWindow(), GLFW_KEY_A) == GLFW_PRESS;
-    bool moveRight = glfwGetKey(&game.getWindow(), GLFW_KEY_D) == GLFW_PRESS;
+    bool moveUp = glfwGetKey(game.getGraphicsContext().getWindow(), GLFW_KEY_W) == GLFW_PRESS;
+    bool moveDown = glfwGetKey(game.getGraphicsContext().getWindow(), GLFW_KEY_S) == GLFW_PRESS;
+    bool moveLeft = glfwGetKey(game.getGraphicsContext().getWindow(), GLFW_KEY_A) == GLFW_PRESS;
+    bool moveRight = glfwGetKey(game.getGraphicsContext().getWindow(), GLFW_KEY_D) == GLFW_PRESS;
 
     if (moveUp && !moveDown) {
         direction.y += 1.0f;

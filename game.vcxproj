@@ -149,6 +149,8 @@
     <ClCompile Include="include\glm\detail\glm.cpp" />
     <ClCompile Include="include\glm\glm.cppm" />
     <ClCompile Include="src\global.cpp" />
+    <ClCompile Include="src\graphicsContext.cpp" />
+    <ClCompile Include="src\inputManager.cpp" />
     <ClCompile Include="src\Inventory.cpp" />
     <ClCompile Include="src\InventorySlot.cpp" />
     <ClCompile Include="src\main.cpp" />
@@ -171,6 +173,8 @@
     <ClInclude Include="include\alchemy\game.h" />
     <ClInclude Include="include\alchemy\gameObject.h" />
     <ClInclude Include="include\alchemy\global.h" />
+    <ClInclude Include="include\alchemy\graphicsContext.h" />
+    <ClInclude Include="include\alchemy\inputManager.h" />
     <ClInclude Include="include\alchemy\Inventory.h" />
     <ClInclude Include="include\alchemy\networkManager.h" />
     <ClInclude Include="include\alchemy\network_protocol.h" />
