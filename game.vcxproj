@@ -154,6 +154,7 @@
     <ClCompile Include="src\Inventory.cpp" />
     <ClCompile Include="src\InventorySlot.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\mob.cpp" />
     <ClCompile Include="src\networkManager.cpp" />
     <ClCompile Include="src\player.cpp" />
     <ClCompile Include="src\render.cpp" />
@@ -177,6 +178,7 @@
     <ClInclude Include="include\alchemy\graphicsContext.h" />
     <ClInclude Include="include\alchemy\inputManager.h" />
     <ClInclude Include="include\alchemy\Inventory.h" />
+    <ClInclude Include="include\alchemy\mob.h" />
     <ClInclude Include="include\alchemy\networkManager.h" />
     <ClInclude Include="include\alchemy\network_protocol.h" />
     <ClInclude Include="include\alchemy\player.h" />
@@ -732,9 +734,14 @@
     <Image Include="aniwooRunning.png" />
     <Image Include="grass.png" />
     <Image Include="inventory.png" />
+    <Image Include="Pink_Monster_Idle_4.png" />
     <Image Include="spriteSheet.png" />
     <Image Include="spruce_log.png" />
     <Image Include="stone_bricks.png" />
+    <Image Include="textures\BIRDSPRITESHEET_Blue.png" />
+    <Image Include="textures\BIRDSPRITESHEET_White.png" />
+    <Image Include="textures\CATSPRITESHEET_Gray.png" />
+    <Image Include="textures\CATSPRITESHEET_Orange.png" />
     <Image Include="wizard.png" />
     <Image Include="wtf.png" />
   </ItemGroup>

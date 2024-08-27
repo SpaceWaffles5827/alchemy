@@ -72,6 +72,9 @@
     <ClCompile Include="src\world.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\mob.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Library Include="lib\glfw3.lib" />
@@ -1310,6 +1313,9 @@
     <ClInclude Include="include\alchemy\inputManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\alchemy\mob.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="include\glm\gtc\bitfield.inl">
@@ -1762,6 +1768,21 @@
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="wtf.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Pink_Monster_Idle_4.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="textures\BIRDSPRITESHEET_Blue.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="textures\BIRDSPRITESHEET_White.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="textures\CATSPRITESHEET_Gray.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="textures\CATSPRITESHEET_Orange.png">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

@@ -16,7 +16,6 @@ public:
         scale(glm::vec3(1.0f, 1.0f, 1.0f)), position(glm::vec3(0.0f)), rotation(glm::vec3(0.0f)) {
     }
 
-    // This is the problem
     Renderable(float width, float height, GLuint textureID,
         const glm::vec2& texTopLeft = glm::vec2(0.0f, 1.0f),
         const glm::vec2& texBottomRight = glm::vec2(1.0f, 0.0f),

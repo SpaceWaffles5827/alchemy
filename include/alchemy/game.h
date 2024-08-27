@@ -87,7 +87,6 @@ private:
     void cleanup();
     void checkCompileErrors(GLuint shader, std::string type);
 
-
     // move this stuff to another class for cleaner code
     int selectedSlotIndex = -1;         // The index of the slot being dragged
     GLuint draggedTextureID = 0;        // The texture ID of the dragged item

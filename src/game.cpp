@@ -58,6 +58,9 @@ void Game::init() {
     playerInventory.loadDefaults();
 
     world.initTileView(10, 10, 1.0f, textureID2, textureID2);
+
+    std::shared_ptr<Mob> mobPtr = std::make_shared<Mob>();
+    world.addMob(mobPtr);
 }
 
 bool Game::getDispalyInventory() {
@@ -122,6 +125,7 @@ void Game::run() {
         }
 
         update(elapsed);
+
         render();
 
         glfwSwapBuffers(GraphicsContext::getInstance().getWindow());
@@ -146,6 +150,13 @@ void Game::update(double deltaTime) {
             Player& player = pair.second;
 
             glm::vec2 position = player.getPosition();
+        }
+    }
+
+    // Update all mobs with the deltaTime for smooth movement
+    for (auto& mobPtr : World::getInstance().getMobs()) {
+        if (mobPtr) {
+            mobPtr->update(static_cast<float>(deltaTime));
         }
     }
 }
@@ -178,6 +189,12 @@ void Game::render() {
     // Render player objects
     {
         std::vector<std::shared_ptr<Renderable>> renderables(world.getPlayers().begin(), world.getPlayers().end());
+        renderer.batchRenderGameObjects(renderables, projection);
+    }
+
+    // Render mobs
+    {
+        std::vector<std::shared_ptr<Renderable>> renderables(world.getMobs().begin(), world.getMobs().end());
         renderer.batchRenderGameObjects(renderables, projection);
     }
 

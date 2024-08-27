@@ -11,6 +11,10 @@ void World::addPlayer(std::shared_ptr<Player> object) {
     players.push_back(object);
 }
 
+void World::addMob(std::shared_ptr<Mob> object) {
+    mobs.push_back(object);
+}
+
 void World::updatePlayerPosition(int clientId, const glm::vec3& newPosition) {
     auto player = getPlayerById(clientId);
     if (player) {
@@ -66,6 +70,10 @@ const std::vector<std::shared_ptr<GameObject>>& World::getObjects() const {
 
 const std::vector<std::shared_ptr<Player>>& World::getPlayers() const {
     return players;
+}
+
+const std::vector<std::shared_ptr<Mob>>& World::getMobs() const {
+    return mobs;
 }
 
 std::shared_ptr<Player> World::getPlayerById(int clientId) const {

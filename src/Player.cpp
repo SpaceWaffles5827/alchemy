@@ -13,6 +13,7 @@ Player::~Player() {
 }
 
 void Player::handleInput() {
+    // We need to make is so that we are not loading the textures every time we make an input. This is bad.
     static GLuint runningTextureID = GraphicsContext::getInstance().loadTexture("aniwooRunning.png");
     static GLuint idleTextureID = GraphicsContext::getInstance().loadTexture("andiwooIdle.png");
 

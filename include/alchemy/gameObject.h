@@ -4,7 +4,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include "Renderable.h"
+#include <alchemy/renderable.h>
 
 class GameObject : public Renderable {
 public:
