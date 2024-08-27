@@ -3,14 +3,16 @@
 
 #include <string>
 #include <iostream>
+#include <GLEW/glew.h>
+#include <GLFW/glfw3.h>
 
 class GraphicsContext {
 public:
-    GraphicsContext()
-        : window(nullptr), title("Default Window") {}
+    static GraphicsContext& getInstance();
 
-    GraphicsContext(const std::string& title);
-    ~GraphicsContext();
+    // Deleted functions to ensure only one instance
+    GraphicsContext(const GraphicsContext&) = delete;
+    GraphicsContext& operator=(const GraphicsContext&) = delete;
 
     void initialize();
     GLFWwindow*& getWindow();
@@ -25,6 +27,9 @@ public:
     void updateUiProjectionMatrix(int width, int height);
 
 private:
+    GraphicsContext();  // Private constructor
+    ~GraphicsContext(); // Private destructor
+
     void initGLFW();
     void initGLEW();
 

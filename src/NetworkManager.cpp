@@ -1,8 +1,13 @@
-#include <alchemy/networkManager.h>
+#include <alchemy/NetworkManager.h>
 #include <alchemy/player.h>
 #include <unordered_map>
 #include <sstream>
 #include <unordered_set>
+
+NetworkManager& NetworkManager::getInstance() {
+    static NetworkManager instance;
+    return instance;
+}
 
 NetworkManager::NetworkManager() : client_addr_len(sizeof(client_addr)) {
     std::srand(static_cast<unsigned int>(std::time(0)));
@@ -63,7 +68,7 @@ void NetworkManager::sendPlayerMovement(int clientId, float x, float y) {
     packet.type = PlayerMovement;
     packet.clientId = clientId;
     packet.movementData.x = x;
-    packet.movementData.y = y; 
+    packet.movementData.y = y;
 
     sendto(sock, (char*)&packet, sizeof(OutGoingPacket), 0, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
 }
@@ -82,10 +87,8 @@ bool NetworkManager::receiveData(std::unordered_map<int, Player>& players) {
 
     if (bytesReceived > 0) {
         if (incomingPacket.type == PlayerMovement && incomingPacket.movementUpdates.numPlayers > 0) {
-            // Set to track the player IDs received in this packet
             std::unordered_set<int> receivedPlayerIds;
 
-            // Update player positions and collect the IDs from the incoming packet
             for (int i = 0; i < incomingPacket.movementUpdates.numPlayers; ++i) {
                 const PlayerPosition& playerData = incomingPacket.movementUpdates.players[i];
                 int playerId = playerData.playerId;
@@ -96,23 +99,18 @@ bool NetworkManager::receiveData(std::unordered_map<int, Player>& players) {
 
                 auto it = players.find(playerId);
                 if (it != players.end()) {
-                    // Update the existing player's position
                     it->second.setPosition(glm::vec3(x, y, 0));
                 }
                 else {
-                    // If a new player is detected, add them to the map
-                    glm::vec3 defaultColor(1.0f, 1.0f, 1.0f); // White color
+                    glm::vec3 defaultColor(1.0f, 1.0f, 1.0f);
                     Player newPlayer(playerId, defaultColor, x, y);
                     players[playerId] = newPlayer;
                 }
             }
 
-            // Remove players that are not present in the received list
             for (auto it = players.begin(); it != players.end(); ) {
                 if (receivedPlayerIds.find(it->first) == receivedPlayerIds.end()) {
-                    // Player ID not in the received data, remove from map
                     it = players.erase(it);
-                    // std::cout << "Player " << it->first << " removed due to inactivity." << std::endl;
                 }
                 else {
                     ++it;

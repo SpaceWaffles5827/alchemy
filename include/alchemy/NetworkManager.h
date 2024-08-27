@@ -68,8 +68,11 @@ struct IncomingPacket {
 
 class NetworkManager {
 public:
-    NetworkManager();
-    ~NetworkManager();
+    static NetworkManager& getInstance();
+
+    // Deleted functions to ensure only one instance
+    NetworkManager(const NetworkManager&) = delete;
+    NetworkManager& operator=(const NetworkManager&) = delete;
 
     void setupUDPClient();
     void sendChatMessage(int clientId, const char* message);
@@ -78,6 +81,9 @@ public:
     bool receiveData(std::unordered_map<int, Player>& players);
 
 private:
+    NetworkManager();  // Private constructor
+    ~NetworkManager(); // Private destructor
+
     SOCKET sock;
     struct sockaddr_in serv_addr, client_addr;
     char buffer[BUFFER_SIZE];

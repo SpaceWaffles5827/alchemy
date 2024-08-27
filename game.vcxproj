@@ -160,6 +160,7 @@
     <ClCompile Include="src\server.cpp" />
     <ClCompile Include="src\stb.cpp" />
     <ClCompile Include="src\textRenderer.cpp" />
+    <ClCompile Include="src\world.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="lib\freetype.lib" />

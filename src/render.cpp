@@ -139,10 +139,13 @@ void Render::renderUI(int width, int height) {
     if (game.getDispalyInventory()) {
         std::vector<std::shared_ptr<Renderable>> renderables;
 
-        std::shared_ptr<Renderable> inventoryRenderable = std::make_shared<Inventory>(game.getPlayerInventory());
-        batchRenderGameObjects({ inventoryRenderable }, projectionUI);
+        // Access the Inventory singleton directly
+        Inventory& playerInventory = Inventory::getInstance();
 
-        for (auto& slot : game.getPlayerInventory().getInventorySlots()) {
+        // Push the inventory object as a Renderable
+        renderables.push_back(std::shared_ptr<Renderable>(&playerInventory, [](Renderable*) {})); // Using a no-op deleter
+
+        for (auto& slot : playerInventory.getInventorySlots()) {
             auto slotRenderable = std::make_shared<InventorySlot>(
                 slot.getPosition(),
                 slot.getRotation(),
@@ -163,11 +166,11 @@ void Render::renderUI(int width, int height) {
             auto draggedItemRenderable = std::make_shared<InventorySlot>(
                 glm::vec3(static_cast<float>(xpos), static_cast<float>(ypos), 0.0f),
                 glm::vec3(0.0f),
-                game.getPlayerInventory().getInventorySlots()[game.getSelectedSlotIndex()].getScale().x,
-                game.getPlayerInventory().getInventorySlots()[game.getSelectedSlotIndex()].getScale().y,
+                playerInventory.getInventorySlots()[game.getSelectedSlotIndex()].getScale().x,
+                playerInventory.getInventorySlots()[game.getSelectedSlotIndex()].getScale().y,
                 game.getDragTextureId(),
-                game.getPlayerInventory().getInventorySlots()[game.getSelectedSlotIndex()].getTextureTopLeft(),
-                game.getPlayerInventory().getInventorySlots()[game.getSelectedSlotIndex()].getTextureBottomRight()
+                playerInventory.getInventorySlots()[game.getSelectedSlotIndex()].getTextureTopLeft(),
+                playerInventory.getInventorySlots()[game.getSelectedSlotIndex()].getTextureBottomRight()
             );
 
             batchRenderGameObjects({ draggedItemRenderable }, projectionUI);

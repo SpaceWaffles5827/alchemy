@@ -56,7 +56,7 @@ public:
 
     Inventory& getPlayerInventory();
 
-    bool getDispalyInventory(); // Fix typo
+    bool getDispalyInventory();
     void setDispalyInventory(bool status);
     int getClientId();
 
@@ -78,7 +78,7 @@ public:
 
     GLuint gettextureID2();
 
-    InputManager getInputManager();
+    InputManager& getInputManager();
 
 private:
     void update(double deltaTime);
@@ -95,22 +95,15 @@ private:
     bool showFps;
     bool displayInventory;
 
-    GraphicsContext graphicsContext;
-
     GLuint VAO, VBO;
     GLuint shaderProgram, redShaderProgram;
 
-    NetworkManager networkManager;
-
     int clientId;
     double tickRate;
-    World world;
 
     glm::mat4 projection;
     glm::mat4 projectionUi;
     std::unordered_map<int, Player> players;
-
-    InputManager inputManager;
 
     GLuint textureID1;
     GLuint textureID2;
@@ -118,12 +111,9 @@ private:
 
     Mode currentMode;
 
-    std::unique_ptr<TextRenderer> textRenderer;
     Chat chat;
 
     std::shared_ptr<UIObject> inventoryUIObject;
-
-    Inventory playerInventory;
 };
 
 #endif // GAME_H

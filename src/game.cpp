@@ -11,8 +11,8 @@ Game::Game(Mode mode)
     : VAO(0), VBO(0), shaderProgram(0), redShaderProgram(0), clientId(std::rand()), tickRate(1.0 / 64.0),
     projection(1.0f), currentMode(mode), chat(800, 800),
     displayInventory(false), showFps(false) {
-    networkManager.setupUDPClient();
-    graphicsContext.setCameraZoom(1.0f);
+    NetworkManager::getInstance().setupUDPClient();
+    GraphicsContext::getInstance().setCameraZoom(1.0f);
 }
 
 Game::~Game() {
@@ -28,33 +28,33 @@ GLuint Game::gettextureID2() {
 }
 
 void Game::init() {
-    graphicsContext.initialize();
-    inputManager.registerCallbacks();
+    GraphicsContext::getInstance().initialize();
+    InputManager::getInstance().registerCallbacks();
 
     Render& renderer = Render::getInstance();
     renderer.initialize();
 
-    textRenderer = std::make_unique<TextRenderer>(800, 800);
+    TextRenderer& textRenderer = TextRenderer::getInstance();
+    textRenderer.updateScreenSize(800, 800);
 
-    if (!textRenderer) {
-        std::cerr << "ERROR::GAME: TextRenderer failed to initialize!" << std::endl;
-    }
-    else {
-        std::cout << "TextRenderer initialized successfully!" << std::endl;
-    }
+    textRenderer.loadFont("fonts/minecraft.ttf", 24);
 
-    textRenderer->loadFont("fonts/minecraft.ttf", 24);
-
-    textureID1 = graphicsContext.loadTexture("aniwooRunning.png");
+    textureID1 = GraphicsContext::getInstance().loadTexture("aniwooRunning.png");
     std::shared_ptr<Player> clientPlayer = std::make_shared<Player>(clientId, glm::vec3(1.0f, 0.5f, 0.2f), 0.0f, 0.0f, 1.0f, 2.0f, textureID1);
     clientPlayer->setTextureTile(0, 0, 8, 512, 512, 64, 128);
+    World& world = World::getInstance();
     world.addPlayer(clientPlayer);
 
-    textureID2 = graphicsContext.loadTexture("spriteSheet.png");
-    inventoryTextureID = graphicsContext.loadTexture("inventory.png");
+    textureID2 = GraphicsContext::getInstance().loadTexture("spriteSheet.png");
+    inventoryTextureID = GraphicsContext::getInstance().loadTexture("inventory.png");
 
-    playerInventory = Inventory(glm::vec3(400.0f, 400.0f, 0.0f), glm::vec3(0.0f), 176.0f * 3, 166.0f * 3, inventoryTextureID,
-        glm::vec2(0.0f, 1.0f), glm::vec2(1.0f, 0.0f), 3, 9);
+    // Initialize and configure the singleton instance of Inventory
+    Inventory& playerInventory = Inventory::getInstance();
+    playerInventory.setPosition(glm::vec3(400.0f, 400.0f, 0.0f));
+    playerInventory.setRotation(glm::vec3(0.0f));
+    playerInventory.setDimensions(176.0f * 3, 166.0f * 3);
+    playerInventory.setTexture(inventoryTextureID, glm::vec2(0.0f, 1.0f), glm::vec2(1.0f, 0.0f));
+    playerInventory.setGridSize(3, 9);
 
     playerInventory.loadDefaults();
 
@@ -99,7 +99,7 @@ void Game::run() {
     int frameCount = 0;
     double fpsTime = 0.0;
 
-    while (!glfwWindowShouldClose(graphicsContext.getWindow())) {
+    while (!glfwWindowShouldClose(GraphicsContext::getInstance().getWindow())) {
         double currentTime = glfwGetTime();
         double elapsed = currentTime - previousTime;
         previousTime = currentTime;
@@ -118,14 +118,14 @@ void Game::run() {
         }
 
         while (lag >= tickRate) {
-            inputManager.handleInput();
+            InputManager::getInstance().handleInput();
             lag -= tickRate;
         }
 
         update(elapsed);
         render();
 
-        glfwSwapBuffers(graphicsContext.getWindow());
+        glfwSwapBuffers(GraphicsContext::getInstance().getWindow());
         glfwPollEvents();
     }
 
@@ -145,7 +145,7 @@ GLuint Game::getShaderProgram() {
 }
 
 void Game::update(double deltaTime) {
-    if (networkManager.receiveData(players)) {
+    if (NetworkManager::getInstance().receiveData(players)) {
         for (auto& pair : players) {
             int playerId = pair.first;
             Player& player = pair.second;
@@ -160,7 +160,7 @@ glm::mat4 Game::getProjection() {
 }
 
 Inventory& Game::getPlayerInventory() {
-    return playerInventory;
+    return Inventory::getInstance();
 }
 
 Mode Game::getGameMode() {
@@ -171,9 +171,10 @@ void Game::render() {
     glClear(GL_COLOR_BUFFER_BIT);
 
     int width, height;
-    glfwGetWindowSize(graphicsContext.getWindow(), &width, &height);
+    glfwGetWindowSize(GraphicsContext::getInstance().getWindow(), &width, &height);
 
-    graphicsContext.updateProjectionMatrix(width, height);
+    GraphicsContext::getInstance().updateProjectionMatrix(width, height);
+    World& world = World::getInstance();
 
     Render& renderer = Render::getInstance();
 
@@ -198,8 +199,8 @@ void Game::render() {
     }
 }
 
-InputManager Game::getInputManager() {
-    return inputManager;
+InputManager& Game::getInputManager() {
+    return InputManager::getInstance();
 }
 
 void Game::cleanup() {
@@ -223,8 +224,8 @@ void Game::cleanup() {
         redShaderProgram = 0;
     }
 
-    if (graphicsContext.getWindow()) {
-        glfwDestroyWindow(graphicsContext.getWindow());
+    if (GraphicsContext::getInstance().getWindow()) {
+        glfwDestroyWindow(GraphicsContext::getInstance().getWindow());
     }
 
     glfwTerminate();
@@ -250,17 +251,20 @@ void Game::checkCompileErrors(GLuint shader, std::string type) {
 }
 
 NetworkManager& Game::getNetworkManager() {
-    return networkManager;
+    return NetworkManager::getInstance();
 }
 
 World& Game::getWorld() {
+    World& world = World::getInstance();
     return world;
 }
 
 GraphicsContext& Game::getGraphicsContext() {
-    return graphicsContext;
+    return GraphicsContext::getInstance();
 }
 
 TextRenderer* Game::getTextRender() {
-    return textRenderer.get();
+    TextRenderer& textRenderer = TextRenderer::getInstance();
+    TextRenderer* testPointer = &textRenderer;
+    return testPointer;
 }

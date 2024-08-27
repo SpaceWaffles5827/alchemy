@@ -1,14 +1,19 @@
 #include <alchemy/inputManager.h>
 #include <alchemy/global.h>
 
-InputManager::InputManager() {
+InputManager& InputManager::getInstance() {
+    static InputManager instance;
+    return instance;
+}
+
+InputManager::InputManager() : isDragging(false) {
     for (int i = 0; i < GLFW_KEY_LAST; ++i) {
         keyReleased[i] = true;
     }
-    isDragging = false; // Initialize isDragging
 }
 
 InputManager::~InputManager() {
+    // Cleanup if needed
 }
 
 bool InputManager::getIsDragging() {
@@ -16,7 +21,7 @@ bool InputManager::getIsDragging() {
 }
 
 void InputManager::registerCallbacks() {
-    glfwSetWindowUserPointer(game.getGraphicsContext().getWindow(), this); // Set the InputManager instance as the user pointer
+    glfwSetWindowUserPointer(game.getGraphicsContext().getWindow(), this);
     glfwSetFramebufferSizeCallback(game.getGraphicsContext().getWindow(), framebuffer_size_callback);
     glfwSetScrollCallback(game.getGraphicsContext().getWindow(), scroll_callback);
     glfwSetMouseButtonCallback(game.getGraphicsContext().getWindow(), mouse_button_callback);
@@ -24,11 +29,8 @@ void InputManager::registerCallbacks() {
 
 void InputManager::framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
-
-    // Recalculate the projection matrix with the new window size
     game.getGraphicsContext().updateProjectionMatrix(width, height);
 
-    // If a text renderer exists, update its screen size to match the new dimensions
     if (game.getTextRender()) {
         game.getTextRender()->updateScreenSize(width, height);
     }
@@ -74,22 +76,18 @@ void InputManager::mouse_button_callback(GLFWwindow* window, int button, int act
             if (game.getDispalyInventory()) {
                 int slotIndex = game.getPlayerInventory().getSlotIndexAt(worldX, worldY);
                 if (slotIndex != -1 && slotIndex != game.getSelectedSlotIndex()) {
-                    // Swap the items between the slots
                     auto& sourceSlot = game.getPlayerInventory().getInventorySlots()[game.getSelectedSlotIndex()];
                     auto& targetSlot = game.getPlayerInventory().getInventorySlots()[slotIndex];
 
-                    // Swap textures
                     GLuint tempTextureID = targetSlot.getTextureID();
                     targetSlot.setTexture(sourceSlot.getTextureID());
                     sourceSlot.setTexture(tempTextureID);
 
-                    // Swap item names
                     std::string tempItemName = targetSlot.getItem();
                     targetSlot.setItem(sourceSlot.getItem());
                     sourceSlot.setItem(tempItemName);
                 }
 
-                // Reset dragging state
                 inputManager->isDragging = false;
                 game.setSelectedSlotIndex(-1);
                 game.setDraggingTextureId(0);
@@ -159,20 +157,19 @@ void InputManager::handleInput() {
         }
 
         if (glfwGetKey(game.getGraphicsContext().getWindow(), GLFW_KEY_TAB) == GLFW_PRESS && tabKeyReleased) {
-            game.getChat().selectSuggestion(); // Handle tab in chat mode
+            game.getChat().selectSuggestion();
             tabKeyReleased = false;
         }
         if (glfwGetKey(game.getGraphicsContext().getWindow(), GLFW_KEY_TAB) == GLFW_RELEASE) {
             tabKeyReleased = true;
         }
 
-        // Process letter keys for chat
         for (int key = GLFW_KEY_A; key <= GLFW_KEY_Z; ++key) {
             if (glfwGetKey(game.getGraphicsContext().getWindow(), key) == GLFW_PRESS && keyReleased[key]) {
                 bool shiftPressed = glfwGetKey(game.getGraphicsContext().getWindow(), GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS || glfwGetKey(game.getGraphicsContext().getWindow(), GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS;
                 char c = static_cast<char>(key);
                 if (!shiftPressed) {
-                    c += 32; // Convert to lowercase if shift is not pressed
+                    c += 32;
                 }
                 std::string currentMessage = game.getChat().getCurrentMessage();
                 currentMessage += c;
@@ -184,7 +181,6 @@ void InputManager::handleInput() {
             }
         }
 
-        // Process number keys for chat
         for (int key = GLFW_KEY_0; key <= GLFW_KEY_9; ++key) {
             if (glfwGetKey(game.getGraphicsContext().getWindow(), key) == GLFW_PRESS && keyReleased[key]) {
                 char c = static_cast<char>(key);
@@ -198,7 +194,6 @@ void InputManager::handleInput() {
             }
         }
 
-        // Process space key for chat
         if (glfwGetKey(game.getGraphicsContext().getWindow(), GLFW_KEY_SPACE) == GLFW_PRESS && keyReleased[GLFW_KEY_SPACE]) {
             std::string currentMessage = game.getChat().getCurrentMessage();
             currentMessage += ' ';
@@ -209,11 +204,9 @@ void InputManager::handleInput() {
             keyReleased[GLFW_KEY_SPACE] = true;
         }
     }
-    else { // Handle input when chat mode is not active
+    else {
         std::shared_ptr<Player> player = game.getWorld().getPlayerById(game.getClientId());
         if (player) {
-            // Code that use to just make up this method 
-
             static GLuint runningTextureID = game.getGraphicsContext().loadTexture("aniwooRunning.png");
             static GLuint idleTextureID = game.getGraphicsContext().loadTexture("andiwooIdle.png");
 
@@ -364,7 +357,6 @@ void InputManager::handleWorldInteraction(double xpos, double ypos, int width, i
             1.0f,
             game.gettextureID2());
 
-        // update this later to use the propper texture chords
         gameObjectAdding->setTextureTile(0, 0, 8, 256, 256, 32, 32);
         game.getWorld().addObject(gameObjectAdding);
     }

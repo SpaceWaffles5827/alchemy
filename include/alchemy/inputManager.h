@@ -12,15 +12,14 @@
 
 class InputManager {
 public:
-    InputManager();
-    ~InputManager();
+    static InputManager& getInstance();
 
-    bool keyReleased[GLFW_KEY_LAST];
+    // Deleted functions to ensure only one instance
+    InputManager(const InputManager&) = delete;
+    InputManager& operator=(const InputManager&) = delete;
+
     void handleInput();
-
-    // Register GLFW callbacks
     void registerCallbacks();
-
     bool getIsDragging();
 
     // GLFW Callbacks
@@ -29,7 +28,12 @@ public:
     static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 
 private:
+    InputManager();  // Private constructor
+    ~InputManager(); // Private destructor
+
+    bool keyReleased[GLFW_KEY_LAST];
     bool isDragging;
+
     void handleWorldInteraction(double xpos, double ypos, int width, int height);
 };
 

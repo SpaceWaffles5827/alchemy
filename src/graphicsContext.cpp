@@ -1,15 +1,22 @@
-#include <GLEW/glew.h>
-#include <GLFW/glfw3.h>
 #include <alchemy/graphicsContext.h>
 #include <stb/stb_image.h>
-#include <iostream>
 #include <alchemy/global.h>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
-GraphicsContext::GraphicsContext(const std::string& title)
-    : window(nullptr), title(title), cameraZoom(1.0f) {}
+GraphicsContext& GraphicsContext::getInstance() {
+    static GraphicsContext instance;
+    return instance;
+}
+
+GraphicsContext::GraphicsContext()
+    : window(nullptr), title("Default Window"), cameraZoom(1.0f) {}
 
 GraphicsContext::~GraphicsContext() {
-    // cleanup();
+    if (window) {
+        glfwDestroyWindow(window);
+    }
+    glfwTerminate();
 }
 
 GLFWwindow*& GraphicsContext::getWindow() {
@@ -32,7 +39,7 @@ void GraphicsContext::initGLFW() {
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
-    window = glfwCreateWindow(800, 800, "Tile Picker", NULL, NULL);
+    window = glfwCreateWindow(800, 800, title.c_str(), NULL, NULL);
     if (!window) {
         std::cerr << "Failed to create GLFW window!" << std::endl;
         glfwTerminate();
@@ -65,7 +72,7 @@ GLuint GraphicsContext::loadTexture(const char* path) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     int width, height, nrChannels;
-    stbi_set_flip_vertically_on_load(true); // Ensure the image is flipped vertically on load
+    stbi_set_flip_vertically_on_load(true);
     unsigned char* data = stbi_load(path, &width, &height, &nrChannels, 0);
     if (data) {
         GLenum format;
@@ -82,7 +89,7 @@ GLuint GraphicsContext::loadTexture(const char* path) {
     else {
         std::cerr << "Failed to load texture: " << path << std::endl;
     }
-    stbi_image_free(data); // Free the image memory
+    stbi_image_free(data);
 
     return textureID;
 }
@@ -92,7 +99,6 @@ void GraphicsContext::updateProjectionMatrix(int width, int height) {
     float viewWidth = 20.0f * cameraZoom;
     float viewHeight = viewWidth / aspectRatio;
 
-    // Retrieve the player position
     auto player = game.getWorld().getPlayerById(game.getClientId());
     if (!player) return;
 

@@ -19,8 +19,14 @@ struct Character {
 
 class TextRenderer {
 public:
-    TextRenderer(GLuint width, GLuint height);
-    ~TextRenderer();
+    static TextRenderer& getInstance(GLuint width = 800, GLuint height = 600) {
+        static TextRenderer instance(width, height);
+        return instance;
+    }
+
+    // Delete copy constructor and assignment operator to prevent copying
+    TextRenderer(const TextRenderer&) = delete;
+    void operator=(const TextRenderer&) = delete;
 
     // Load a font file and generate character textures
     void loadFont(const std::string& font, GLuint fontSize);
@@ -31,6 +37,9 @@ public:
     void updateScreenSize(GLuint width, GLuint height);
 
 private:
+    TextRenderer(GLuint width, GLuint height);
+    ~TextRenderer();
+
     std::map<GLchar, Character> characters; // Map storing character data
     GLuint VAO, VBO; // Vertex Array Object and Vertex Buffer Object
     GLuint shaderProgram; // Shader program for rendering text
