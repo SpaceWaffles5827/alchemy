@@ -159,9 +159,9 @@ void Render::renderUI(int width, int height) {
 
         batchRenderGameObjects(renderables, projectionUI);
 
-        if (game.getInputManager().getIsDragging()) {
+        if (InputManager::getInstance().getIsDragging()) {
             double xpos, ypos;
-            glfwGetCursorPos(game.getGraphicsContext().getWindow(), &xpos, &ypos);
+            glfwGetCursorPos(GraphicsContext::getInstance().getWindow(), &xpos, &ypos);
 
             auto draggedItemRenderable = std::make_shared<InventorySlot>(
                 glm::vec3(static_cast<float>(xpos), static_cast<float>(ypos), 0.0f),

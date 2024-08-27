@@ -45,7 +45,7 @@ void Inventory::initializeSlots() {
 }
 
 void Inventory::loadDefaults() {
-    GLuint specialTextureID = game.getGraphicsContext().loadTexture("stone_bricks.png");
+    GLuint specialTextureID = GraphicsContext::getInstance().loadTexture("stone_bricks.png");
     slots[0].setTexture(specialTextureID);
     slots[0].setItem("Stone");
     slots[1].setTexture(specialTextureID);

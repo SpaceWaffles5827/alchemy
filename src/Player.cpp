@@ -13,13 +13,13 @@ Player::~Player() {
 }
 
 void Player::handleInput() {
-    static GLuint runningTextureID = game.getGraphicsContext().loadTexture("aniwooRunning.png");
-    static GLuint idleTextureID = game.getGraphicsContext().loadTexture("andiwooIdle.png");
+    static GLuint runningTextureID = GraphicsContext::getInstance().loadTexture("aniwooRunning.png");
+    static GLuint idleTextureID = GraphicsContext::getInstance().loadTexture("andiwooIdle.png");
 
     bool positionUpdated = false;
     bool isMoving = false;
 
-    auto player = game.getWorld().getPlayerById(clientId);
+    auto player = World::getInstance().getPlayerById(clientId);
     if (!player) return;
 
     glm::vec3 position = player->getPosition();
@@ -38,10 +38,10 @@ void Player::handleInput() {
         lastTime = currentTime;
     }
 
-    bool moveUp = glfwGetKey(game.getGraphicsContext().getWindow(), GLFW_KEY_W) == GLFW_PRESS;
-    bool moveDown = glfwGetKey(game.getGraphicsContext().getWindow(), GLFW_KEY_S) == GLFW_PRESS;
-    bool moveLeft = glfwGetKey(game.getGraphicsContext().getWindow(), GLFW_KEY_A) == GLFW_PRESS;
-    bool moveRight = glfwGetKey(game.getGraphicsContext().getWindow(), GLFW_KEY_D) == GLFW_PRESS;
+    bool moveUp = glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_W) == GLFW_PRESS;
+    bool moveDown = glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_S) == GLFW_PRESS;
+    bool moveLeft = glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_A) == GLFW_PRESS;
+    bool moveRight = glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_D) == GLFW_PRESS;
 
     if (moveUp && !moveDown) {
         direction.y += 1.0f;
@@ -81,11 +81,11 @@ void Player::handleInput() {
     }
 
     if (positionUpdated) {
-        game.getWorld().updatePlayerPosition(clientId, position);
-        game.getNetworkManager().sendPlayerMovement(clientId, position.x, position.y);
+        World::getInstance().updatePlayerPosition(clientId, position);
+        NetworkManager::getInstance().sendPlayerMovement(clientId, position.x, position.y);
     }
     else {
-        game.getNetworkManager().sendHeatBeat(clientId);
+        NetworkManager::getInstance().sendHeatBeat(clientId);
     }
 }
 

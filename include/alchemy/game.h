@@ -37,13 +37,6 @@ public:
     void run();
     void init();
 
-    NetworkManager& getNetworkManager();
-    World& getWorld();
-    GraphicsContext& getGraphicsContext();
-    TextRenderer* getTextRender();
-
-    Chat& getChat();
-
     glm::mat4 getProjection();
 
     void setCurrentMode(Mode mode) { currentMode = mode; }
@@ -53,8 +46,6 @@ public:
     }
 
     Mode getGameMode();
-
-    Inventory& getPlayerInventory();
 
     bool getDispalyInventory();
     void setDispalyInventory(bool status);
@@ -75,10 +66,7 @@ public:
     void setProjectionMatrix(glm::mat4 projectionMatrix);
 
     GLuint getShaderProgram();
-
     GLuint gettextureID2();
-
-    InputManager& getInputManager();
 
 private:
     void update(double deltaTime);
@@ -95,24 +83,27 @@ private:
     bool showFps;
     bool displayInventory;
 
+    // Move to graphics context
     GLuint VAO, VBO;
     GLuint shaderProgram, redShaderProgram;
 
     int clientId;
     double tickRate;
 
+    // Move to graphics context
     glm::mat4 projection;
     glm::mat4 projectionUi;
+
     std::unordered_map<int, Player> players;
 
+    // Move to graphics context
     GLuint textureID1;
     GLuint textureID2;
     GLuint inventoryTextureID;
 
     Mode currentMode;
 
-    Chat chat;
-
+    // Move to graphics context
     std::shared_ptr<UIObject> inventoryUIObject;
 };
 

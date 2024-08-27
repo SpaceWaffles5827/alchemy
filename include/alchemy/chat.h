@@ -8,7 +8,7 @@
 
 class Chat {
 public:
-    Chat(GLuint screenWidth, GLuint screenHeight);
+    static Chat& getInstance();
     ~Chat();
 
     void addMessage(const std::string& message);
@@ -18,11 +18,15 @@ public:
     bool isChatModeActive() const;
     void setChatModeActive(bool active);
 
-    void saveWorld(const std::string& worldName); // Updated method declaration
+    void saveWorld(const std::string& worldName);
     void loadWorld(const std::string& id);
-    void selectSuggestion(); // Make this method public
+    void selectSuggestion();
 
 private:
+    Chat(GLuint screenWidth, GLuint screenHeight);
+    Chat(const Chat& other) = delete;
+    Chat& operator=(const Chat& other) = delete;
+
     GLuint screenWidth;
     GLuint screenHeight;
     GLfloat lineHeight;

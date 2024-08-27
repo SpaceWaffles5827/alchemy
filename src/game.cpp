@@ -9,7 +9,7 @@
 
 Game::Game(Mode mode)
     : VAO(0), VBO(0), shaderProgram(0), redShaderProgram(0), clientId(std::rand()), tickRate(1.0 / 64.0),
-    projection(1.0f), currentMode(mode), chat(800, 800),
+    projection(1.0f), currentMode(mode),
     displayInventory(false), showFps(false) {
     NetworkManager::getInstance().setupUDPClient();
     GraphicsContext::getInstance().setCameraZoom(1.0f);
@@ -48,7 +48,6 @@ void Game::init() {
     textureID2 = GraphicsContext::getInstance().loadTexture("spriteSheet.png");
     inventoryTextureID = GraphicsContext::getInstance().loadTexture("inventory.png");
 
-    // Initialize and configure the singleton instance of Inventory
     Inventory& playerInventory = Inventory::getInstance();
     playerInventory.setPosition(glm::vec3(400.0f, 400.0f, 0.0f));
     playerInventory.setRotation(glm::vec3(0.0f));
@@ -136,10 +135,6 @@ int Game::getClientId() {
     return clientId;
 }
 
-Chat& Game::getChat() {
-    return chat;
-}
-
 GLuint Game::getShaderProgram() {
     return shaderProgram;
 }
@@ -157,10 +152,6 @@ void Game::update(double deltaTime) {
 
 glm::mat4 Game::getProjection() {
     return projection;
-}
-
-Inventory& Game::getPlayerInventory() {
-    return Inventory::getInstance();
 }
 
 Mode Game::getGameMode() {
@@ -191,16 +182,12 @@ void Game::render() {
     }
 
     // Render the chat
-    chat.render();
+    Chat::getInstance().render();
 
     // Render the UI elements (like inventory)
     if (displayInventory) {
         renderer.renderUI(width, height);
     }
-}
-
-InputManager& Game::getInputManager() {
-    return InputManager::getInstance();
 }
 
 void Game::cleanup() {
@@ -248,23 +235,4 @@ void Game::checkCompileErrors(GLuint shader, std::string type) {
             std::cout << "| ERROR::Program: Link-time error: Type: " << type << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
         }
     }
-}
-
-NetworkManager& Game::getNetworkManager() {
-    return NetworkManager::getInstance();
-}
-
-World& Game::getWorld() {
-    World& world = World::getInstance();
-    return world;
-}
-
-GraphicsContext& Game::getGraphicsContext() {
-    return GraphicsContext::getInstance();
-}
-
-TextRenderer* Game::getTextRender() {
-    TextRenderer& textRenderer = TextRenderer::getInstance();
-    TextRenderer* testPointer = &textRenderer;
-    return testPointer;
 }

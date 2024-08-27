@@ -21,30 +21,27 @@ bool InputManager::getIsDragging() {
 }
 
 void InputManager::registerCallbacks() {
-    glfwSetWindowUserPointer(game.getGraphicsContext().getWindow(), this);
-    glfwSetFramebufferSizeCallback(game.getGraphicsContext().getWindow(), framebuffer_size_callback);
-    glfwSetScrollCallback(game.getGraphicsContext().getWindow(), scroll_callback);
-    glfwSetMouseButtonCallback(game.getGraphicsContext().getWindow(), mouse_button_callback);
+    glfwSetWindowUserPointer(GraphicsContext::getInstance().getWindow(), this);
+    glfwSetFramebufferSizeCallback(GraphicsContext::getInstance().getWindow(), framebuffer_size_callback);
+    glfwSetScrollCallback(GraphicsContext::getInstance().getWindow(), scroll_callback);
+    glfwSetMouseButtonCallback(GraphicsContext::getInstance().getWindow(), mouse_button_callback);
 }
 
 void InputManager::framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
-    game.getGraphicsContext().updateProjectionMatrix(width, height);
-
-    if (game.getTextRender()) {
-        game.getTextRender()->updateScreenSize(width, height);
-    }
+    GraphicsContext::getInstance().updateProjectionMatrix(width, height);
+    TextRenderer::getInstance().updateScreenSize(width, height);
 }
 
 void InputManager::scroll_callback(GLFWwindow* window, double xOffset, double yOffset) {
-    game.getGraphicsContext().setCameraZoom(game.getGraphicsContext().getCameraZoom() + yOffset * -0.1f);
-    if (game.getGraphicsContext().getCameraZoom() < 0.1f) game.getGraphicsContext().setCameraZoom(0.1f);
-    if (game.getGraphicsContext().getCameraZoom() > 99.0f) game.getGraphicsContext().setCameraZoom(99.0f);
+    GraphicsContext::getInstance().setCameraZoom(GraphicsContext::getInstance().getCameraZoom() + yOffset * -0.1f);
+    if (GraphicsContext::getInstance().getCameraZoom() < 0.1f) GraphicsContext::getInstance().setCameraZoom(0.1f);
+    if (GraphicsContext::getInstance().getCameraZoom() > 99.0f) GraphicsContext::getInstance().setCameraZoom(99.0f);
 
     int width, height;
     glfwGetWindowSize(window, &width, &height);
 
-    game.getGraphicsContext().updateProjectionMatrix(width, height);
+    GraphicsContext::getInstance().updateProjectionMatrix(width, height);
 }
 
 void InputManager::mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
@@ -62,11 +59,11 @@ void InputManager::mouse_button_callback(GLFWwindow* window, int button, int act
     if (button == GLFW_MOUSE_BUTTON_LEFT) {
         if (action == GLFW_PRESS) {
             if (game.getDispalyInventory()) {
-                int slotIndex = game.getPlayerInventory().getSlotIndexAt(worldX, worldY);
+                int slotIndex = Inventory::getInstance().getSlotIndexAt(worldX, worldY);
                 if (slotIndex != -1 && !inputManager->isDragging) {
                     game.setSelectedSlotIndex(slotIndex);
-                    game.setDraggingTextureId(game.getPlayerInventory().getInventorySlots()[slotIndex].getTextureID());
-                    game.setDraggingItemName(game.getPlayerInventory().getItemInSlot(slotIndex));
+                    game.setDraggingTextureId(Inventory::getInstance().getInventorySlots()[slotIndex].getTextureID());
+                    game.setDraggingItemName(Inventory::getInstance().getItemInSlot(slotIndex));
                     inputManager->isDragging = true;
                     game.setDraggingStartPos(glm::vec2(worldX, worldY));
                 }
@@ -74,10 +71,10 @@ void InputManager::mouse_button_callback(GLFWwindow* window, int button, int act
         }
         else if (action == GLFW_RELEASE && inputManager->isDragging) {
             if (game.getDispalyInventory()) {
-                int slotIndex = game.getPlayerInventory().getSlotIndexAt(worldX, worldY);
+                int slotIndex = Inventory::getInstance().getSlotIndexAt(worldX, worldY);
                 if (slotIndex != -1 && slotIndex != game.getSelectedSlotIndex()) {
-                    auto& sourceSlot = game.getPlayerInventory().getInventorySlots()[game.getSelectedSlotIndex()];
-                    auto& targetSlot = game.getPlayerInventory().getInventorySlots()[slotIndex];
+                    auto& sourceSlot = Inventory::getInstance().getInventorySlots()[game.getSelectedSlotIndex()];
+                    auto& targetSlot = Inventory::getInstance().getInventorySlots()[slotIndex];
 
                     GLuint tempTextureID = targetSlot.getTextureID();
                     targetSlot.setTexture(sourceSlot.getTextureID());
@@ -98,10 +95,10 @@ void InputManager::mouse_button_callback(GLFWwindow* window, int button, int act
     else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
         if (game.getGameMode() == Mode::LevelEdit) {
             double xpos, ypos;
-            glfwGetCursorPos(game.getGraphicsContext().getWindow(), &xpos, &ypos);
+            glfwGetCursorPos(GraphicsContext::getInstance().getWindow(), &xpos, &ypos);
 
             int width, height;
-            glfwGetWindowSize(game.getGraphicsContext().getWindow(), &width, &height);
+            glfwGetWindowSize(GraphicsContext::getInstance().getWindow(), &width, &height);
 
             float xNDC = static_cast<float>((2.0 * xpos) / width - 1.0);
             float yNDC = static_cast<float>(1.0 - (2.0 * ypos) / height);
@@ -112,7 +109,7 @@ void InputManager::mouse_button_callback(GLFWwindow* window, int button, int act
             float snappedX = std::round(worldCoords.x);
             float snappedY = std::round(worldCoords.y);
 
-            game.getWorld().eraseObject(glm::vec3(snappedX, snappedY, 0.0f));
+            World::getInstance().eraseObject(glm::vec3(snappedX, snappedY, 0.0f));
         }
     }
 }
@@ -121,94 +118,94 @@ void InputManager::handleInput() {
     static bool tabKeyReleased = true;
     static bool escKeyReleased = true;
 
-    if (game.getChat().isChatModeActive()) {
+    if (Chat::getInstance().isChatModeActive()) {
         static bool enterKeyReleased = true;
         static bool backspaceKeyReleased = true;
 
-        if (glfwGetKey(game.getGraphicsContext().getWindow(), GLFW_KEY_ENTER) == GLFW_PRESS && enterKeyReleased) {
-            game.getChat().addMessage(game.getChat().getCurrentMessage());
-            game.getChat().setCurrentMessage("");
-            game.getChat().setChatModeActive(false);
+        if (glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_ENTER) == GLFW_PRESS && enterKeyReleased) {
+            Chat::getInstance().addMessage(Chat::getInstance().getCurrentMessage());
+            Chat::getInstance().setCurrentMessage("");
+            Chat::getInstance().setChatModeActive(false);
             enterKeyReleased = false;
         }
-        if (glfwGetKey(game.getGraphicsContext().getWindow(), GLFW_KEY_ENTER) == GLFW_RELEASE) {
+        if (glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_ENTER) == GLFW_RELEASE) {
             enterKeyReleased = true;
         }
 
-        if (glfwGetKey(game.getGraphicsContext().getWindow(), GLFW_KEY_BACKSPACE) == GLFW_PRESS && backspaceKeyReleased) {
-            std::string currentMessage = game.getChat().getCurrentMessage();
+        if (glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_BACKSPACE) == GLFW_PRESS && backspaceKeyReleased) {
+            std::string currentMessage = Chat::getInstance().getCurrentMessage();
             if (!currentMessage.empty()) {
                 currentMessage.pop_back();
-                game.getChat().setCurrentMessage(currentMessage);
+                Chat::getInstance().setCurrentMessage(currentMessage);
             }
             backspaceKeyReleased = false;
         }
-        if (glfwGetKey(game.getGraphicsContext().getWindow(), GLFW_KEY_BACKSPACE) == GLFW_RELEASE) {
+        if (glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_BACKSPACE) == GLFW_RELEASE) {
             backspaceKeyReleased = true;
         }
 
-        if (glfwGetKey(game.getGraphicsContext().getWindow(), GLFW_KEY_ESCAPE) == GLFW_PRESS && escKeyReleased) {
-            game.getChat().setCurrentMessage("");
-            game.getChat().setChatModeActive(false);
+        if (glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_ESCAPE) == GLFW_PRESS && escKeyReleased) {
+            Chat::getInstance().setCurrentMessage("");
+            Chat::getInstance().setChatModeActive(false);
             escKeyReleased = false;
         }
-        if (glfwGetKey(game.getGraphicsContext().getWindow(), GLFW_KEY_ESCAPE) == GLFW_RELEASE) {
+        if (glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_ESCAPE) == GLFW_RELEASE) {
             escKeyReleased = true;
         }
 
-        if (glfwGetKey(game.getGraphicsContext().getWindow(), GLFW_KEY_TAB) == GLFW_PRESS && tabKeyReleased) {
-            game.getChat().selectSuggestion();
+        if (glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_TAB) == GLFW_PRESS && tabKeyReleased) {
+            Chat::getInstance().selectSuggestion();
             tabKeyReleased = false;
         }
-        if (glfwGetKey(game.getGraphicsContext().getWindow(), GLFW_KEY_TAB) == GLFW_RELEASE) {
+        if (glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_TAB) == GLFW_RELEASE) {
             tabKeyReleased = true;
         }
 
         for (int key = GLFW_KEY_A; key <= GLFW_KEY_Z; ++key) {
-            if (glfwGetKey(game.getGraphicsContext().getWindow(), key) == GLFW_PRESS && keyReleased[key]) {
-                bool shiftPressed = glfwGetKey(game.getGraphicsContext().getWindow(), GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS || glfwGetKey(game.getGraphicsContext().getWindow(), GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS;
+            if (glfwGetKey(GraphicsContext::getInstance().getWindow(), key) == GLFW_PRESS && keyReleased[key]) {
+                bool shiftPressed = glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS || glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS;
                 char c = static_cast<char>(key);
                 if (!shiftPressed) {
                     c += 32;
                 }
-                std::string currentMessage = game.getChat().getCurrentMessage();
+                std::string currentMessage = Chat::getInstance().getCurrentMessage();
                 currentMessage += c;
-                game.getChat().setCurrentMessage(currentMessage);
+                Chat::getInstance().setCurrentMessage(currentMessage);
                 keyReleased[key] = false;
             }
-            if (glfwGetKey(game.getGraphicsContext().getWindow(), key) == GLFW_RELEASE) {
+            if (glfwGetKey(GraphicsContext::getInstance().getWindow(), key) == GLFW_RELEASE) {
                 keyReleased[key] = true;
             }
         }
 
         for (int key = GLFW_KEY_0; key <= GLFW_KEY_9; ++key) {
-            if (glfwGetKey(game.getGraphicsContext().getWindow(), key) == GLFW_PRESS && keyReleased[key]) {
+            if (glfwGetKey(GraphicsContext::getInstance().getWindow(), key) == GLFW_PRESS && keyReleased[key]) {
                 char c = static_cast<char>(key);
-                std::string currentMessage = game.getChat().getCurrentMessage();
+                std::string currentMessage = Chat::getInstance().getCurrentMessage();
                 currentMessage += c;
-                game.getChat().setCurrentMessage(currentMessage);
+                Chat::getInstance().setCurrentMessage(currentMessage);
                 keyReleased[key] = false;
             }
-            if (glfwGetKey(game.getGraphicsContext().getWindow(), key) == GLFW_RELEASE) {
+            if (glfwGetKey(GraphicsContext::getInstance().getWindow(), key) == GLFW_RELEASE) {
                 keyReleased[key] = true;
             }
         }
 
-        if (glfwGetKey(game.getGraphicsContext().getWindow(), GLFW_KEY_SPACE) == GLFW_PRESS && keyReleased[GLFW_KEY_SPACE]) {
-            std::string currentMessage = game.getChat().getCurrentMessage();
+        if (glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_SPACE) == GLFW_PRESS && keyReleased[GLFW_KEY_SPACE]) {
+            std::string currentMessage = Chat::getInstance().getCurrentMessage();
             currentMessage += ' ';
-            game.getChat().setCurrentMessage(currentMessage);
+            Chat::getInstance().setCurrentMessage(currentMessage);
             keyReleased[GLFW_KEY_SPACE] = false;
         }
-        if (glfwGetKey(game.getGraphicsContext().getWindow(), GLFW_KEY_SPACE) == GLFW_RELEASE) {
+        if (glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_SPACE) == GLFW_RELEASE) {
             keyReleased[GLFW_KEY_SPACE] = true;
         }
     }
     else {
-        std::shared_ptr<Player> player = game.getWorld().getPlayerById(game.getClientId());
+        std::shared_ptr<Player> player = World::getInstance().getPlayerById(game.getClientId());
         if (player) {
-            static GLuint runningTextureID = game.getGraphicsContext().loadTexture("aniwooRunning.png");
-            static GLuint idleTextureID = game.getGraphicsContext().loadTexture("andiwooIdle.png");
+            static GLuint runningTextureID = GraphicsContext::getInstance().loadTexture("aniwooRunning.png");
+            static GLuint idleTextureID = GraphicsContext::getInstance().loadTexture("andiwooIdle.png");
 
             bool positionUpdated = false;
             bool isMoving = false;
@@ -229,10 +226,10 @@ void InputManager::handleInput() {
                 lastTime = currentTime;
             }
 
-            bool moveUp = glfwGetKey(game.getGraphicsContext().getWindow(), GLFW_KEY_W) == GLFW_PRESS;
-            bool moveDown = glfwGetKey(game.getGraphicsContext().getWindow(), GLFW_KEY_S) == GLFW_PRESS;
-            bool moveLeft = glfwGetKey(game.getGraphicsContext().getWindow(), GLFW_KEY_A) == GLFW_PRESS;
-            bool moveRight = glfwGetKey(game.getGraphicsContext().getWindow(), GLFW_KEY_D) == GLFW_PRESS;
+            bool moveUp = glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_W) == GLFW_PRESS;
+            bool moveDown = glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_S) == GLFW_PRESS;
+            bool moveLeft = glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_A) == GLFW_PRESS;
+            bool moveRight = glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_D) == GLFW_PRESS;
 
             if (moveUp && !moveDown) {
                 direction.y += 1.0f;
@@ -272,11 +269,11 @@ void InputManager::handleInput() {
             }
 
             if (positionUpdated) {
-                game.getWorld().updatePlayerPosition(game.getClientId(), position);
-                game.getNetworkManager().sendPlayerMovement(game.getClientId(), position.x, position.y);
+                World::getInstance().updatePlayerPosition(game.getClientId(), position);
+                NetworkManager::getInstance().sendPlayerMovement(game.getClientId(), position.x, position.y);
             }
             else {
-                game.getNetworkManager().sendHeatBeat(game.getClientId());
+                NetworkManager::getInstance().sendHeatBeat(game.getClientId());
             }
         }
         else {
@@ -287,53 +284,53 @@ void InputManager::handleInput() {
         static bool slashKeyReleased = true;
         static bool bKeyReleased = true;
 
-        if (glfwGetKey(game.getGraphicsContext().getWindow(), GLFW_KEY_T) == GLFW_PRESS && tKeyReleased) {
-            game.getChat().setChatModeActive(true);
+        if (glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_T) == GLFW_PRESS && tKeyReleased) {
+            Chat::getInstance().setChatModeActive(true);
             tKeyReleased = false;
         }
-        if (glfwGetKey(game.getGraphicsContext().getWindow(), GLFW_KEY_T) == GLFW_RELEASE) {
+        if (glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_T) == GLFW_RELEASE) {
             tKeyReleased = true;
         }
 
-        if (glfwGetKey(game.getGraphicsContext().getWindow(), GLFW_KEY_SLASH) == GLFW_PRESS && slashKeyReleased) {
-            game.getChat().setChatModeActive(true);
-            std::string currentMessage = game.getChat().getCurrentMessage();
+        if (glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_SLASH) == GLFW_PRESS && slashKeyReleased) {
+            Chat::getInstance().setChatModeActive(true);
+            std::string currentMessage = Chat::getInstance().getCurrentMessage();
             currentMessage += '/';
-            game.getChat().setCurrentMessage(currentMessage);
+            Chat::getInstance().setCurrentMessage(currentMessage);
             slashKeyReleased = false;
         }
-        if (glfwGetKey(game.getGraphicsContext().getWindow(), GLFW_KEY_SLASH) == GLFW_RELEASE) {
+        if (glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_SLASH) == GLFW_RELEASE) {
             slashKeyReleased = true;
         }
 
-        if (glfwGetKey(game.getGraphicsContext().getWindow(), GLFW_KEY_B) == GLFW_PRESS && bKeyReleased) {
+        if (glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_B) == GLFW_PRESS && bKeyReleased) {
             game.setDispalyInventory(false);
-            game.getChat().setChatModeActive(false);
+            Chat::getInstance().setChatModeActive(false);
             bKeyReleased = false;
         }
-        if (glfwGetKey(game.getGraphicsContext().getWindow(), GLFW_KEY_B) == GLFW_RELEASE) {
+        if (glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_B) == GLFW_RELEASE) {
             bKeyReleased = true;
         }
 
-        if (glfwGetKey(game.getGraphicsContext().getWindow(), GLFW_KEY_TAB) == GLFW_PRESS && tabKeyReleased) {
+        if (glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_TAB) == GLFW_PRESS && tabKeyReleased) {
             game.setDispalyInventory(!game.getDispalyInventory());
-            game.getChat().setChatModeActive(false);
+            Chat::getInstance().setChatModeActive(false);
             tabKeyReleased = false;
         }
-        if (glfwGetKey(game.getGraphicsContext().getWindow(), GLFW_KEY_TAB) == GLFW_RELEASE) {
+        if (glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_TAB) == GLFW_RELEASE) {
             tabKeyReleased = true;
         }
 
-        if (glfwGetKey(game.getGraphicsContext().getWindow(), GLFW_KEY_ESCAPE) == GLFW_PRESS && escKeyReleased) {
+        if (glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_ESCAPE) == GLFW_PRESS && escKeyReleased) {
             if (game.getDispalyInventory()) {
                 game.setDispalyInventory(false);
             }
             else {
-                game.getChat().setChatModeActive(false);
+                Chat::getInstance().setChatModeActive(false);
             }
             escKeyReleased = false;
         }
-        if (glfwGetKey(game.getGraphicsContext().getWindow(), GLFW_KEY_ESCAPE) == GLFW_RELEASE) {
+        if (glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_ESCAPE) == GLFW_RELEASE) {
             escKeyReleased = true;
         }
     }
@@ -358,6 +355,6 @@ void InputManager::handleWorldInteraction(double xpos, double ypos, int width, i
             game.gettextureID2());
 
         gameObjectAdding->setTextureTile(0, 0, 8, 256, 256, 32, 32);
-        game.getWorld().addObject(gameObjectAdding);
+        World::getInstance().addObject(gameObjectAdding);
     }
 }

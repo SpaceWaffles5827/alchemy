@@ -99,7 +99,7 @@ void GraphicsContext::updateProjectionMatrix(int width, int height) {
     float viewWidth = 20.0f * cameraZoom;
     float viewHeight = viewWidth / aspectRatio;
 
-    auto player = game.getWorld().getPlayerById(game.getClientId());
+    auto player = World::getInstance().getPlayerById(game.getClientId());
     if (!player) return;
 
     glm::vec2 playerPos = player->getPosition();

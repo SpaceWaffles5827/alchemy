@@ -5,8 +5,12 @@
 #include <algorithm>
 #include <fstream>
 #include <filesystem>
-
 namespace fs = std::filesystem;
+
+Chat& Chat::getInstance() {
+    static Chat instance(800, 800);  // Default screen size, adjust as needed
+    return instance;
+}
 
 std::string toLowerCase(const std::string& str) {
     std::string lowerStr = str;
@@ -16,7 +20,6 @@ std::string toLowerCase(const std::string& str) {
 
 Chat::Chat(GLuint screenWidth, GLuint screenHeight)
     : screenWidth(screenWidth), screenHeight(screenHeight), lineHeight(30.0f), isChatMode(false), currentMessage("") {
-
     commandMap = {
         {"setmode", {"leveledit", "play", "pause"}},
         {"saveworld", {}},
@@ -38,20 +41,20 @@ void Chat::addMessage(const std::string& message) {
 void Chat::render() {
     GLfloat y = screenHeight - lineHeight;  // Start rendering from the bottom
     for (const auto& message : messages) {
-        game.getTextRender()->renderText(message, 10.0f, y, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));  // White text
+        TextRenderer::getInstance().renderText(message, 10.0f, y, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));  // White text
         y -= lineHeight;
     }
 
     // Render the current message being typed if chat mode is active
     if (isChatMode) {
-        game.getTextRender()->renderText("> " + currentMessage, 10.0f, 10.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));  // White text
+        TextRenderer::getInstance().renderText("> " + currentMessage, 10.0f, 10.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));  // White text
     }
 
     // Render suggestions if available
     if (!suggestions.empty()) {
         GLfloat suggestionY = 50.0f;
         for (const auto& suggestion : suggestions) {
-            game.getTextRender()->renderText(suggestion, 10.0f, suggestionY, 0.8f, glm::vec3(0.7f, 0.7f, 0.7f));  // Grey text
+            TextRenderer::getInstance().renderText(suggestion, 10.0f, suggestionY, 0.8f, glm::vec3(0.7f, 0.7f, 0.7f));  // Grey text
             suggestionY += lineHeight;
         }
     }
@@ -231,7 +234,7 @@ void Chat::saveWorld(const std::string& worldName) {
     if (outFile.is_open()) {
         // Save all game objects
         outFile << "Objects:\n";
-        for (const auto& object : game.getWorld().getObjects()) {
+        for (const auto& object : World::getInstance().getObjects()) {
             glm::vec3 pos = object->getPosition();
             glm::vec3 scale = object->getScale();
             glm::vec3 rot = object->getRotation();
@@ -247,7 +250,7 @@ void Chat::saveWorld(const std::string& worldName) {
 
         // Save all players
         outFile << "Players:\n";
-        for (const auto& player : game.getWorld().getPlayers()) {
+        for (const auto& player : World::getInstance().getPlayers()) {
             glm::vec3 pos = player->getPosition();
             float width = player->getWidth();
             float height = player->getHeight();
@@ -271,7 +274,7 @@ void Chat::loadWorld(const std::string& worldName) {
     std::string filename = "worldData_" + worldName + ".txt";
     std::ifstream inFile(filename);
     if (inFile.is_open()) {
-        game.getWorld().clearObjects();
+        World::getInstance().clearObjects();
 
         std::string line;
         bool loadingObjects = false;
@@ -304,7 +307,7 @@ void Chat::loadWorld(const std::string& worldName) {
                     glm::vec2 texBottomRight(values[12], values[13]);
 
                     auto object = std::make_shared<GameObject>(pos, rot, scale.x, scale.y, texID, texTopLeft, texBottomRight);
-                    game.getWorld().addObject(object);
+                    World::getInstance().addObject(object);
                 }
             }
             else {
@@ -324,7 +327,7 @@ void Chat::loadWorld(const std::string& worldName) {
                     GLuint texID = static_cast<GLuint>(values[5]);
 
                     auto player = std::make_shared<Player>(clientId, pos, 0.0f, 0.0f, width, height, texID);
-                    game.getWorld().addPlayer(player);
+                    World::getInstance().addPlayer(player);
                 }
             }
         }
