@@ -10,7 +10,7 @@ GraphicsContext& GraphicsContext::getInstance() {
 }
 
 GraphicsContext::GraphicsContext()
-    : window(nullptr), title("Default Window"), cameraZoom(1.0f) {}
+    : window(nullptr), title("Alchemy"), cameraZoom(1.0f) {}
 
 GraphicsContext::~GraphicsContext() {
     if (window) {

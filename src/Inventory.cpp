@@ -12,7 +12,7 @@ Inventory::Inventory()
     width(1.0f),
     height(1.0f),
     textureID(0),
-    texTopLeft(glm::vec2(0.0f, 1.0f)),
+    texTopLeft(glm::vec2(0.0f, 0.0f)),
     texBottomRight(glm::vec2(1.0f, 0.0f)),
     rows(2),
     cols(2)
@@ -39,7 +39,7 @@ void Inventory::initializeSlots() {
             int index = row * cols + col;
             float x = position.x + xOffset + col * (slotWidth + horizontalGap);
             float y = position.y + yOffset + row * (slotHeight + verticalGap);
-            slots[index] = InventorySlot(glm::vec3(x, y, 0.0f), glm::vec3(0.0f), slotWidth, slotHeight, textureID, glm::vec2(0.0f, 0.0f), glm::vec2(1.0f, 1.0f));
+            slots[index] = InventorySlot(glm::vec3(x, y, 0.0f), glm::vec3(0.0f), slotWidth, slotHeight, textureID, glm::vec2(0.0f, 1.0f), glm::vec2(1.0f, 0.0f));
         }
     }
 }
@@ -54,6 +54,7 @@ void Inventory::loadDefaults() {
     slots[2].setItem("Stone");
     slots[3].setTexture(specialTextureID);
     slots[3].setItem("Stone");
+    slots[15].setIsVisable(false);
 }
 
 void Inventory::addItemToSlot(int slotIndex, const std::string& itemName) {

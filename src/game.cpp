@@ -181,13 +181,9 @@ void Game::render() {
         renderer.batchRenderGameObjects(renderables, projection);
     }
 
-    // Render the chat
     Chat::getInstance().render();
 
-    // Render the UI elements (like inventory)
-    if (displayInventory) {
-        renderer.renderUI(width, height);
-    }
+    renderer.renderUI(width, height);
 }
 
 void Game::cleanup() {

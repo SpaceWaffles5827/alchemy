@@ -59,6 +59,18 @@ public:
 
     GLuint getDragTextureId();
 
+    std::string getDraggingItemName() {
+        return draggedItemName;
+    }
+
+    void setIsDraggingItemVisable(bool isVisable) {
+        draggingItemVisable = isVisable;
+    }
+
+    bool getIsDraggingItemVisable() {
+        return draggingItemVisable;
+    }
+
     void setDraggingItemName(std::string name);
 
     void setDraggingStartPos(glm::vec2);
@@ -75,10 +87,13 @@ private:
     void cleanup();
     void checkCompileErrors(GLuint shader, std::string type);
 
+
+    // move this stuff to another class for cleaner code
     int selectedSlotIndex = -1;         // The index of the slot being dragged
     GLuint draggedTextureID = 0;        // The texture ID of the dragged item
     std::string draggedItemName;        // The name of the dragged item
     glm::vec2 dragStartPosition;        // The starting position of the drag
+    bool draggingItemVisable;           // The starting position of the drag
 
     bool showFps;
     bool displayInventory;

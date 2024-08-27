@@ -12,8 +12,11 @@ public:
     Renderable()
         : width(1.0f), height(1.0f), textureID(0),
         textureTopLeft(glm::vec2(0.0f, 1.0f)), textureBottomRight(glm::vec2(1.0f, 0.0f)),
-        scale(glm::vec3(1.0f, 1.0f, 1.0f)), position(glm::vec3(0.0f)), rotation(glm::vec3(0.0f)) {}
+        isVisable(true),
+        scale(glm::vec3(1.0f, 1.0f, 1.0f)), position(glm::vec3(0.0f)), rotation(glm::vec3(0.0f)) {
+    }
 
+    // This is the problem
     Renderable(float width, float height, GLuint textureID,
         const glm::vec2& texTopLeft = glm::vec2(0.0f, 1.0f),
         const glm::vec2& texBottomRight = glm::vec2(1.0f, 0.0f),
@@ -21,7 +24,9 @@ public:
         const glm::vec3& initialRotation = glm::vec3(0.0f))
         : width(width), height(height), textureID(textureID),
         textureTopLeft(texTopLeft), textureBottomRight(texBottomRight),
-        scale(glm::vec3(width, height, 1.0f)), position(initialPosition), rotation(initialRotation) {}
+        isVisable(true),
+        scale(glm::vec3(width, height, 1.0f)), position(initialPosition), rotation(initialRotation) {
+    }
 
     virtual ~Renderable() = default;
 
@@ -34,8 +39,13 @@ public:
     const glm::vec2& getTextureBottomRight() const { return textureBottomRight; }
     float getWidth() const { return width; }
     float getHeight() const { return height; }
+    bool getIsVisable() const { return isVisable; }
 
     // Setters
+    void setIsVisable(bool visable) {
+        isVisable = visable;
+    }
+
     void setPosition(const glm::vec3& newPosition) { position = newPosition; }
     void setRotation(const glm::vec3& newRotation) { rotation = newRotation; }
     void setScale(const glm::vec3& newScale) {
@@ -89,6 +99,7 @@ protected:
     glm::vec3 position;
     glm::vec3 rotation;
     float boundingRadius;
+    bool isVisable;
 };
 
 #endif // RENDERABLE_H

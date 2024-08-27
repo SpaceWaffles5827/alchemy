@@ -56,14 +56,31 @@ void InputManager::mouse_button_callback(GLFWwindow* window, int button, int act
     float worldX = static_cast<float>(xpos);
     float worldY = static_cast<float>(ypos);
 
+    static GLuint originalTextureID = 0;
+    static std::string originalItemName;
+    static int originalSlotIndex = -1;
+
     if (button == GLFW_MOUSE_BUTTON_LEFT) {
         if (action == GLFW_PRESS) {
             if (game.getDispalyInventory()) {
                 int slotIndex = Inventory::getInstance().getSlotIndexAt(worldX, worldY);
                 if (slotIndex != -1 && !inputManager->isDragging) {
+                    // Store the original slot's state before dragging
+                    originalSlotIndex = slotIndex;
+                    originalTextureID = Inventory::getInstance().getInventorySlots()[slotIndex].getTextureID();
+                    originalItemName = Inventory::getInstance().getItemInSlot(slotIndex);
+                    bool isDraggingItemVisable = Inventory::getInstance().getInventorySlots()[slotIndex].getIsVisable();
+
+                    // Clear the item from the original slot to simulate dragging
+                    Inventory::getInstance().getInventorySlots()[slotIndex].setTexture(0);
+                    Inventory::getInstance().getInventorySlots()[slotIndex].setItem("");
+
+                    // Start dragging the item
                     game.setSelectedSlotIndex(slotIndex);
-                    game.setDraggingTextureId(Inventory::getInstance().getInventorySlots()[slotIndex].getTextureID());
-                    game.setDraggingItemName(Inventory::getInstance().getItemInSlot(slotIndex));
+                    game.setDraggingTextureId(originalTextureID);
+                    game.setDraggingItemName(originalItemName);
+                    game.setIsDraggingItemVisable(isDraggingItemVisable);
+
                     inputManager->isDragging = true;
                     game.setDraggingStartPos(glm::vec2(worldX, worldY));
                 }
@@ -71,24 +88,34 @@ void InputManager::mouse_button_callback(GLFWwindow* window, int button, int act
         }
         else if (action == GLFW_RELEASE && inputManager->isDragging) {
             if (game.getDispalyInventory()) {
-                int slotIndex = Inventory::getInstance().getSlotIndexAt(worldX, worldY);
-                if (slotIndex != -1 && slotIndex != game.getSelectedSlotIndex()) {
-                    auto& sourceSlot = Inventory::getInstance().getInventorySlots()[game.getSelectedSlotIndex()];
-                    auto& targetSlot = Inventory::getInstance().getInventorySlots()[slotIndex];
+                int targetSlotIndex = Inventory::getInstance().getSlotIndexAt(worldX, worldY);
+                if (targetSlotIndex != -1 && targetSlotIndex != originalSlotIndex) {
+                    auto& originalSlot = Inventory::getInstance().getInventorySlots()[originalSlotIndex];
+                    auto& targetSlot = Inventory::getInstance().getInventorySlots()[targetSlotIndex];
 
-                    GLuint tempTextureID = targetSlot.getTextureID();
-                    targetSlot.setTexture(sourceSlot.getTextureID());
-                    sourceSlot.setTexture(tempTextureID);
+                    GLuint targetTextureID = targetSlot.getTextureID();
+                    std::string targetItemName = targetSlot.getItem();
+                    bool targetIsVisable = targetSlot.getIsVisable();
 
-                    std::string tempItemName = targetSlot.getItem();
-                    targetSlot.setItem(sourceSlot.getItem());
-                    sourceSlot.setItem(tempItemName);
+                    targetSlot.setTexture(game.getDragTextureId());
+                    targetSlot.setItem(game.getDraggingItemName());
+                    targetSlot.setIsVisable(game.getIsDraggingItemVisable());
+
+                    originalSlot.setTexture(targetTextureID);
+                    originalSlot.setItem(targetItemName);
+                    originalSlot.setIsVisable(targetIsVisable);
+                }
+                else {
+                    auto& originalSlot = Inventory::getInstance().getInventorySlots()[originalSlotIndex];
+                    originalSlot.setTexture(originalTextureID);
+                    originalSlot.setItem(originalItemName);
                 }
 
                 inputManager->isDragging = false;
                 game.setSelectedSlotIndex(-1);
                 game.setDraggingTextureId(0);
                 game.setDraggingItemName("");
+                game.setIsDraggingItemVisable(true);
             }
         }
     }

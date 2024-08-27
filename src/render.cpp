@@ -139,38 +139,34 @@ void Render::renderUI(int width, int height) {
     if (game.getDispalyInventory()) {
         std::vector<std::shared_ptr<Renderable>> renderables;
 
-        // Access the Inventory singleton directly
         Inventory& playerInventory = Inventory::getInstance();
 
-        // Push the inventory object as a Renderable
-        renderables.push_back(std::shared_ptr<Renderable>(&playerInventory, [](Renderable*) {})); // Using a no-op deleter
+        renderables.push_back(std::shared_ptr<Renderable>(&playerInventory, [](Renderable*) {}));
 
         for (auto& slot : playerInventory.getInventorySlots()) {
-            auto slotRenderable = std::make_shared<InventorySlot>(
-                slot.getPosition(),
-                slot.getRotation(),
-                slot.getScale().x, slot.getScale().y,
-                slot.getTextureID(),
-                slot.getTextureTopLeft(),
-                slot.getTextureBottomRight()
-            );
-            renderables.push_back(slotRenderable);
+            renderables.push_back(std::shared_ptr<Renderable>(&slot, [](Renderable*) {}));
         }
 
         batchRenderGameObjects(renderables, projectionUI);
 
-        if (InputManager::getInstance().getIsDragging()) {
+        if (InputManager::getInstance().getIsDragging() && playerInventory.getInventorySlots()[game.getSelectedSlotIndex()].getIsVisable()) {
             double xpos, ypos;
             glfwGetCursorPos(GraphicsContext::getInstance().getWindow(), &xpos, &ypos);
+
+            auto& draggedSlot = playerInventory.getInventorySlots()[game.getSelectedSlotIndex()];
+
+            // Flip the Y texture coordinates to correct the upside-down issue
+            glm::vec2 correctedTopLeft = glm::vec2(draggedSlot.getTextureTopLeft().x, 1.0f - draggedSlot.getTextureTopLeft().y);
+            glm::vec2 correctedBottomRight = glm::vec2(draggedSlot.getTextureBottomRight().x, 1.0f - draggedSlot.getTextureBottomRight().y);
 
             auto draggedItemRenderable = std::make_shared<InventorySlot>(
                 glm::vec3(static_cast<float>(xpos), static_cast<float>(ypos), 0.0f),
                 glm::vec3(0.0f),
-                playerInventory.getInventorySlots()[game.getSelectedSlotIndex()].getScale().x,
-                playerInventory.getInventorySlots()[game.getSelectedSlotIndex()].getScale().y,
+                draggedSlot.getScale().x,
+                draggedSlot.getScale().y,
                 game.getDragTextureId(),
-                playerInventory.getInventorySlots()[game.getSelectedSlotIndex()].getTextureTopLeft(),
-                playerInventory.getInventorySlots()[game.getSelectedSlotIndex()].getTextureBottomRight()
+                correctedTopLeft,
+                correctedBottomRight
             );
 
             batchRenderGameObjects({ draggedItemRenderable }, projectionUI);
@@ -227,13 +223,15 @@ void Render::batchRenderGameObjects(const std::vector<std::shared_ptr<Renderable
     std::map<std::tuple<GLuint, glm::vec2, glm::vec2>, std::vector<std::shared_ptr<Renderable>>, TextureGroupComparator> textureGroups;
 
     for (const auto& renderable : renderables) {
-        // Check if the renderable object is within the camera's view
-        // commenting this out for now because there
-        // is something wrong with implementation
-        // if (frustum.isInFrustum(renderable->getPosition(), renderable->getBoundingRadius())) {  
-            auto groupKey = std::make_tuple(renderable->getTextureID(), renderable->getTextureTopLeft(), renderable->getTextureBottomRight());
-            textureGroups[groupKey].push_back(renderable);
-        // }
+       // Check if the renderable object is within the camera's view
+       // commenting this out for now because there
+       // is something wrong with implementation
+       // if (frustum.isInFrustum(renderable->getPosition(), renderable->getBoundingRadius())) {} 
+        if (!renderable->getIsVisable()) {
+            continue;
+        }
+        auto groupKey = std::make_tuple(renderable->getTextureID(), renderable->getTextureTopLeft(), renderable->getTextureBottomRight());
+        textureGroups[groupKey].push_back(renderable);
     }
 
     // Render each group of objects with the same texture and texture coordinates
