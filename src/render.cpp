@@ -228,10 +228,12 @@ void Render::batchRenderGameObjects(const std::vector<std::shared_ptr<Renderable
 
     for (const auto& renderable : renderables) {
         // Check if the renderable object is within the camera's view
-        if (frustum.isInFrustum(renderable->getPosition(), renderable->getBoundingRadius())) {
+        // commenting this out for now because there
+        // is something wrong with implementation
+        // if (frustum.isInFrustum(renderable->getPosition(), renderable->getBoundingRadius())) {  
             auto groupKey = std::make_tuple(renderable->getTextureID(), renderable->getTextureTopLeft(), renderable->getTextureBottomRight());
             textureGroups[groupKey].push_back(renderable);
-        }
+        // }
     }
 
     // Render each group of objects with the same texture and texture coordinates
