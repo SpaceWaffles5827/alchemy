@@ -110,10 +110,10 @@ void GraphicsContext::updateProjectionMatrix(int width, int height) {
         -1.0f, 1.0f
     );
 
-    game.setProjectionMatrix(projection);
+    GraphicsContext::getInstance().setProjectionMatrix(projection);
 
-    GLuint transformLoc = glGetUniformLocation(game.getShaderProgram(), "transform");
-    glUseProgram(game.getShaderProgram());
+    GLuint transformLoc = glGetUniformLocation(GraphicsContext::getInstance().getDefaultShader(), "transform");
+    glUseProgram(GraphicsContext::getInstance().getDefaultShader());
     glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(projection));
 }
 
@@ -136,7 +136,7 @@ void GraphicsContext::updateUiProjectionMatrix(int width, int height) {
         -1.0f, 1.0f
     );
 
-    GLuint transformLoc = glGetUniformLocation(game.getShaderProgram(), "transform");
-    glUseProgram(game.getShaderProgram());
+    GLuint transformLoc = glGetUniformLocation(GraphicsContext::getInstance().getDefaultShader(), "transform");
+    glUseProgram(GraphicsContext::getInstance().getDefaultShader());
     glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(projection));
 }

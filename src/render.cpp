@@ -149,7 +149,7 @@ void Render::renderUI(int width, int height) {
     }
 
     // Render the inventory only if it's being displayed
-    if (game.getDispalyInventory()) {
+    if (Inventory::getInstance().getIsVisable()) {
         Inventory& playerInventory = Inventory::getInstance();
 
         renderables.push_back(std::shared_ptr<Renderable>(&playerInventory, [](Renderable*) {}));
@@ -160,8 +160,8 @@ void Render::renderUI(int width, int height) {
 
     batchRenderGameObjects(renderables, projectionUI);
 
-    if (game.getDispalyInventory() && InputManager::getInstance().getIsDragging()) {
-        auto& draggedSlot = Inventory::getInstance().getInventorySlots()[game.getSelectedSlotIndex()];
+    if (Inventory::getInstance().getIsVisable() && InputManager::getInstance().getIsDragging()) {
+        auto& draggedSlot = Inventory::getInstance().getInventorySlots()[Inventory::getInstance().getSelectedSlotIndex()];
 
         if (draggedSlot.getIsVisable()) {
             double xpos, ypos;
@@ -175,7 +175,7 @@ void Render::renderUI(int width, int height) {
                 glm::vec3(0.0f),
                 draggedSlot.getScale().x,
                 draggedSlot.getScale().y,
-                game.getDragTextureId(),
+                Inventory::getInstance().getDragTextureId(),
                 correctedTopLeft,
                 correctedBottomRight
             );

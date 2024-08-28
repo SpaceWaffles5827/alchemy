@@ -17,6 +17,8 @@ Inventory::Inventory()
     rows(2),
     cols(2)
 {
+    std::cout << "Jere\n";
+    isVisable = false;
     initializeSlots();
 }
 

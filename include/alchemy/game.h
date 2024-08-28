@@ -36,79 +36,21 @@ public:
     void run();
     void init();
 
-    glm::mat4 getProjection();
-
+    Mode getGameMode();
     void setCurrentMode(Mode mode) { currentMode = mode; }
 
-    GLuint getTheTexture() {
-        return textureID1;
-    }
-
-    Mode getGameMode();
-
-    bool getDispalyInventory();
-    void setDispalyInventory(bool status);
     int getClientId();
-
-    void setSelectedSlotIndex(int slotIndex);
-
-    int getSelectedSlotIndex();
-
-    void setDraggingTextureId(GLuint textureId);
-
-    GLuint getDragTextureId();
-
-    std::string getDraggingItemName() {
-        return draggedItemName;
-    }
-
-    void setIsDraggingItemVisable(bool isVisable) {
-        draggingItemVisable = isVisable;
-    }
-
-    bool getIsDraggingItemVisable() {
-        return draggingItemVisable;
-    }
-
-    void setDraggingItemName(std::string name);
-
-    void setDraggingStartPos(glm::vec2);
-
-    void setProjectionMatrix(glm::mat4 projectionMatrix);
-
-    GLuint getShaderProgram();
-    GLuint gettextureID2();
 
 private:
     void update(double deltaTime);
     void render();
-
     void cleanup();
     void checkCompileErrors(GLuint shader, std::string type);
-
-    int selectedSlotIndex = -1;         // The index of the slot being dragged
-    GLuint draggedTextureID = 0;        // The texture ID of the dragged item
-    std::string draggedItemName;        // The name of the dragged item
-    glm::vec2 dragStartPosition;        // The starting position of the drag
-    bool draggingItemVisable;           // The visibility of the dragged item
-
-    bool displayInventory;
-
-    GLuint VAO, VBO;
-    GLuint shaderProgram, redShaderProgram;
 
     int clientId;
     double tickRate;
 
-    glm::mat4 projection;
-    glm::mat4 projectionUi;
-
     std::unordered_map<int, Player> players;
-
-    GLuint textureID1;
-    GLuint textureID2;
-    GLuint inventoryTextureID;
-    GLuint hotbarTextureId;
 
     Mode currentMode;
 

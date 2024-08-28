@@ -63,7 +63,7 @@ void InputManager::mouse_button_callback(GLFWwindow* window, int button, int act
 
     if (button == GLFW_MOUSE_BUTTON_LEFT) {
         if (action == GLFW_PRESS) {
-            if (game.getDispalyInventory()) {
+            if (Inventory::getInstance().getIsVisable()) {
                 int slotIndex = Inventory::getInstance().getSlotIndexAt(worldX, worldY);
                 if (slotIndex != -1 && !inputManager->isDragging) {
                     // Store the original slot's state before dragging
@@ -77,18 +77,18 @@ void InputManager::mouse_button_callback(GLFWwindow* window, int button, int act
                     Inventory::getInstance().getInventorySlots()[slotIndex].setItem("");
 
                     // Start dragging the item
-                    game.setSelectedSlotIndex(slotIndex);
-                    game.setDraggingTextureId(originalTextureID);
-                    game.setDraggingItemName(originalItemName);
-                    game.setIsDraggingItemVisable(isDraggingItemVisable);
+                    Inventory::getInstance().setSelectedSlotIndex(slotIndex);
+                    Inventory::getInstance().setDraggingTextureId(originalTextureID);
+                    Inventory::getInstance().setDraggingItemName(originalItemName);
+                    Inventory::getInstance().setIsDraggingItemVisable(isDraggingItemVisable);
 
                     inputManager->isDragging = true;
-                    game.setDraggingStartPos(glm::vec2(worldX, worldY));
+                    Inventory::getInstance().setDraggingStartPos(glm::vec2(worldX, worldY));
                 }
             }
         }
         else if (action == GLFW_RELEASE && inputManager->isDragging) {
-            if (game.getDispalyInventory()) {
+            if (Inventory::getInstance().getIsVisable()) {
                 int targetSlotIndex = Inventory::getInstance().getSlotIndexAt(worldX, worldY);
                 if (targetSlotIndex != -1 && targetSlotIndex != originalSlotIndex) {
                     auto& originalSlot = Inventory::getInstance().getInventorySlots()[originalSlotIndex];
@@ -98,9 +98,9 @@ void InputManager::mouse_button_callback(GLFWwindow* window, int button, int act
                     std::string targetItemName = targetSlot.getItem();
                     bool targetIsVisable = targetSlot.getIsVisable();
 
-                    targetSlot.setTexture(game.getDragTextureId());
-                    targetSlot.setItem(game.getDraggingItemName());
-                    targetSlot.setIsVisable(game.getIsDraggingItemVisable());
+                    targetSlot.setTexture(Inventory::getInstance().getDragTextureId());
+                    targetSlot.setItem(Inventory::getInstance().getDraggingItemName());
+                    Inventory::getInstance().setIsVisable(Inventory::getInstance().getIsDraggingItemVisable());
 
                     originalSlot.setTexture(targetTextureID);
                     originalSlot.setItem(targetItemName);
@@ -113,10 +113,10 @@ void InputManager::mouse_button_callback(GLFWwindow* window, int button, int act
                 }
 
                 inputManager->isDragging = false;
-                game.setSelectedSlotIndex(-1);
-                game.setDraggingTextureId(0);
-                game.setDraggingItemName("");
-                game.setIsDraggingItemVisable(true);
+                Inventory::getInstance().setSelectedSlotIndex(-1);
+                Inventory::getInstance().setDraggingTextureId(0);
+                Inventory::getInstance().setDraggingItemName("");
+                Inventory::getInstance().setIsDraggingItemVisable(true);
             }
         }
     }
@@ -132,7 +132,7 @@ void InputManager::mouse_button_callback(GLFWwindow* window, int button, int act
             float yNDC = static_cast<float>(1.0 - (2.0 * ypos) / height);
 
             glm::vec4 ndcCoords = glm::vec4(xNDC, yNDC, 0.0f, 1.0f);
-            glm::vec4 worldCoords = glm::inverse(game.getProjection()) * ndcCoords;
+            glm::vec4 worldCoords = glm::inverse(GraphicsContext::getInstance().getProjection()) * ndcCoords;
 
             float snappedX = std::round(worldCoords.x);
             float snappedY = std::round(worldCoords.y);
@@ -337,7 +337,7 @@ void InputManager::handleInput() {
         }
 
         if (glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_B) == GLFW_PRESS && bKeyReleased) {
-            game.setDispalyInventory(false);
+            Inventory::getInstance().setIsVisable(false);
             Chat::getInstance().setChatModeActive(false);
             bKeyReleased = false;
         }
@@ -346,7 +346,7 @@ void InputManager::handleInput() {
         }
 
         if (glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_TAB) == GLFW_PRESS && tabKeyReleased) {
-            game.setDispalyInventory(!game.getDispalyInventory());
+            Inventory::getInstance().setIsVisable(!Inventory::getInstance().getIsVisable());
             Chat::getInstance().setChatModeActive(false);
             tabKeyReleased = false;
         }
@@ -355,8 +355,8 @@ void InputManager::handleInput() {
         }
 
         if (glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_ESCAPE) == GLFW_PRESS && escKeyReleased) {
-            if (game.getDispalyInventory()) {
-                game.setDispalyInventory(false);
+            if (Inventory::getInstance().getIsVisable()) {
+                Inventory::getInstance().setIsVisable(false);
             }
             else {
                 Chat::getInstance().setChatModeActive(false);
@@ -387,7 +387,7 @@ void InputManager::handleWorldInteraction(double xpos, double ypos, int width, i
         float yNDC = static_cast<float>(1.0 - (2.0 * ypos) / height);
 
         glm::vec4 ndcCoords = glm::vec4(xNDC, yNDC, 0.0f, 1.0f);
-        glm::vec4 worldCoords = glm::inverse(game.getProjection()) * ndcCoords;
+        glm::vec4 worldCoords = glm::inverse(GraphicsContext::getInstance().getProjection()) * ndcCoords;
 
         float snappedX = std::round(worldCoords.x);
         float snappedY = std::round(worldCoords.y);
@@ -397,7 +397,7 @@ void InputManager::handleWorldInteraction(double xpos, double ypos, int width, i
             glm::vec3(0.0f),
             1.0f,
             1.0f,
-            game.gettextureID2());
+            GraphicsContext::getInstance().getTextureID2());
 
         gameObjectAdding->setTextureTile(0, 0, 8, 256, 256, 32, 32);
         World::getInstance().addObject(gameObjectAdding);
