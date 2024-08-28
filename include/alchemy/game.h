@@ -17,7 +17,6 @@
 #include <memory>
 #include <vector>
 #include <alchemy/Inventory.h>
-#include <alchemy/Inventory.h>
 #include <alchemy/graphicsContext.h>
 #include <alchemy/inputManager.h>
 
@@ -87,37 +86,31 @@ private:
     void cleanup();
     void checkCompileErrors(GLuint shader, std::string type);
 
-    // move this stuff to another class for cleaner code
     int selectedSlotIndex = -1;         // The index of the slot being dragged
     GLuint draggedTextureID = 0;        // The texture ID of the dragged item
     std::string draggedItemName;        // The name of the dragged item
     glm::vec2 dragStartPosition;        // The starting position of the drag
-    bool draggingItemVisable;           // The starting position of the drag
+    bool draggingItemVisable;           // The visibility of the dragged item
 
-    bool showFps;
     bool displayInventory;
 
-    // Move to graphics context
     GLuint VAO, VBO;
     GLuint shaderProgram, redShaderProgram;
 
     int clientId;
     double tickRate;
 
-    // Move to graphics context
     glm::mat4 projection;
     glm::mat4 projectionUi;
 
     std::unordered_map<int, Player> players;
 
-    // Move to graphics context
     GLuint textureID1;
     GLuint textureID2;
     GLuint inventoryTextureID;
 
     Mode currentMode;
 
-    // Move to graphics context
     std::shared_ptr<UIObject> inventoryUIObject;
 };
 

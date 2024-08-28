@@ -145,6 +145,7 @@
   <ItemGroup>
     <ClCompile Include="include\alchemy\InventorySlot.h" />
     <ClCompile Include="src\chat.cpp" />
+    <ClCompile Include="src\fpsDisplay.cpp" />
     <ClCompile Include="src\game.cpp" />
     <ClCompile Include="include\glm\detail\glm.cpp" />
     <ClCompile Include="include\glm\glm.cppm" />
@@ -171,6 +172,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\alchemy\chat.h" />
+    <ClInclude Include="include\alchemy\fpsDisplay.h" />
     <ClInclude Include="include\alchemy\frustum.h" />
     <ClInclude Include="include\alchemy\game.h" />
     <ClInclude Include="include\alchemy\gameObject.h" />

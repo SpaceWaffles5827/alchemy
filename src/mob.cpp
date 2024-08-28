@@ -3,7 +3,6 @@
 #include <iostream>
 
 Mob::Mob() {
-    std::cout << "Mob object created\n";
     GLuint defaultTextureID = GraphicsContext::getInstance().loadTexture("textures/CATSPRITESHEET_Orange.png");
     setTexture(defaultTextureID);
     setTextureTile(0, 0, 4, 128, 416, 32, 32);

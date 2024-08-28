@@ -5,6 +5,9 @@
 #include <algorithm>
 #include <fstream>
 #include <filesystem>
+#include <alchemy/global.h>
+#include <alchemy/fpsDisplay.h>
+
 namespace fs = std::filesystem;
 
 Chat& Chat::getInstance() {
@@ -23,7 +26,8 @@ Chat::Chat(GLuint screenWidth, GLuint screenHeight)
     commandMap = {
         {"setmode", {"leveledit", "play", "pause"}},
         {"saveworld", {}},
-        {"loadworld", {}}
+        {"loadworld", {}},
+        {"showfps", {"true", "false"}}
     };
 }
 
@@ -140,11 +144,29 @@ bool Chat::processCommand() {
             return true;
         }
 
+        if (command == "showfps") {
+            std::string value;
+            iss >> value;
+            value = toLowerCase(value);
+            if (value == "true") {
+                FPSDisplay::getInstance().setIsVisable(true);
+                std::cout << "FPS display enabled." << std::endl;
+            }
+            else if (value == "false") {
+                FPSDisplay::getInstance().setIsVisable(false);
+                std::cout << "FPS display disabled." << std::endl;
+            }
+            else {
+                std::cout << "Unknown value for showfps: " << value << ". Use 'true' or 'false'." << std::endl;
+            }
+            return true;
+        }
+
         std::cout << "Unknown command: " << command << std::endl;
         return true;
     }
 
-    return false;  // Not a command
+    return false;
 }
 
 void Chat::updateSuggestions() {

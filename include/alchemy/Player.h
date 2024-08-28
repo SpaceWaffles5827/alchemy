@@ -8,7 +8,20 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <stb/stb_image.h>
 #include <iostream>
-#include <alchemy/gameObject.h>     
+#include <alchemy/gameObject.h>
+
+enum class PlayerState {
+    Idle,
+    Walking,
+    Attacking
+};
+
+enum class PlayerDirection {
+    North,
+    South,
+    East,
+    West
+};
 
 class Player : public GameObject {
 public:
@@ -17,11 +30,14 @@ public:
 
     int getClientId() const;
 
-    void handleInput();
+    void attack();
 
 private:
     int clientId;
     bool keyReleased[GLFW_KEY_LAST];
+
+    PlayerState currentState;
+    PlayerDirection currentDirection;
 };
 
 #endif // PLAYER_H

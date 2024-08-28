@@ -149,6 +149,7 @@ void InputManager::handleInput() {
         static bool enterKeyReleased = true;
         static bool backspaceKeyReleased = true;
 
+        // Handle chat-related input
         if (glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_ENTER) == GLFW_PRESS && enterKeyReleased) {
             Chat::getInstance().addMessage(Chat::getInstance().getCurrentMessage());
             Chat::getInstance().setCurrentMessage("");
@@ -188,12 +189,13 @@ void InputManager::handleInput() {
             tabKeyReleased = true;
         }
 
+        // Handle alphabetic keys (A-Z)
         for (int key = GLFW_KEY_A; key <= GLFW_KEY_Z; ++key) {
             if (glfwGetKey(GraphicsContext::getInstance().getWindow(), key) == GLFW_PRESS && keyReleased[key]) {
                 bool shiftPressed = glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS || glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS;
                 char c = static_cast<char>(key);
                 if (!shiftPressed) {
-                    c += 32;
+                    c += 32;  // Convert to lowercase
                 }
                 std::string currentMessage = Chat::getInstance().getCurrentMessage();
                 currentMessage += c;
@@ -205,6 +207,7 @@ void InputManager::handleInput() {
             }
         }
 
+        // Handle numeric keys (0-9)
         for (int key = GLFW_KEY_0; key <= GLFW_KEY_9; ++key) {
             if (glfwGetKey(GraphicsContext::getInstance().getWindow(), key) == GLFW_PRESS && keyReleased[key]) {
                 char c = static_cast<char>(key);
@@ -218,6 +221,7 @@ void InputManager::handleInput() {
             }
         }
 
+        // Handle space key
         if (glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_SPACE) == GLFW_PRESS && keyReleased[GLFW_KEY_SPACE]) {
             std::string currentMessage = Chat::getInstance().getCurrentMessage();
             currentMessage += ' ';
@@ -229,6 +233,7 @@ void InputManager::handleInput() {
         }
     }
     else {
+        // Player movement and action handling
         std::shared_ptr<Player> player = World::getInstance().getPlayerById(game.getClientId());
         if (player) {
             static GLuint runningTextureID = GraphicsContext::getInstance().loadTexture("aniwooRunning.png");
@@ -257,6 +262,7 @@ void InputManager::handleInput() {
             bool moveDown = glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_S) == GLFW_PRESS;
             bool moveLeft = glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_A) == GLFW_PRESS;
             bool moveRight = glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_D) == GLFW_PRESS;
+            bool attackKeyPressed = glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_1) == GLFW_PRESS;
 
             if (moveUp && !moveDown) {
                 direction.y += 1.0f;
@@ -293,6 +299,14 @@ void InputManager::handleInput() {
             else {
                 player->setTexture(idleTextureID);
                 player->setTextureTile(frame, lastDirection, 8, 512, 512, 64, 128);
+            }
+
+            if (attackKeyPressed && keyReleased[GLFW_KEY_1]) {
+                player->attack();
+                keyReleased[GLFW_KEY_1] = false;
+            }
+            else if (!attackKeyPressed) {
+                keyReleased[GLFW_KEY_1] = true;
             }
 
             if (positionUpdated) {

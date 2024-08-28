@@ -6,11 +6,12 @@
 #include <alchemy/networkManager.h>
 #include <alchemy/textRenderer.h>
 #include <fstream>
+#include <alchemy/fpsDisplay.h>
 
 Game::Game(Mode mode)
     : VAO(0), VBO(0), shaderProgram(0), redShaderProgram(0), clientId(std::rand()), tickRate(1.0 / 64.0),
     projection(1.0f), currentMode(mode),
-    displayInventory(false), showFps(false) {
+    displayInventory(false) {
     NetworkManager::getInstance().setupUDPClient();
     GraphicsContext::getInstance().setCameraZoom(1.0f);
 }
@@ -110,10 +111,11 @@ void Game::run() {
         fpsTime += elapsed;
         frameCount++;
 
+        FPSDisplay::getInstance().update(); // Update the FPS counter
+
         if (fpsTime >= 1.0) {
-            if (showFps) {
-                double fps = frameCount / fpsTime;
-                std::cout << "FPS: " << fps << " | Frame Time: " << (fpsTime / frameCount) * 1000.0 << " ms" << std::endl;
+            if (FPSDisplay::getInstance().isVisable()) {
+                FPSDisplay::getInstance().render();
             }
             frameCount = 0;
             fpsTime = 0.0;
@@ -201,6 +203,10 @@ void Game::render() {
     Chat::getInstance().render();
 
     renderer.renderUI(width, height);
+
+    if (FPSDisplay::getInstance().isVisable()) {
+        FPSDisplay::getInstance().render();
+    }
 }
 
 void Game::cleanup() {
