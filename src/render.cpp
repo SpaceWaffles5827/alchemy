@@ -3,6 +3,7 @@
 #include <tuple>
 #include <alchemy/frustum.h>
 #include <alchemy/global.h>
+#include <alchemy/hotbar.h>
 
 // Default shaders
 const char* Render::defaultVertexShaderSource = R"(
@@ -136,26 +137,36 @@ void Render::renderUI(int width, int height) {
         -1.0f, 1.0f
     );
 
-    if (game.getDispalyInventory()) {
-        std::vector<std::shared_ptr<Renderable>> renderables;
+    std::vector<std::shared_ptr<Renderable>> renderables;
 
+    // Always render the hot bar
+    HotBar& playerHotbar = HotBar::getInstance();
+    renderables.push_back(std::shared_ptr<Renderable>(&playerHotbar, [](Renderable*) {}));
+    Renderable selectedSlotObject = playerHotbar.getSelectedSlotObject();
+    renderables.push_back(std::shared_ptr<Renderable>(&selectedSlotObject, [](Renderable*) {}));
+    for (auto& slot : playerHotbar.getHotBarSlots()) {
+        renderables.push_back(std::shared_ptr<Renderable>(&slot, [](Renderable*) {}));
+    }
+
+    // Render the inventory only if it's being displayed
+    if (game.getDispalyInventory()) {
         Inventory& playerInventory = Inventory::getInstance();
 
         renderables.push_back(std::shared_ptr<Renderable>(&playerInventory, [](Renderable*) {}));
-
         for (auto& slot : playerInventory.getInventorySlots()) {
             renderables.push_back(std::shared_ptr<Renderable>(&slot, [](Renderable*) {}));
         }
+    }
 
-        batchRenderGameObjects(renderables, projectionUI);
+    batchRenderGameObjects(renderables, projectionUI);
 
-        if (InputManager::getInstance().getIsDragging() && playerInventory.getInventorySlots()[game.getSelectedSlotIndex()].getIsVisable()) {
+    if (game.getDispalyInventory() && InputManager::getInstance().getIsDragging()) {
+        auto& draggedSlot = Inventory::getInstance().getInventorySlots()[game.getSelectedSlotIndex()];
+
+        if (draggedSlot.getIsVisable()) {
             double xpos, ypos;
             glfwGetCursorPos(GraphicsContext::getInstance().getWindow(), &xpos, &ypos);
 
-            auto& draggedSlot = playerInventory.getInventorySlots()[game.getSelectedSlotIndex()];
-
-            // Flip the Y texture coordinates to correct the upside-down issue
             glm::vec2 correctedTopLeft = glm::vec2(draggedSlot.getTextureTopLeft().x, 1.0f - draggedSlot.getTextureTopLeft().y);
             glm::vec2 correctedBottomRight = glm::vec2(draggedSlot.getTextureBottomRight().x, 1.0f - draggedSlot.getTextureBottomRight().y);
 

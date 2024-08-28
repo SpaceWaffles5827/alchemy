@@ -108,6 +108,7 @@ private:
     GLuint textureID1;
     GLuint textureID2;
     GLuint inventoryTextureID;
+    GLuint hotbarTextureId;
 
     Mode currentMode;
 

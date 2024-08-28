@@ -78,6 +78,9 @@
     <ClCompile Include="src\fpsDisplay.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\hotbar.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Library Include="lib\glfw3.lib" />
@@ -1322,6 +1325,9 @@
     <ClInclude Include="include\alchemy\fpsDisplay.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\alchemy\hotbar.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="include\glm\gtc\bitfield.inl">
@@ -1789,6 +1795,9 @@
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="textures\CATSPRITESHEET_Orange.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="textures\ui\hotbar.png">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

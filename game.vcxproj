@@ -151,6 +151,7 @@
     <ClCompile Include="include\glm\glm.cppm" />
     <ClCompile Include="src\global.cpp" />
     <ClCompile Include="src\graphicsContext.cpp" />
+    <ClCompile Include="src\hotbar.cpp" />
     <ClCompile Include="src\inputManager.cpp" />
     <ClCompile Include="src\Inventory.cpp" />
     <ClCompile Include="src\InventorySlot.cpp" />
@@ -178,6 +179,7 @@
     <ClInclude Include="include\alchemy\gameObject.h" />
     <ClInclude Include="include\alchemy\global.h" />
     <ClInclude Include="include\alchemy\graphicsContext.h" />
+    <ClInclude Include="include\alchemy\hotbar.h" />
     <ClInclude Include="include\alchemy\inputManager.h" />
     <ClInclude Include="include\alchemy\Inventory.h" />
     <ClInclude Include="include\alchemy\mob.h" />
@@ -744,6 +746,7 @@
     <Image Include="textures\BIRDSPRITESHEET_White.png" />
     <Image Include="textures\CATSPRITESHEET_Gray.png" />
     <Image Include="textures\CATSPRITESHEET_Orange.png" />
+    <Image Include="textures\ui\hotbar.png" />
     <Image Include="wizard.png" />
     <Image Include="wtf.png" />
   </ItemGroup>

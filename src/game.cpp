@@ -7,6 +7,7 @@
 #include <alchemy/textRenderer.h>
 #include <fstream>
 #include <alchemy/fpsDisplay.h>
+#include <alchemy/hotbar.h>
 
 Game::Game(Mode mode)
     : VAO(0), VBO(0), shaderProgram(0), redShaderProgram(0), clientId(std::rand()), tickRate(1.0 / 64.0),
@@ -48,6 +49,7 @@ void Game::init() {
 
     textureID2 = GraphicsContext::getInstance().loadTexture("spriteSheet.png");
     inventoryTextureID = GraphicsContext::getInstance().loadTexture("inventory.png");
+    hotbarTextureId = GraphicsContext::getInstance().loadTexture("textures/ui/hotbar.png");
 
     Inventory& playerInventory = Inventory::getInstance();
     playerInventory.setPosition(glm::vec3(400.0f, 400.0f, 0.0f));
@@ -55,8 +57,15 @@ void Game::init() {
     playerInventory.setDimensions(176.0f * 3, 166.0f * 3);
     playerInventory.setTexture(inventoryTextureID, glm::vec2(0.0f, 1.0f), glm::vec2(1.0f, 0.0f));
     playerInventory.setGridSize(3, 9);
-
     playerInventory.loadDefaults();
+
+    HotBar& playerHotbar = HotBar::getInstance();
+    playerHotbar.setPosition(glm::vec3(400.0f, 765.0f, 0.0f));
+    playerHotbar.setRotation(glm::vec3(0.0f));
+    playerHotbar.setDimensions(183.0f * 3, 23.0f * 3);
+    playerHotbar.setTexture(hotbarTextureId, glm::vec2(0.0f, 1.0f), glm::vec2(1.0f, 0.0f));
+    playerHotbar.loadDefaults();
+
 
     world.initTileView(10, 10, 1.0f, textureID2, textureID2);
 

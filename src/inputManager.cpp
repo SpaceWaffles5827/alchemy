@@ -1,5 +1,6 @@
 #include <alchemy/inputManager.h>
 #include <alchemy/global.h>
+#include <alchemy/hotbar.h>
 
 InputManager& InputManager::getInstance() {
     static InputManager instance;
@@ -262,7 +263,6 @@ void InputManager::handleInput() {
             bool moveDown = glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_S) == GLFW_PRESS;
             bool moveLeft = glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_A) == GLFW_PRESS;
             bool moveRight = glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_D) == GLFW_PRESS;
-            bool attackKeyPressed = glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_1) == GLFW_PRESS;
 
             if (moveUp && !moveDown) {
                 direction.y += 1.0f;
@@ -299,14 +299,6 @@ void InputManager::handleInput() {
             else {
                 player->setTexture(idleTextureID);
                 player->setTextureTile(frame, lastDirection, 8, 512, 512, 64, 128);
-            }
-
-            if (attackKeyPressed && keyReleased[GLFW_KEY_1]) {
-                player->attack();
-                keyReleased[GLFW_KEY_1] = false;
-            }
-            else if (!attackKeyPressed) {
-                keyReleased[GLFW_KEY_1] = true;
             }
 
             if (positionUpdated) {
@@ -373,6 +365,18 @@ void InputManager::handleInput() {
         }
         if (glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_ESCAPE) == GLFW_RELEASE) {
             escKeyReleased = true;
+        }
+
+        // Handle number keys (1-9) for selecting hotbar slots
+        for (int key = GLFW_KEY_1; key <= GLFW_KEY_9; ++key) {
+            if (glfwGetKey(GraphicsContext::getInstance().getWindow(), key) == GLFW_PRESS && keyReleased[key]) {
+                int slotIndex = key - GLFW_KEY_1;
+                HotBar::getInstance().setSelectedSlotIndex(slotIndex);
+                keyReleased[key] = false;
+            }
+            if (glfwGetKey(GraphicsContext::getInstance().getWindow(), key) == GLFW_RELEASE) {
+                keyReleased[key] = true;
+            }
         }
     }
 }
