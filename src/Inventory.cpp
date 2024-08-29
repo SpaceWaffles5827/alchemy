@@ -1,5 +1,5 @@
-#include <alchemy/Inventory.h>
-#include <alchemy/InventorySlot.h>
+#include <alchemy/inventory.h>
+#include <alchemy/inventorySlot.h>
 #include <stdexcept>
 #include <iostream>
 #include <alchemy/global.h>

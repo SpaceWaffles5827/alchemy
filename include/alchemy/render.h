@@ -5,7 +5,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include "GameObject.h"
+#include "gameObject.h"
 #include <vector>
 #include <memory>
 #include <map>

@@ -3,7 +3,7 @@
 
 #include <string>
 #include <GLEW/glew.h>
-#include "Renderable.h"
+#include "renderable.h"
 #include <glm/glm.hpp>
 
 class InventorySlot : public Renderable {

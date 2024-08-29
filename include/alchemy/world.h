@@ -4,8 +4,8 @@
 #include <vector>
 #include <memory>
 #include <algorithm>
-#include "GameObject.h"
-#include <alchemy/Player.h>
+#include "gameObject.h"
+#include <alchemy/player.h>
 #include <glm/glm.hpp>
 #include <alchemy/mob.h>
 

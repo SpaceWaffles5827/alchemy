@@ -4,8 +4,8 @@
 #include <GLEW/glew.h>
 #include <string>
 #include <vector>
-#include "Renderable.h"
-#include <alchemy/InventorySlot.h>
+#include "renderable.h"
+#include <alchemy/inventorySlot.h>
 #include <glm/glm.hpp>
 
 class Inventory : public Renderable {

@@ -1,4 +1,4 @@
-#include <alchemy/NetworkManager.h>
+#include <alchemy/networkManager.h>
 #include <alchemy/player.h>
 #include <unordered_map>
 #include <sstream>
@@ -31,7 +31,7 @@ void NetworkManager::setupUDPClient() {
     }
 #endif
 
-    if ((sock = socket(AF_INET, SOCK_DGRAM, 0)) == INVALID_SOCKET) {
+    if ((sock = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {  // Replace INVALID_SOCKET with -1
         std::cerr << "Socket creation error" << std::endl;
         exit(EXIT_FAILURE);
     }
@@ -57,7 +57,7 @@ void NetworkManager::sendChatMessage(int clientId, const char* message) {
     OutGoingPacket packet;
     packet.type = ChatMessage;
     packet.clientId = clientId;
-    strncpy_s(packet.chatData.message, message, sizeof(packet.chatData.message) - 1);
+    strncpy(packet.chatData.message, message, sizeof(packet.chatData.message) - 1);  // Replace strncpy_s with strncpy
     packet.chatData.message[sizeof(packet.chatData.message) - 1] = '\0';
 
     sendto(sock, (char*)&packet, sizeof(OutGoingPacket), 0, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
@@ -83,7 +83,8 @@ void NetworkManager::sendHeatBeat(int clientId) {
 
 bool NetworkManager::receiveData(std::unordered_map<int, Player>& players) {
     IncomingPacket incomingPacket;
-    int bytesReceived = recvfrom(sock, (char*)&incomingPacket, sizeof(IncomingPacket), 0, (struct sockaddr*)&client_addr, &client_addr_len);
+    socklen_t client_addr_len_copy = client_addr_len;  // Use socklen_t instead of int for Unix-based systems
+    int bytesReceived = recvfrom(sock, (char*)&incomingPacket, sizeof(IncomingPacket), 0, (struct sockaddr*)&client_addr, &client_addr_len_copy);
 
     if (bytesReceived > 0) {
         if (incomingPacket.type == PlayerMovement && incomingPacket.movementUpdates.numPlayers > 0) {
@@ -123,7 +124,7 @@ bool NetworkManager::receiveData(std::unordered_map<int, Player>& players) {
             std::cerr << "Unexpected message type or no players in the update." << std::endl;
         }
     }
-    else if (bytesReceived == SOCKET_ERROR) {
+    else if (bytesReceived == -1) {  // Replace SOCKET_ERROR with -1
         int errorCode =
 #ifdef _WIN32
             WSAGetLastError();
@@ -134,3 +135,4 @@ bool NetworkManager::receiveData(std::unordered_map<int, Player>& players) {
     }
     return false;
 }
+

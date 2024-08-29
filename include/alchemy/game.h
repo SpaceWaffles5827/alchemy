@@ -7,16 +7,16 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <alchemy/networkManager.h>
-#include <alchemy/Player.h>
+#include <alchemy/player.h>
 #include <unordered_map>
 #include <alchemy/world.h>
 #include <alchemy/render.h>
 #include <alchemy/textRenderer.h>
 #include <alchemy/chat.h>
-#include <alchemy/UIObject.h>
+#include <alchemy/uiObject.h>
 #include <memory>
 #include <vector>
-#include <alchemy/Inventory.h>
+#include <alchemy/inventory.h>
 #include <alchemy/graphicsContext.h>
 #include <alchemy/inputManager.h>
 

@@ -4,18 +4,21 @@
 #include <iostream>
 #include <cstring>
 #include <cstdlib>
-#include "player.h"
+#include "../alchemy/player.h"
 #include <unordered_map>
 #include <ctime>
+
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #pragma comment(lib, "Ws2_32.lib")
+typedef SOCKET SocketType; // Use SOCKET for Windows
 #else
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <fcntl.h>
+typedef int SocketType; // Use int for Unix-based systems
 #endif
 
 #define SERVER_PORT 8080
@@ -84,10 +87,11 @@ private:
     NetworkManager();  // Private constructor
     ~NetworkManager(); // Private destructor
 
-    SOCKET sock;
+    SocketType sock;
     struct sockaddr_in serv_addr, client_addr;
     char buffer[BUFFER_SIZE];
     int client_addr_len;
 };
 
 #endif
+

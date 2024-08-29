@@ -1,22 +1,30 @@
 #ifndef SERVER_H
 #define SERVER_H
 
-#include <winsock2.h>       
-#include <ws2tcpip.h>         
-#include <iostream>         
-#include <unordered_map>      
-#include <unordered_set>      
-#include <string>            
-#include <functional>         
-#include <chrono>          
-#include <thread>         
-#include <mutex>             
-#include <queue>               
-#include <cstring>   
-#include <ws2tcpip.h>
+#include <iostream>
+#include <unordered_map>
+#include <unordered_set>
+#include <string>
+#include <functional>
 #include <chrono>
+#include <thread>
+#include <mutex>
+#include <queue>
+#include <cstring>
 
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <winsock2.h>
+#include <ws2tcpip.h>
 #pragma comment(lib, "Ws2_32.lib")
+#else
+#include <arpa/inet.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netdb.h>
+#endif
 
 #define SERVER_PORT 8080
 #define BUFFER_SIZE 1024
@@ -113,7 +121,12 @@ private:
     void processIncomingPacket(const IncomingPacket& packet, const sockaddr_in& clientAddr);
     void sendMovementUpdates();
 
+#ifdef _WIN32
     SOCKET serverSocket;
+#else
+    int serverSocket;
+#endif
+
     sockaddr_in serverAddr;
     std::unordered_set<sockaddr_in, sockaddr_in_hash, sockaddr_in_equal> clients;
     std::unordered_map<int, PlayerInfo> playerPositions;
@@ -123,3 +136,4 @@ private:
 };
 
 #endif // SERVER_H
+
