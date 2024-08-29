@@ -33,14 +33,14 @@ void Game::init() {
 
     textRenderer.loadFont("fonts/minecraft.ttf", 24);
 
-    GraphicsContext::getInstance().setTextureID1(GraphicsContext::getInstance().loadTexture("aniwooRunning.png"));
+    GraphicsContext::getInstance().setTextureID1(GraphicsContext::getInstance().loadTexture("textures/player/playerRunning.png"));
     std::shared_ptr<Player> clientPlayer = std::make_shared<Player>(clientId, glm::vec3(1.0f, 0.5f, 0.2f), 0.0f, 0.0f, 1.0f, 2.0f, GraphicsContext::getInstance().getTextureID1());
     clientPlayer->setTextureTile(0, 0, 8, 512, 512, 64, 128);
     World& world = World::getInstance();
     world.addPlayer(clientPlayer);
 
-    GraphicsContext::getInstance().setTextureID2(GraphicsContext::getInstance().loadTexture("spriteSheet.png"));
-    GraphicsContext::getInstance().setInventoryTextureID(GraphicsContext::getInstance().loadTexture("inventory.png"));
+    GraphicsContext::getInstance().setTextureID2(GraphicsContext::getInstance().loadTexture("textures/world/grassSheet.png"));
+    GraphicsContext::getInstance().setInventoryTextureID(GraphicsContext::getInstance().loadTexture("textures/ui/inventory.png"));
     GraphicsContext::getInstance().setHotbarTextureId(GraphicsContext::getInstance().loadTexture("textures/ui/hotbar.png"));
 
     Inventory& playerInventory = Inventory::getInstance();

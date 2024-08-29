@@ -258,8 +258,8 @@ void InputManager::handleInput() {
         // Player movement and action handling
         std::shared_ptr<Player> player = World::getInstance().getPlayerById(game.getClientId());
         if (player) {
-            static GLuint runningTextureID = GraphicsContext::getInstance().loadTexture("aniwooRunning.png");
-            static GLuint idleTextureID = GraphicsContext::getInstance().loadTexture("andiwooIdle.png");
+            static GLuint runningTextureID = GraphicsContext::getInstance().loadTexture("textures/player/playerRunning.png");
+            static GLuint idleTextureID = GraphicsContext::getInstance().loadTexture("textures/player/playerIdle.png");
 
             bool positionUpdated = false;
             bool isMoving = false;

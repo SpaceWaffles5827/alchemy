@@ -748,6 +748,11 @@
     <Image Include="textures\CATSPRITESHEET_Gray.png" />
     <Image Include="textures\CATSPRITESHEET_Orange.png" />
     <Image Include="textures\ui\hotbar.png" />
+    <Image Include="textures\ui\inventory.png" />
+    <Image Include="textures\ui\selected.png" />
+    <Image Include="textures\world\grassSheet.png" />
+    <Image Include="textures\world\spruce_log.png" />
+    <Image Include="textures\world\stone_bricks.png" />
     <Image Include="wizard.png" />
     <Image Include="wtf.png" />
   </ItemGroup>

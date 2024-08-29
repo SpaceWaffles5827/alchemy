@@ -45,7 +45,7 @@ void HotBar::initializeSlots() {
 }
 
 void HotBar::loadDefaults() {
-    GLuint specialTextureID = GraphicsContext::getInstance().loadTexture("stone_bricks.png");
+    GLuint specialTextureID = GraphicsContext::getInstance().loadTexture("textures/world/stone_bricks.png");
     for (int i = 0; i < slots.size(); ++i) {
         slots[i].setTexture(specialTextureID);
         slots[i].setItem("Stone");

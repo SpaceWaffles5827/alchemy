@@ -1803,6 +1803,21 @@
     <Image Include="textures\ui\hotbar.png">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="textures\ui\selected.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="textures\ui\inventory.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="textures\world\grassSheet.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="textures\world\spruce_log.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="textures\world\stone_bricks.png">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <Font Include="..\..\..\Downloads\arial.ttf" />
