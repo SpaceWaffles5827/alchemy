@@ -23,6 +23,7 @@ Game::~Game() {
 void Game::init() {
     GraphicsContext::getInstance().initialize();
     InputManager::getInstance().registerCallbacks();
+    GraphicsContext::getInstance().registerCallbacks();
 
     Render& renderer = Render::getInstance();
     renderer.initialize();
@@ -138,9 +139,9 @@ void Game::render() {
     int width, height;
     glfwGetWindowSize(GraphicsContext::getInstance().getWindow(), &width, &height);
 
+    // Move this so that its only called when it needs to be called such as player movement etc...
     GraphicsContext::getInstance().updateProjectionMatrix(width, height);
     World& world = World::getInstance();
-
     Render& renderer = Render::getInstance();
 
     // Render game world objects

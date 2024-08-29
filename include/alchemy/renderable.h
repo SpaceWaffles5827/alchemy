@@ -30,7 +30,9 @@ public:
     virtual ~Renderable() = default;
 
     // Getters
-    const glm::vec3& getPosition() const { return position; }
+    const glm::vec3& getPosition() const { 
+        return position;
+    }
     const glm::vec3& getRotation() const { return rotation; }
     const glm::vec3& getScale() const { return scale; }
     GLuint getTextureID() const { return textureID; }
@@ -45,7 +47,9 @@ public:
         isVisable = visable;
     }
 
-    void setPosition(const glm::vec3& newPosition) { position = newPosition; }
+    void setPosition(const glm::vec3& newPosition) {
+        position = newPosition; 
+    }
     void setRotation(const glm::vec3& newRotation) { rotation = newRotation; }
     void setScale(const glm::vec3& newScale) {
         scale = newScale;

@@ -3,6 +3,7 @@
 #include <alchemy/global.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <alchemy/hotbar.h>
 
 GraphicsContext& GraphicsContext::getInstance() {
     static GraphicsContext instance;
@@ -117,6 +118,10 @@ void GraphicsContext::updateProjectionMatrix(int width, int height) {
     glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(projection));
 }
 
+void GraphicsContext::registerCallbacks() {
+    glfwSetFramebufferSizeCallback(GraphicsContext::getInstance().getWindow(), framebuffer_size_callback);
+}
+
 float GraphicsContext::getCameraZoom() {
     return cameraZoom;
 }
@@ -139,4 +144,12 @@ void GraphicsContext::updateUiProjectionMatrix(int width, int height) {
     GLuint transformLoc = glGetUniformLocation(GraphicsContext::getInstance().getDefaultShader(), "transform");
     glUseProgram(GraphicsContext::getInstance().getDefaultShader());
     glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(projection));
+}
+
+void GraphicsContext::framebuffer_size_callback(GLFWwindow* window, int width, int height) {
+    glViewport(0, 0, width, height);
+    Inventory::getInstance().setPosition(glm::vec3(width / 2.0f, height / 2.0f, 0));
+    HotBar::getInstance().setPosition(glm::vec3(width / 2.0f, height - 35.0f, 0.0f));
+    GraphicsContext::getInstance().updateProjectionMatrix(width, height);
+    TextRenderer::getInstance().updateScreenSize(width, height);
 }

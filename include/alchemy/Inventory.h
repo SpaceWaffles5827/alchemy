@@ -52,7 +52,6 @@ private:
     void initializeSlots();
 
     // Internal properties
-    glm::vec3 position;
     glm::vec3 rotation;
     float width;
     float height;

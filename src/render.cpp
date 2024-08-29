@@ -143,27 +143,36 @@ void Render::renderUI(int width, int height) {
 
     std::vector<std::shared_ptr<Renderable>> renderables;
 
-    // Always render the hot bar
     HotBar& playerHotbar = HotBar::getInstance();
-    renderables.push_back(std::shared_ptr<Renderable>(&playerHotbar, [](Renderable*) {}));
-    Renderable selectedSlotObject = playerHotbar.getSelectedSlotObject();
-    renderables.push_back(std::shared_ptr<Renderable>(&selectedSlotObject, [](Renderable*) {}));
-    for (auto& slot : playerHotbar.getHotBarSlots()) {
-        renderables.push_back(std::shared_ptr<Renderable>(&slot, [](Renderable*) {}));
-    }
 
-    // Render the inventory only if it's being displayed
-    if (Inventory::getInstance().getIsVisable()) {
-        Inventory& playerInventory = Inventory::getInstance();
+    // Add HotBar to renderables
+    {
+        std::shared_ptr<Renderable> hotbarPtr = std::make_shared<Renderable>(playerHotbar);
+        renderables.push_back(hotbarPtr);
+        auto selectedSlotObject = std::make_shared<Renderable>(playerHotbar.getSelectedSlotObject());
+        renderables.push_back(selectedSlotObject);
 
-        renderables.push_back(std::shared_ptr<Renderable>(&playerInventory, [](Renderable*) {}));
-        for (auto& slot : playerInventory.getInventorySlots()) {
-            renderables.push_back(std::shared_ptr<Renderable>(&slot, [](Renderable*) {}));
+        for (auto& slot : playerHotbar.getHotBarSlots()) {
+            renderables.push_back(std::make_shared<Renderable>(slot));
         }
     }
 
+    // Add Inventory to renderables if it's visible
+    if (Inventory::getInstance().getIsVisable()) {
+        Inventory& playerInventory = Inventory::getInstance();
+
+        std::shared_ptr<Renderable> inventoryPtr = std::make_shared<Renderable>(playerInventory);
+        renderables.push_back(inventoryPtr);
+
+        for (auto& slot : playerInventory.getInventorySlots()) {
+            renderables.push_back(std::make_shared<Renderable>(slot));
+        }
+    }
+
+    // Batch render all UI elements
     batchRenderGameObjects(renderables, projectionUI);
 
+    // Render dragged slot if the inventory is visible and the user is dragging an item
     if (Inventory::getInstance().getIsVisable() && InputManager::getInstance().getIsDragging()) {
         auto& draggedSlot = Inventory::getInstance().getInventorySlots()[InputManager::getInstance().getSelectedSlotIndex()];
 
@@ -238,10 +247,10 @@ void Render::batchRenderGameObjects(const std::vector<std::shared_ptr<Renderable
     std::map<std::tuple<GLuint, glm::vec2, glm::vec2>, std::vector<std::shared_ptr<Renderable>>, TextureGroupComparator> textureGroups;
 
     for (const auto& renderable : renderables) {
-       // Check if the renderable object is within the camera's view
-       // commenting this out for now because there
-       // is something wrong with implementation
-       // if (frustum.isInFrustum(renderable->getPosition(), renderable->getBoundingRadius())) {} 
+        // Check if the renderable object is within the camera's view
+        // commenting this out for now because there
+        // is something wrong with implementation
+        // if (frustum.isInFrustum(renderable->getPosition(), renderable->getBoundingRadius())) {} 
         if (!renderable->getIsVisable()) {
             continue;
         }

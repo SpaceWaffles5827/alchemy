@@ -15,6 +15,8 @@ public:
     GraphicsContext(const GraphicsContext&) = delete;
     GraphicsContext& operator=(const GraphicsContext&) = delete;
 
+    void registerCallbacks();
+
     void initialize();
     GLFWwindow*& getWindow();
 
@@ -70,6 +72,8 @@ public:
     GLuint getDefaultShader() {
         return 0;
     }
+
+    static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
 private:
     GraphicsContext();  // Private constructor

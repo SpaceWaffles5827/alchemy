@@ -23,15 +23,8 @@ bool InputManager::getIsDragging() {
 
 void InputManager::registerCallbacks() {
     glfwSetWindowUserPointer(GraphicsContext::getInstance().getWindow(), this);
-    glfwSetFramebufferSizeCallback(GraphicsContext::getInstance().getWindow(), framebuffer_size_callback);
     glfwSetScrollCallback(GraphicsContext::getInstance().getWindow(), scroll_callback);
     glfwSetMouseButtonCallback(GraphicsContext::getInstance().getWindow(), mouse_button_callback);
-}
-
-void InputManager::framebuffer_size_callback(GLFWwindow* window, int width, int height) {
-    glViewport(0, 0, width, height);
-    GraphicsContext::getInstance().updateProjectionMatrix(width, height);
-    TextRenderer::getInstance().updateScreenSize(width, height);
 }
 
 void InputManager::scroll_callback(GLFWwindow* window, double xOffset, double yOffset) {

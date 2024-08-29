@@ -8,7 +8,7 @@
 
 // Constructor definition with no parameters
 HotBar::HotBar()
-    : Renderable(183.0f * 3, 23.0f * 3, textureID, glm::vec2(0.0f, 1.0f), glm::vec2(1.0f, 0.0f), glm::vec3(400.0f, 765.0f, 0.0f)),
+    : Renderable(183.0f * 3, 23.0f * 3, textureID, glm::vec2(0.0f, 1.0f), glm::vec2(1.0f, 0.0f), glm::vec3(400.0f, 800.0f - 35.0f, 0.0f)),
     width(1.0f),
     height(1.0f),
     textureID(0),
@@ -103,13 +103,25 @@ int HotBar::getSlotIndexAt(float x, float y) const {
 // Setter methods
 void HotBar::setPosition(const glm::vec3& pos) {
     position = pos;
-    initializeSlots(); // Reinitialize slots based on new position
+    float slotWidth = 45.0f;
+    float slotHeight = 45.0f;
+    float horizontalGap = 15.0f;
+    float xOffset = -239.0f;
+
+    for (int i = 0; i < slots.size(); ++i) {
+        float x = position.x + xOffset + i * (slotWidth + horizontalGap);
+        float y = position.y;
+        slots[i].setPosition(glm::vec3(x, y, 0.0f));
+    }
+
+    // Update the position of the selected slot object
+    float offset = slotWidth + horizontalGap; // slotWidth + horizontalGap
+    selectedSlotObject.setPosition(glm::vec3(position.x + xOffset + (selectedSlotIndex * offset), position.y, 0.0f));
 }
 
 void HotBar::setDimensions(float newWidth, float newHeight) {
     width = newWidth;
     height = newHeight;
-    initializeSlots();
 }
 
 void HotBar::setTexture(GLuint newTextureID, const glm::vec2& newTexTopLeft, const glm::vec2& newTexBottomRight) {
@@ -119,8 +131,6 @@ void HotBar::setTexture(GLuint newTextureID, const glm::vec2& newTexTopLeft, con
 
     Renderable::setTexture(newTextureID);
     Renderable::setTextureCoords(glm::vec2(texTopLeft.x, 1.0f - texTopLeft.y), glm::vec2(texBottomRight.x, 1.0f - texBottomRight.y));
-
-    initializeSlots();
 }
 
 void HotBar::setSelectedSlotIndex(int index) {
@@ -128,8 +138,14 @@ void HotBar::setSelectedSlotIndex(int index) {
         throw std::out_of_range("Invalid slot index");
     }
     selectedSlotIndex = index;
-    float offset = 45.0f + 15.0f; // slotWidth + horizontalGap
-    selectedSlotObject.setPosition(glm::vec3(400.0f - 239.0f + (index * offset), selectedSlotObject.getPosition().y, 0));
+
+    float slotWidth = 45.0f;
+    float horizontalGap = 15.0f;
+    float xOffset = -239.0f;
+    float offset = slotWidth + horizontalGap; // slotWidth + horizontalGap
+
+    // Update the position of the selected slot object based on the selected slot index
+    selectedSlotObject.setPosition(glm::vec3(position.x + xOffset + (index * offset), position.y, 0));
 }
 
 int HotBar::getSelectedSlotIndex() const {
