@@ -40,42 +40,6 @@ public:
 
     void setSlotTexture(int slotIndex, GLuint newTextureID);
 
-    void setIsDraggingItemVisable(bool isVisable) {
-        draggingItemVisable = isVisable;
-    }
-
-    bool getIsDraggingItemVisable() {
-        return draggingItemVisable;
-    }
-
-    std::string getDraggingItemName() {
-        return draggedItemName;
-    }
-
-    GLuint getDragTextureId() {
-        return draggedTextureID;
-    }
-
-    void setSelectedSlotIndex(int index) {
-        selectedSlotIndex = index;
-    }
-
-    void setDraggingTextureId(GLuint textureId) {
-        draggedTextureID = textureId;
-    }
-
-    void setDraggingItemName(std::string name) {
-        draggedItemName = name;
-    }
-
-    void setDraggingStartPos(glm::vec2 position) {
-        dragStartPosition = position;
-    }
-
-    int getSelectedSlotIndex() {
-        return selectedSlotIndex;
-    }
-
 private:
     // Private constructor with default initialization
     Inventory();
@@ -97,12 +61,6 @@ private:
     glm::vec2 texBottomRight;
     int rows;
     int cols;
-
-    int selectedSlotIndex = -1;
-    GLuint draggedTextureID = 0;        // The texture ID of the dragged item
-    std::string draggedItemName;        // The name of the dragged item
-    glm::vec2 dragStartPosition;        // The starting position of the drag
-    bool draggingItemVisable;           // The visibility of the dragged item
 };
 
 #endif // INVENTORY_H

@@ -161,9 +161,10 @@ void Game::render() {
         renderer.batchRenderGameObjects(renderables, GraphicsContext::getInstance().getProjection());
     }
 
+    renderer.renderUI(width, height);
+
     Chat::getInstance().render();
 
-    renderer.renderUI(width, height);
 
     if (FPSDisplay::getInstance().isVisable()) {
         FPSDisplay::getInstance().render();

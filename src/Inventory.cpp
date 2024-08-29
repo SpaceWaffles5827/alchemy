@@ -17,7 +17,6 @@ Inventory::Inventory()
     rows(2),
     cols(2)
 {
-    std::cout << "Jere\n";
     isVisable = false;
     initializeSlots();
 }
@@ -41,7 +40,7 @@ void Inventory::initializeSlots() {
             int index = row * cols + col;
             float x = position.x + xOffset + col * (slotWidth + horizontalGap);
             float y = position.y + yOffset + row * (slotHeight + verticalGap);
-            slots[index] = InventorySlot(glm::vec3(x, y, 0.0f), glm::vec3(0.0f), slotWidth, slotHeight, textureID, glm::vec2(0.0f, 1.0f), glm::vec2(1.0f, 0.0f));
+            slots[index] = InventorySlot(glm::vec3(x, y, 0.0f), glm::vec3(0.0f), slotWidth, slotHeight, 0, glm::vec2(0.0f, 1.0f), glm::vec2(1.0f, 0.0f));
         }
     }
 }

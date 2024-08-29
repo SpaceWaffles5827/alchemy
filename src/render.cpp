@@ -48,6 +48,10 @@ Render::~Render() {
 
 void Render::initialize() {
     shaderProgram = loadShader(defaultVertexShaderSource, defaultFragmentShaderSource);
+
+    // Disable VSync (no frame rate cap)
+    // Add a comand for this later in the text chat
+    glfwSwapInterval(0);
     setupBuffers();
 }
 
@@ -161,7 +165,7 @@ void Render::renderUI(int width, int height) {
     batchRenderGameObjects(renderables, projectionUI);
 
     if (Inventory::getInstance().getIsVisable() && InputManager::getInstance().getIsDragging()) {
-        auto& draggedSlot = Inventory::getInstance().getInventorySlots()[Inventory::getInstance().getSelectedSlotIndex()];
+        auto& draggedSlot = Inventory::getInstance().getInventorySlots()[InputManager::getInstance().getSelectedSlotIndex()];
 
         if (draggedSlot.getIsVisable()) {
             double xpos, ypos;
@@ -175,7 +179,7 @@ void Render::renderUI(int width, int height) {
                 glm::vec3(0.0f),
                 draggedSlot.getScale().x,
                 draggedSlot.getScale().y,
-                Inventory::getInstance().getDragTextureId(),
+                InputManager::getInstance().getDragTextureId(),
                 correctedTopLeft,
                 correctedBottomRight
             );

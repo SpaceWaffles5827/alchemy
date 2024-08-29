@@ -63,61 +63,89 @@ void InputManager::mouse_button_callback(GLFWwindow* window, int button, int act
 
     if (button == GLFW_MOUSE_BUTTON_LEFT) {
         if (action == GLFW_PRESS) {
-            if (Inventory::getInstance().getIsVisable()) {
+            if (Inventory::getInstance().getIsVisable() || HotBar::getInstance().getIsVisable()) {
                 int slotIndex = Inventory::getInstance().getSlotIndexAt(worldX, worldY);
+                if (slotIndex != -1) {
+                    inputManager->setDraggingFromHotbar(false);
+                }
+                else {
+                    slotIndex = HotBar::getInstance().getSlotIndexAt(worldX, worldY);
+                    if (slotIndex != -1) {
+                        inputManager->setDraggingFromHotbar(true);
+                    }
+                }
+
                 if (slotIndex != -1 && !inputManager->isDragging) {
-                    // Store the original slot's state before dragging
                     originalSlotIndex = slotIndex;
-                    originalTextureID = Inventory::getInstance().getInventorySlots()[slotIndex].getTextureID();
-                    originalItemName = Inventory::getInstance().getItemInSlot(slotIndex);
-                    bool isDraggingItemVisable = Inventory::getInstance().getInventorySlots()[slotIndex].getIsVisable();
+                    originalTextureID = inputManager->isDraggingFromHotbar() ? HotBar::getInstance().getHotBarSlots()[slotIndex].getTextureID()
+                        : Inventory::getInstance().getInventorySlots()[slotIndex].getTextureID();
+                    originalItemName = inputManager->isDraggingFromHotbar() ? HotBar::getInstance().getItemInSlot(slotIndex)
+                        : Inventory::getInstance().getItemInSlot(slotIndex);
 
-                    // Clear the item from the original slot to simulate dragging
-                    Inventory::getInstance().getInventorySlots()[slotIndex].setTexture(0);
-                    Inventory::getInstance().getInventorySlots()[slotIndex].setItem("");
+                    if (inputManager->isDraggingFromHotbar()) {
+                        HotBar::getInstance().getHotBarSlots()[slotIndex].setTexture(0);
+                        HotBar::getInstance().getHotBarSlots()[slotIndex].setItem("");
+                    }
+                    else {
+                        Inventory::getInstance().getInventorySlots()[slotIndex].setTexture(0);
+                        Inventory::getInstance().getInventorySlots()[slotIndex].setItem("");
+                    }
 
-                    // Start dragging the item
-                    Inventory::getInstance().setSelectedSlotIndex(slotIndex);
-                    Inventory::getInstance().setDraggingTextureId(originalTextureID);
-                    Inventory::getInstance().setDraggingItemName(originalItemName);
-                    Inventory::getInstance().setIsDraggingItemVisable(isDraggingItemVisable);
+                    InputManager::getInstance().setSelectedSlotIndex(slotIndex);
+                    InputManager::getInstance().setDraggingTextureId(originalTextureID);
+                    InputManager::getInstance().setDraggingItemName(originalItemName);
+                    InputManager::getInstance().setIsDraggingItemVisable(true);
 
                     inputManager->isDragging = true;
-                    Inventory::getInstance().setDraggingStartPos(glm::vec2(worldX, worldY));
+                    InputManager::getInstance().setDraggingStartPos(glm::vec2(worldX, worldY));
                 }
             }
         }
         else if (action == GLFW_RELEASE && inputManager->isDragging) {
-            if (Inventory::getInstance().getIsVisable()) {
-                int targetSlotIndex = Inventory::getInstance().getSlotIndexAt(worldX, worldY);
-                if (targetSlotIndex != -1 && targetSlotIndex != originalSlotIndex) {
-                    auto& originalSlot = Inventory::getInstance().getInventorySlots()[originalSlotIndex];
-                    auto& targetSlot = Inventory::getInstance().getInventorySlots()[targetSlotIndex];
+            int targetSlotIndex = Inventory::getInstance().getSlotIndexAt(worldX, worldY);
+            bool targetIsHotbar = false;
 
-                    GLuint targetTextureID = targetSlot.getTextureID();
-                    std::string targetItemName = targetSlot.getItem();
-                    bool targetIsVisable = targetSlot.getIsVisable();
-
-                    targetSlot.setTexture(Inventory::getInstance().getDragTextureId());
-                    targetSlot.setItem(Inventory::getInstance().getDraggingItemName());
-                    Inventory::getInstance().setIsVisable(Inventory::getInstance().getIsDraggingItemVisable());
-
-                    originalSlot.setTexture(targetTextureID);
-                    originalSlot.setItem(targetItemName);
-                    originalSlot.setIsVisable(targetIsVisable);
-                }
-                else {
-                    auto& originalSlot = Inventory::getInstance().getInventorySlots()[originalSlotIndex];
-                    originalSlot.setTexture(originalTextureID);
-                    originalSlot.setItem(originalItemName);
-                }
-
-                inputManager->isDragging = false;
-                Inventory::getInstance().setSelectedSlotIndex(-1);
-                Inventory::getInstance().setDraggingTextureId(0);
-                Inventory::getInstance().setDraggingItemName("");
-                Inventory::getInstance().setIsDraggingItemVisable(true);
+            if (targetSlotIndex == -1) {
+                targetSlotIndex = HotBar::getInstance().getSlotIndexAt(worldX, worldY);
+                targetIsHotbar = true;
             }
+
+            if (targetSlotIndex != -1 && targetSlotIndex != originalSlotIndex) {
+                auto& originalSlot = inputManager->isDraggingFromHotbar() ? HotBar::getInstance().getHotBarSlots()[originalSlotIndex]
+                    : Inventory::getInstance().getInventorySlots()[originalSlotIndex];
+                auto& targetSlot = targetIsHotbar ? HotBar::getInstance().getHotBarSlots()[targetSlotIndex]
+                    : Inventory::getInstance().getInventorySlots()[targetSlotIndex];
+
+                GLuint targetTextureID = targetSlot.getTextureID();
+                std::string targetItemName = targetSlot.getItem();
+                bool targetIsVisable = targetSlot.getIsVisable();
+
+                // Swap the items
+                targetSlot.setTexture(InputManager::getInstance().getDragTextureId());
+                targetSlot.setItem(InputManager::getInstance().getDraggingItemName());
+
+                targetSlot.setIsVisable(true);
+
+                originalSlot.setTexture(targetTextureID);
+                originalSlot.setItem(targetItemName);
+                originalSlot.setIsVisable(targetIsVisable);
+            }
+            else {
+                auto& originalSlot = inputManager->isDraggingFromHotbar() ? HotBar::getInstance().getHotBarSlots()[originalSlotIndex]
+                    : Inventory::getInstance().getInventorySlots()[originalSlotIndex];
+                originalSlot.setTexture(originalTextureID);
+                originalSlot.setItem(originalItemName);
+
+                if (inputManager->isDraggingFromHotbar()) {
+                    originalSlot.setIsVisable(true);
+                }
+            }
+
+            inputManager->isDragging = false;
+            InputManager::getInstance().setSelectedSlotIndex(-1);
+            InputManager::getInstance().setDraggingTextureId(0);
+            InputManager::getInstance().setDraggingItemName("");
+            InputManager::getInstance().setIsDraggingItemVisable(true);
         }
     }
     else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {

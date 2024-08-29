@@ -44,7 +44,6 @@ public:
 
 private:
     HotBar();
-
     ~HotBar();
 
     std::vector<InventorySlot> slots;
