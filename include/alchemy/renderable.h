@@ -9,88 +9,43 @@
 
 class Renderable {
 public:
-    Renderable()
-        : width(1.0f), height(1.0f), textureID(0),
-        textureTopLeft(glm::vec2(0.0f, 1.0f)), textureBottomRight(glm::vec2(1.0f, 0.0f)),
-        isVisable(true),
-        scale(glm::vec3(1.0f, 1.0f, 1.0f)), position(glm::vec3(0.0f)), rotation(glm::vec3(0.0f)) {
-    }
-
+    Renderable();
     Renderable(float width, float height, GLuint textureID,
         const glm::vec2& texTopLeft = glm::vec2(0.0f, 1.0f),
         const glm::vec2& texBottomRight = glm::vec2(1.0f, 0.0f),
         const glm::vec3& initialPosition = glm::vec3(0.0f),
-        const glm::vec3& initialRotation = glm::vec3(0.0f))
-        : width(width), height(height), textureID(textureID),
-        textureTopLeft(texTopLeft), textureBottomRight(texBottomRight),
-        isVisable(true),
-        scale(glm::vec3(width, height, 1.0f)), position(initialPosition), rotation(initialRotation) {
-    }
-
-    virtual ~Renderable() = default;
+        const glm::vec3& initialRotation = glm::vec3(0.0f));
+    virtual ~Renderable();
 
     // Getters
-    const glm::vec3& getPosition() const { 
-        return position;
-    }
-    const glm::vec3& getRotation() const { return rotation; }
-    const glm::vec3& getScale() const { return scale; }
-    GLuint getTextureID() const { return textureID; }
-    const glm::vec2& getTextureTopLeft() const { return textureTopLeft; }
-    const glm::vec2& getTextureBottomRight() const { return textureBottomRight; }
-    float getWidth() const { return width; }
-    float getHeight() const { return height; }
-    bool getIsVisable() const { return isVisable; }
+    const glm::vec3& getPosition() const;
+
+    const glm::vec3& getRotation() const;
+    const glm::vec3& getScale() const;
+    GLuint getTextureID() const;
+    const glm::vec2& getTextureTopLeft() const;
+    const glm::vec2& getTextureBottomRight() const;
+    float getWidth() const;
+    float getHeight() const;
+    bool getIsVisable() const;
 
     // Setters
-    void setIsVisable(bool visable) {
-        isVisable = visable;
-    }
+    void setIsVisable(bool visable);
 
-    void setPosition(const glm::vec3& newPosition) {
-        position = newPosition; 
-    }
-    void setRotation(const glm::vec3& newRotation) { rotation = newRotation; }
-    void setScale(const glm::vec3& newScale) {
-        scale = newScale;
-        width = scale.x;
-        height = scale.y;
-        updateScale();
-    }
+    void setPosition(const glm::vec3& newPosition);
+    void setRotation(const glm::vec3& newRotation);
+    void setScale(const glm::vec3& newScale);
 
-    void setTexture(GLuint newTextureID) {
-        textureID = newTextureID;
-    }
+    void setTexture(GLuint newTextureID);
 
-    void setTextureTile(int tileX, int tileY, int tilesPerRow, int textureWidth, int textureHeight, int tileWidth, int tileHeight) {
-        float normTileWidth = static_cast<float>(tileWidth) / textureWidth;
-        float normTileHeight = static_cast<float>(tileHeight) / textureHeight;
+    void setTextureTile(int tileX, int tileY, int tilesPerRow, int textureWidth, int textureHeight, int tileWidth, int tileHeight);
+    void setTextureCoords(const glm::vec2& topLeft, const glm::vec2& bottomRight);
 
-        float left = static_cast<float>(tileX) * normTileWidth;
-        float right = left + normTileWidth;
-        float top = static_cast<float>(tileY) * normTileHeight;
-        float bottom = top + normTileHeight;
+    void updateScale();
 
-        float invertedTop = 1.0f - top;
-        float invertedBottom = 1.0f - bottom;
+    void updateBoundingRadius();
 
-        setTextureCoords(glm::vec2(left, invertedTop), glm::vec2(right, invertedBottom));
-    }
-
-    void setTextureCoords(const glm::vec2& topLeft, const glm::vec2& bottomRight) {
-        textureTopLeft = topLeft;
-        textureBottomRight = bottomRight;
-    }
-
-    void updateScale() {
-        scale = glm::vec3(width, height, 1.0f);
-    }
-
-    void updateBoundingRadius() {
-        boundingRadius = std::sqrt(width * width + height * height) / 2.0f;
-    }
-
-    float getBoundingRadius() const { return boundingRadius; }
+    float getBoundingRadius() const;
 
 protected:
     float width;

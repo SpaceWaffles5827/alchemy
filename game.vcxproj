@@ -160,6 +160,7 @@
     <ClCompile Include="src\networkManager.cpp" />
     <ClCompile Include="src\player.cpp" />
     <ClCompile Include="src\render.cpp" />
+    <ClCompile Include="src\renderable.cpp" />
     <ClCompile Include="src\server.cpp" />
     <ClCompile Include="src\stb.cpp" />
     <ClCompile Include="src\textRenderer.cpp" />
