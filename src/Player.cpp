@@ -1,4 +1,4 @@
-#include <alchemy/Player.h>
+#include <alchemy/player.h>
 #include <alchemy/global.h>
 
 Player::Player(int clientId, const glm::vec3& color, float x, float y, float width, float height, GLuint textureID)

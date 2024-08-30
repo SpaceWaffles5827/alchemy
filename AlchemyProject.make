@@ -39,8 +39,6 @@ define PREBUILDCMDS
 endef
 define PRELINKCMDS
 endef
-define POSTBUILDCMDS
-endef
 
 ifeq ($(config),debug_x64)
 TARGETDIR = bin/Debug
@@ -49,6 +47,12 @@ OBJDIR = obj/x64/Debug
 DEFINES += -DGLFW_INCLUDE_NONE -DDEBUG
 ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -g -std=c++20
 ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -g -std=c++20 -std=c++20
+define POSTBUILDCMDS
+	@echo Running postbuild commands
+	cp -rf ../audio bin/Debug
+	cp -rf ../textures bin/Debug
+	cp -rf ../fonts bin/Debug
+endef
 
 else ifeq ($(config),debug_arm64)
 TARGETDIR = bin/Debug
@@ -57,6 +61,12 @@ OBJDIR = obj/ARM64/Debug
 DEFINES += -DGLFW_INCLUDE_NONE -DDEBUG
 ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -g -std=c++20
 ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -g -std=c++20 -std=c++20
+define POSTBUILDCMDS
+	@echo Running postbuild commands
+	cp -rf ../audio bin/Debug
+	cp -rf ../textures bin/Debug
+	cp -rf ../fonts bin/Debug
+endef
 
 else ifeq ($(config),release_x64)
 TARGETDIR = bin/Release
@@ -65,6 +75,12 @@ OBJDIR = obj/x64/Release
 DEFINES += -DGLFW_INCLUDE_NONE -DNDEBUG
 ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -O2 -std=c++20
 ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -O2 -std=c++20 -std=c++20
+define POSTBUILDCMDS
+	@echo Running postbuild commands
+	cp -rf ../audio bin/Release
+	cp -rf ../textures bin/Release
+	cp -rf ../fonts bin/Release
+endef
 
 else ifeq ($(config),release_arm64)
 TARGETDIR = bin/Release
@@ -73,6 +89,12 @@ OBJDIR = obj/ARM64/Release
 DEFINES += -DGLFW_INCLUDE_NONE -DNDEBUG
 ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -O2 -std=c++20
 ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -O2 -std=c++20 -std=c++20
+define POSTBUILDCMDS
+	@echo Running postbuild commands
+	cp -rf ../audio bin/Release
+	cp -rf ../textures bin/Release
+	cp -rf ../fonts bin/Release
+endef
 
 endif
 

@@ -1,13 +1,12 @@
-#include <alchemy/game.h>
+#include "../include/alchemy/game.h"
 #include <iostream>
 #include <cstdlib>
 #include <ctime>
 #include <GLFW/glfw3.h>
 #include <alchemy/networkManager.h>
 #include <alchemy/textRenderer.h>
-#include <fstream>
 #include <alchemy/fpsDisplay.h>
-#include <alchemy/hotbar.h>
+#include "../include/alchemy/hotbar.h"
 #include <alchemy/audioManager.h>
 
 Game::Game(Mode mode)
@@ -17,49 +16,61 @@ Game::Game(Mode mode)
     GraphicsContext::getInstance().setCameraZoom(1.0f);
 }
 
-Game::~Game() {
-    cleanup();
-}
+Game::~Game() { cleanup(); }
 
 void Game::init() {
     GraphicsContext::getInstance().initialize();
     InputManager::getInstance().registerCallbacks();
     GraphicsContext::getInstance().registerCallbacks();
 
-    Render& renderer = Render::getInstance();
+    Render &renderer = Render::getInstance();
     renderer.initialize();
 
-    TextRenderer& textRenderer = TextRenderer::getInstance();
+    TextRenderer &textRenderer = TextRenderer::getInstance();
     textRenderer.updateScreenSize(800, 800);
 
     textRenderer.loadFont("fonts/minecraft.ttf", 24);
 
-    GraphicsContext::getInstance().setTextureID1(GraphicsContext::getInstance().loadTexture("textures/player/playerRunning.png"));
-    std::shared_ptr<Player> clientPlayer = std::make_shared<Player>(clientId, glm::vec3(1.0f, 0.5f, 0.2f), 0.0f, 0.0f, 1.0f, 2.0f, GraphicsContext::getInstance().getTextureID1());
+    GraphicsContext::getInstance().setTextureID1(
+        GraphicsContext::getInstance().loadTexture(
+            "textures/player/playerRunning.png"));
+    std::shared_ptr<Player> clientPlayer = std::make_shared<Player>(
+        clientId, glm::vec3(1.0f, 0.5f, 0.2f), 0.0f, 0.0f, 1.0f, 2.0f,
+        GraphicsContext::getInstance().getTextureID1());
     clientPlayer->setTextureTile(0, 0, 8, 512, 512, 64, 128);
-    World& world = World::getInstance();
+    World &world = World::getInstance();
     world.addPlayer(clientPlayer);
 
-    GraphicsContext::getInstance().setTextureID2(GraphicsContext::getInstance().loadTexture("textures/world/grassSheet.png"));
-    GraphicsContext::getInstance().setInventoryTextureID(GraphicsContext::getInstance().loadTexture("textures/ui/inventory.png"));
-    GraphicsContext::getInstance().setHotbarTextureId(GraphicsContext::getInstance().loadTexture("textures/ui/hotbar.png"));
+    GraphicsContext::getInstance().setTextureID2(
+        GraphicsContext::getInstance().loadTexture(
+            "textures/world/grassSheet.png"));
+    GraphicsContext::getInstance().setInventoryTextureID(
+        GraphicsContext::getInstance().loadTexture(
+            "textures/ui/inventory.png"));
+    GraphicsContext::getInstance().setHotbarTextureId(
+        GraphicsContext::getInstance().loadTexture("textures/ui/hotbar.png"));
 
-    Inventory& playerInventory = Inventory::getInstance();
+    Inventory &playerInventory = Inventory::getInstance();
     playerInventory.setPosition(glm::vec3(400.0f, 400.0f, 0.0f));
     playerInventory.setRotation(glm::vec3(0.0f));
     playerInventory.setDimensions(176.0f * 3, 166.0f * 3);
-    playerInventory.setTexture(GraphicsContext::getInstance().getInventoryTextureID(), glm::vec2(0.0f, 1.0f), glm::vec2(1.0f, 0.0f));
+    playerInventory.setTexture(
+        GraphicsContext::getInstance().getInventoryTextureID(),
+        glm::vec2(0.0f, 1.0f), glm::vec2(1.0f, 0.0f));
     playerInventory.setGridSize(3, 9);
     playerInventory.loadDefaults();
 
-    HotBar& playerHotbar = HotBar::getInstance();
+    HotBar &playerHotbar = HotBar::getInstance();
     playerHotbar.setPosition(glm::vec3(400.0f, 765.0f, 0.0f));
     playerHotbar.setRotation(glm::vec3(0.0f));
     playerHotbar.setDimensions(183.0f * 3, 23.0f * 3);
-    playerHotbar.setTexture(GraphicsContext::getInstance().getHotbarTextureId(), glm::vec2(0.0f, 1.0f), glm::vec2(1.0f, 0.0f));
+    playerHotbar.setTexture(GraphicsContext::getInstance().getHotbarTextureId(),
+                            glm::vec2(0.0f, 1.0f), glm::vec2(1.0f, 0.0f));
     playerHotbar.loadDefaults();
 
-    world.initTileView(10, 10, 1.0f, GraphicsContext::getInstance().getTextureID2(), GraphicsContext::getInstance().getTextureID2());
+    world.initTileView(10, 10, 1.0f,
+                       GraphicsContext::getInstance().getTextureID2(),
+                       GraphicsContext::getInstance().getTextureID2());
 
     std::shared_ptr<Mob> mobPtr = std::make_shared<Mob>();
     world.addMob(mobPtr);
@@ -113,59 +124,63 @@ void Game::run() {
     cleanup();
 }
 
-int Game::getClientId() {
-    return clientId;
-}
+int Game::getClientId() { return clientId; }
 
 void Game::update(double deltaTime) {
     if (NetworkManager::getInstance().receiveData(players)) {
-        for (auto& pair : players) {
+        for (auto &pair : players) {
             int playerId = pair.first;
-            Player& player = pair.second;
+            Player &player = pair.second;
 
             glm::vec2 position = player.getPosition();
         }
     }
 
     // Update all mobs with the deltaTime for smooth movement
-    for (auto& mobPtr : World::getInstance().getMobs()) {
+    for (auto &mobPtr : World::getInstance().getMobs()) {
         if (mobPtr) {
             mobPtr->update(static_cast<float>(deltaTime));
         }
     }
 }
 
-Mode Game::getGameMode() {
-    return currentMode;
-}
+Mode Game::getGameMode() { return currentMode; }
 
 void Game::render() {
     glClear(GL_COLOR_BUFFER_BIT);
 
     int width, height;
-    glfwGetWindowSize(GraphicsContext::getInstance().getWindow(), &width, &height);
+    glfwGetWindowSize(GraphicsContext::getInstance().getWindow(), &width,
+                      &height);
 
-    // Move this so that its only called when it needs to be called such as player movement etc...
+    // Move this so that its only called when it needs to be called such as
+    // player movement etc...
     GraphicsContext::getInstance().updateProjectionMatrix(width, height);
-    World& world = World::getInstance();
-    Render& renderer = Render::getInstance();
+    World &world = World::getInstance();
+    Render &renderer = Render::getInstance();
 
     // Render game world objects
     {
-        std::vector<std::shared_ptr<Renderable>> renderables(world.getObjects().begin(), world.getObjects().end());
-        renderer.batchRenderGameObjects(renderables, GraphicsContext::getInstance().getProjection());
+        std::vector<std::shared_ptr<Renderable>> renderables(
+            world.getObjects().begin(), world.getObjects().end());
+        renderer.batchRenderGameObjects(
+            renderables, GraphicsContext::getInstance().getProjection());
     }
 
     // Render player objects
     {
-        std::vector<std::shared_ptr<Renderable>> renderables(world.getPlayers().begin(), world.getPlayers().end());
-        renderer.batchRenderGameObjects(renderables, GraphicsContext::getInstance().getProjection());
+        std::vector<std::shared_ptr<Renderable>> renderables(
+            world.getPlayers().begin(), world.getPlayers().end());
+        renderer.batchRenderGameObjects(
+            renderables, GraphicsContext::getInstance().getProjection());
     }
 
     // Render mobs
     {
-        std::vector<std::shared_ptr<Renderable>> renderables(world.getMobs().begin(), world.getMobs().end());
-        renderer.batchRenderGameObjects(renderables, GraphicsContext::getInstance().getProjection());
+        std::vector<std::shared_ptr<Renderable>> renderables(
+            world.getMobs().begin(), world.getMobs().end());
+        renderer.batchRenderGameObjects(
+            renderables, GraphicsContext::getInstance().getProjection());
     }
 
     renderer.renderUI(width, height);
@@ -194,14 +209,23 @@ void Game::checkCompileErrors(GLuint shader, std::string type) {
         glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
         if (!success) {
             glGetShaderInfoLog(shader, 1024, NULL, infoLog);
-            std::cout << "| ERROR::SHADER: Compile-time error: Type: " << type << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
+            std::cout
+                << "| ERROR::SHADER: Compile-time error: Type: " << type << "\n"
+                << infoLog
+                << "\n -- --------------------------------------------------- "
+                   "-- "
+                << std::endl;
         }
-    }
-    else {
+    } else {
         glGetProgramiv(shader, GL_LINK_STATUS, &success);
         if (!success) {
             glGetProgramInfoLog(shader, 1024, NULL, infoLog);
-            std::cout << "| ERROR::Program: Link-time error: Type: " << type << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
+            std::cout
+                << "| ERROR::Program: Link-time error: Type: " << type << "\n"
+                << infoLog
+                << "\n -- --------------------------------------------------- "
+                   "-- "
+                << std::endl;
         }
     }
 }

@@ -1,4 +1,4 @@
-#include <alchemy/InventorySlot.h>
+#include <alchemy/inventorySlot.h>
 
 // Parameterized constructor definition with four parameters
 InventorySlot::InventorySlot(float x, float y, float width, float height, GLuint textureID)

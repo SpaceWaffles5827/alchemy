@@ -1,0 +1,5 @@
+Language:        Cpp
+SortIncludes:    false  # Prevents reordering of includes
+UseTab:          Never
+IndentWidth:     4
+
