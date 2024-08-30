@@ -15,7 +15,7 @@ project "AlchemyProject"
 
    filter "system:windows"
       defines { "GLFW_INCLUDE_NONE", "GLEW_STATIC", "AL_LIBTYPE_STATIC" }
-      links { "glfw3", "glew32s", "freetype", "opengl32", "OpenAL32" }  -- Ensure this is pointing to your static OpenAL32.lib
+      links { "glfw3", "glew32s", "freetype", "opengl32", "OpenAL32" }
 
    filter "system:linux"
       defines { "GLFW_INCLUDE_NONE" }
@@ -28,6 +28,12 @@ project "AlchemyProject"
       links { "Cocoa.framework", "IOKit.framework", "CoreVideo.framework", "OpenGL.framework", "glfw", "GLEW", "freetype", "OpenAL.framework" }
       buildoptions { "-std=c++20" }
 
+      postbuildcommands {
+         "{COPY} ../audio %{cfg.targetdir}/",
+         "{COPY} ../textures %{cfg.targetdir}/",
+         "{COPY} ../fonts %{cfg.targetdir}/"
+      }
+
    filter "configurations:Debug"
       defines { "DEBUG" }
       symbols "On"
@@ -35,3 +41,4 @@ project "AlchemyProject"
    filter "configurations:Release"
       defines { "NDEBUG" }
       optimize "On"
+
