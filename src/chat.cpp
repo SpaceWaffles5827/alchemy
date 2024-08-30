@@ -28,7 +28,8 @@ Chat::Chat(GLuint screenWidth, GLuint screenHeight)
     commandMap = {{"setmode", {"leveledit", "play", "pause"}},
                   {"saveworld", {}},
                   {"loadworld", {}},
-                  {"showfps", {"true", "false"}}};
+                  {"showfps", {"true", "false"}},
+                  {"clearchat", {}}}; // Added clearchat command
 }
 
 Chat::~Chat() {}
@@ -155,6 +156,13 @@ bool Chat::processCommand() {
                 std::cout << "Unknown value for showfps: " << value
                           << ". Use 'true' or 'false'." << std::endl;
             }
+            return true;
+        }
+
+        // New clearchat command
+        if (command == "clearchat") {
+            messages.clear();
+            std::cout << "Chat cleared." << std::endl;
             return true;
         }
 
