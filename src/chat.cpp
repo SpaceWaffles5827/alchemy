@@ -10,109 +10,106 @@
 
 namespace fs = std::filesystem;
 
-Chat& Chat::getInstance() {
-    static Chat instance(800, 800);  // Default screen size, adjust as needed
+Chat &Chat::getInstance() {
+    static Chat instance(800, 800); // Default screen size, adjust as needed
     return instance;
 }
 
-std::string toLowerCase(const std::string& str) {
+std::string toLowerCase(const std::string &str) {
     std::string lowerStr = str;
-    std::transform(lowerStr.begin(), lowerStr.end(), lowerStr.begin(), ::tolower);
+    std::transform(lowerStr.begin(), lowerStr.end(), lowerStr.begin(),
+                   ::tolower);
     return lowerStr;
 }
 
 Chat::Chat(GLuint screenWidth, GLuint screenHeight)
-    : screenWidth(screenWidth), screenHeight(screenHeight), lineHeight(30.0f), isChatMode(false), currentMessage("") {
-    commandMap = {
-        {"setmode", {"leveledit", "play", "pause"}},
-        {"saveworld", {}},
-        {"loadworld", {}},
-        {"showfps", {"true", "false"}}
-    };
+    : screenWidth(screenWidth), screenHeight(screenHeight), lineHeight(30.0f),
+      isChatMode(false), currentMessage("") {
+    commandMap = {{"setmode", {"leveledit", "play", "pause"}},
+                  {"saveworld", {}},
+                  {"loadworld", {}},
+                  {"showfps", {"true", "false"}}};
 }
 
 Chat::~Chat() {}
 
-void Chat::addMessage(const std::string& message) {
+void Chat::addMessage(const std::string &message) {
     currentMessage = message;
     if (!processCommand()) {
         messages.push_back(message);
         trimMessages();
     }
-    currentMessage.clear();  // Clear the current message after processing
+    currentMessage.clear(); // Clear the current message after processing
 }
 
 void Chat::render() {
-    GLfloat y = screenHeight - lineHeight;  // Start rendering from the bottom
-    for (const auto& message : messages) {
-        TextRenderer::getInstance().renderText(message, 10.0f, y, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));  // White text
+    GLfloat y = screenHeight - lineHeight; // Start rendering from the bottom
+    for (const auto &message : messages) {
+        TextRenderer::getInstance().renderText(
+            message, 10.0f, y, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f)); // White text
         y -= lineHeight;
     }
 
     // Render the current message being typed if chat mode is active
     if (isChatMode) {
-        TextRenderer::getInstance().renderText("> " + currentMessage, 10.0f, 10.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));  // White text
+        TextRenderer::getInstance().renderText(
+            "> " + currentMessage, 10.0f, 10.0f, 1.0f,
+            glm::vec3(1.0f, 1.0f, 1.0f)); // White text
     }
 
     // Render suggestions if available
     if (!suggestions.empty()) {
         GLfloat suggestionY = 50.0f;
-        for (const auto& suggestion : suggestions) {
-            TextRenderer::getInstance().renderText(suggestion, 10.0f, suggestionY, 0.8f, glm::vec3(0.7f, 0.7f, 0.7f));  // Grey text
+        for (const auto &suggestion : suggestions) {
+            TextRenderer::getInstance().renderText(
+                suggestion, 10.0f, suggestionY, 0.8f,
+                glm::vec3(0.7f, 0.7f, 0.7f)); // Grey text
             suggestionY += lineHeight;
         }
     }
 }
 
-std::string Chat::getCurrentMessage() {
-    return currentMessage;
-}
+std::string Chat::getCurrentMessage() { return currentMessage; }
 
-void Chat::setCurrentMessage(const std::string& message) {
+void Chat::setCurrentMessage(const std::string &message) {
     currentMessage = message;
     updateSuggestions();
 }
 
-bool Chat::isChatModeActive() const {
-    return isChatMode;
-}
+bool Chat::isChatModeActive() const { return isChatMode; }
 
-void Chat::setChatModeActive(bool active) {
-    isChatMode = active;
-}
+void Chat::setChatModeActive(bool active) { isChatMode = active; }
 
 void Chat::trimMessages() {
     GLuint maxMessages = static_cast<GLuint>(screenHeight / lineHeight);
     if (messages.size() > maxMessages) {
-        messages.erase(messages.begin(), messages.begin() + (messages.size() - maxMessages));
+        messages.erase(messages.begin(),
+                       messages.begin() + (messages.size() - maxMessages));
     }
 }
 
 bool Chat::processCommand() {
     if (!currentMessage.empty() && currentMessage[0] == '/') {
-        std::istringstream iss(currentMessage.substr(1));  // Skip the '/'
+        std::istringstream iss(currentMessage.substr(1)); // Skip the '/'
         std::string command;
         iss >> command;
 
-        command = toLowerCase(command);  // Convert command to lowercase
+        command = toLowerCase(command); // Convert command to lowercase
 
         if (command == "setmode") {
             std::string mode;
             iss >> mode;
-            mode = toLowerCase(mode);  // Convert mode to lowercase
+            mode = toLowerCase(mode); // Convert mode to lowercase
             if (mode == "leveledit") {
                 game.setCurrentMode(Mode::LevelEdit);
                 std::cout << "Switched to Level Edit mode." << std::endl;
-            }
-            else if (mode == "play") {
+            } else if (mode == "play") {
                 game.setCurrentMode(Mode::Play);
                 std::cout << "Switched to Play mode." << std::endl;
-            }
-            else if (mode == "pause") {
+            } else if (mode == "pause") {
                 game.setCurrentMode(Mode::Pause);
                 std::cout << "Game Paused." << std::endl;
-            }
-            else {
+            } else {
                 std::cout << "Unknown mode: " << mode << std::endl;
             }
             return true;
@@ -124,8 +121,7 @@ bool Chat::processCommand() {
             if (!worldName.empty()) {
                 saveWorld(worldName);
                 std::cout << "World saved as: " << worldName << std::endl;
-            }
-            else {
+            } else {
                 std::cout << "No world name provided for saving." << std::endl;
             }
             return true;
@@ -136,10 +132,11 @@ bool Chat::processCommand() {
             iss >> worldName;
             if (!worldName.empty()) {
                 loadWorld(worldName);
-                std::cout << "World loaded with name: " << worldName << std::endl;
-            }
-            else {
-                std::cout << "No world name specified for loading." << std::endl;
+                std::cout << "World loaded with name: " << worldName
+                          << std::endl;
+            } else {
+                std::cout << "No world name specified for loading."
+                          << std::endl;
             }
             return true;
         }
@@ -151,13 +148,12 @@ bool Chat::processCommand() {
             if (value == "true") {
                 FPSDisplay::getInstance().setIsVisable(true);
                 std::cout << "FPS display enabled." << std::endl;
-            }
-            else if (value == "false") {
+            } else if (value == "false") {
                 FPSDisplay::getInstance().setIsVisable(false);
                 std::cout << "FPS display disabled." << std::endl;
-            }
-            else {
-                std::cout << "Unknown value for showfps: " << value << ". Use 'true' or 'false'." << std::endl;
+            } else {
+                std::cout << "Unknown value for showfps: " << value
+                          << ". Use 'true' or 'false'." << std::endl;
             }
             return true;
         }
@@ -171,18 +167,19 @@ bool Chat::processCommand() {
 
 void Chat::updateSuggestions() {
     suggestions.clear();
-    if (currentMessage.empty() || currentMessage[0] != '/') return;
+    if (currentMessage.empty() || currentMessage[0] != '/')
+        return;
 
-    std::istringstream iss(currentMessage.substr(1));  // Skip the '/'
+    std::istringstream iss(currentMessage.substr(1)); // Skip the '/'
     std::string command;
     iss >> command;
 
-    command = toLowerCase(command);  // Convert command to lowercase
+    command = toLowerCase(command); // Convert command to lowercase
 
     // Auto-complete command names
     if (commandMap.find(command) == commandMap.end()) {
         int count = 0;
-        for (const auto& cmd : commandMap) {
+        for (const auto &cmd : commandMap) {
             if (toLowerCase(cmd.first).find(command) == 0 && count < 3) {
                 suggestions.push_back("/" + cmd.first);
                 count++;
@@ -194,24 +191,26 @@ void Chat::updateSuggestions() {
     if (command == "loadworld") {
         std::string partialWorldName;
         iss >> partialWorldName;
-        partialWorldName = toLowerCase(partialWorldName);  // Convert partialWorldName to lowercase
+        partialWorldName = toLowerCase(
+            partialWorldName); // Convert partialWorldName to lowercase
 
-        for (const auto& entry : fs::directory_iterator(".")) {
-            if (entry.path().extension() == ".txt" && entry.path().filename().string().find("worldData_") == 0) {
-                std::string worldName = entry.path().stem().string().substr(10);  // Extract world name from "worldData_<name>.txt"
+        for (const auto &entry : fs::directory_iterator("save")) {
+            if (entry.path().extension() == ".txt" &&
+                entry.path().filename().string().find("worldData_") == 0) {
+                std::string worldName = entry.path().stem().string().substr(
+                    10); // Extract world name from "worldData_<name>.txt"
                 if (worldName.find(partialWorldName) == 0) {
                     suggestions.push_back("/loadworld " + worldName);
                 }
             }
         }
-    }
-    else if (commandMap.find(command) != commandMap.end()) {
+    } else if (commandMap.find(command) != commandMap.end()) {
         std::string partialArg;
         iss >> partialArg;
-        partialArg = toLowerCase(partialArg);  // Convert partialArg to lowercase
+        partialArg = toLowerCase(partialArg); // Convert partialArg to lowercase
 
         int count = 0;
-        for (const auto& arg : commandMap[command]) {
+        for (const auto &arg : commandMap[command]) {
             if (toLowerCase(arg).find(partialArg) == 0 && count < 3) {
                 suggestions.push_back("/" + command + " " + arg);
                 count++;
@@ -226,74 +225,78 @@ void Chat::selectSuggestion() {
     }
 }
 
-void Chat::saveLevel(const std::string& filename) {
+void Chat::saveLevel(const std::string &filename) {
     std::ofstream outFile(filename);
     if (outFile.is_open()) {
         // Serialize your level data here, e.g.:
         // outFile << levelData;
         outFile.close();
-    }
-    else {
-        std::cerr << "Failed to open file for saving: " << filename << std::endl;
+    } else {
+        std::cerr << "Failed to open file for saving: " << filename
+                  << std::endl;
     }
 }
 
-void Chat::loadLevel(const std::string& filename) {
+void Chat::loadLevel(const std::string &filename) {
     std::ifstream inFile(filename);
     if (inFile.is_open()) {
         // Deserialize your level data here, e.g.:
         // inFile >> levelData;
         inFile.close();
-    }
-    else {
-        std::cerr << "Failed to open file for loading: " << filename << std::endl;
+    } else {
+        std::cerr << "Failed to open file for loading: " << filename
+                  << std::endl;
     }
 }
 
-void Chat::saveWorld(const std::string& worldName) {
-    std::string filename = "worldData_" + worldName + ".txt";
+void Chat::saveWorld(const std::string &worldName) {
+    std::string saveFolder = "save";
+    if (!fs::exists(saveFolder)) {
+        fs::create_directory(saveFolder);
+    }
+
+    std::string filename = saveFolder + "/worldData_" + worldName + ".txt";
     std::ofstream outFile(filename);
     if (outFile.is_open()) {
         // Save all game objects
         outFile << "Objects:\n";
-        for (const auto& object : World::getInstance().getObjects()) {
+        for (const auto &object : World::getInstance().getObjects()) {
             glm::vec3 pos = object->getPosition();
             glm::vec3 scale = object->getScale();
             glm::vec3 rot = object->getRotation();
             GLuint texID = object->getTextureID();
 
-            outFile << pos.x << "," << pos.y << "," << pos.z << ","
-                << scale.x << "," << scale.y << "," << scale.z << ","
-                << rot.x << "," << rot.y << "," << rot.z << ","
-                << texID << ","
-                << object->getTextureTopLeft().x << "," << object->getTextureTopLeft().y << ","
-                << object->getTextureBottomRight().x << "," << object->getTextureBottomRight().y << "\n";
+            outFile << pos.x << "," << pos.y << "," << pos.z << "," << scale.x
+                    << "," << scale.y << "," << scale.z << "," << rot.x << ","
+                    << rot.y << "," << rot.z << "," << texID << ","
+                    << object->getTextureTopLeft().x << ","
+                    << object->getTextureTopLeft().y << ","
+                    << object->getTextureBottomRight().x << ","
+                    << object->getTextureBottomRight().y << "\n";
         }
 
         // Save all players
         outFile << "Players:\n";
-        for (const auto& player : World::getInstance().getPlayers()) {
+        for (const auto &player : World::getInstance().getPlayers()) {
             glm::vec3 pos = player->getPosition();
             float width = player->getWidth();
             float height = player->getHeight();
             GLuint texID = player->getTextureID();
 
-            outFile << player->getClientId() << ","
-                << pos.x << "," << pos.y << ","
-                << width << "," << height << ","
-                << texID << "\n";
+            outFile << player->getClientId() << "," << pos.x << "," << pos.y
+                    << "," << width << "," << height << "," << texID << "\n";
         }
 
         std::cout << "World saved to " << filename << std::endl;
         outFile.close();
-    }
-    else {
-        std::cerr << "Failed to open file for saving: " << filename << std::endl;
+    } else {
+        std::cerr << "Failed to open file for saving: " << filename
+                  << std::endl;
     }
 }
 
-void Chat::loadWorld(const std::string& worldName) {
-    std::string filename = "worldData_" + worldName + ".txt";
+void Chat::loadWorld(const std::string &worldName) {
+    std::string filename = "save/worldData_" + worldName + ".txt";
     std::ifstream inFile(filename);
     if (inFile.is_open()) {
         World::getInstance().clearObjects();
@@ -328,11 +331,12 @@ void Chat::loadWorld(const std::string& worldName) {
                     glm::vec2 texTopLeft(values[10], values[11]);
                     glm::vec2 texBottomRight(values[12], values[13]);
 
-                    auto object = std::make_shared<GameObject>(pos, rot, scale.x, scale.y, texID, texTopLeft, texBottomRight);
+                    auto object = std::make_shared<GameObject>(
+                        pos, rot, scale.x, scale.y, texID, texTopLeft,
+                        texBottomRight);
                     World::getInstance().addObject(object);
                 }
-            }
-            else {
+            } else {
                 std::istringstream iss(line);
                 std::string token;
                 std::vector<float> values;
@@ -341,14 +345,17 @@ void Chat::loadWorld(const std::string& worldName) {
                     values.push_back(std::stof(token));
                 }
 
-                if (values.size() == 7) {  // Ensure the correct number of values for players
+                if (values.size() ==
+                    7) { // Ensure the correct number of values for players
                     int clientId = static_cast<int>(values[0]);
-                    glm::vec3 pos(values[1], values[2], 0.0f);  // Assuming players are 2D and Z is 0
+                    glm::vec3 pos(values[1], values[2],
+                                  0.0f); // Assuming players are 2D and Z is 0
                     float width = values[3];
                     float height = values[4];
                     GLuint texID = static_cast<GLuint>(values[5]);
 
-                    auto player = std::make_shared<Player>(clientId, pos, 0.0f, 0.0f, width, height, texID);
+                    auto player = std::make_shared<Player>(
+                        clientId, pos, 0.0f, 0.0f, width, height, texID);
                     World::getInstance().addPlayer(player);
                 }
             }
@@ -356,8 +363,8 @@ void Chat::loadWorld(const std::string& worldName) {
 
         std::cout << "World loaded from " << filename << std::endl;
         inFile.close();
-    }
-    else {
-        std::cerr << "Failed to open file for loading: " << filename << std::endl;
+    } else {
+        std::cerr << "Failed to open file for loading: " << filename
+                  << std::endl;
     }
 }
