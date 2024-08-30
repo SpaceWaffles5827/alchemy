@@ -8,25 +8,25 @@ project "AlchemyProject"
    targetdir "bin/%{cfg.buildcfg}"
 
    files { "src/**.h", "src/**.cpp", "include/**.h" }
-   includedirs { "include", "src", "include/GLFW", "include/GL", "include/freetype2" }
+   includedirs { "include", "src", "include/GLFW", "include/GL", "include/freetype2", "include/OpenAL" }
    libdirs { "lib" }
 
-   cppdialect "C++20"  -- Use C++20 standard
+   cppdialect "C++20"
 
    filter "system:windows"
-      defines { "GLFW_INCLUDE_NONE", "GLEW_STATIC" }
-      links { "glfw3", "glew32s", "freetype", "opengl32" }
+      defines { "GLFW_INCLUDE_NONE", "GLEW_STATIC", "AL_LIBTYPE_STATIC" }
+      links { "glfw3", "glew32s", "freetype", "opengl32", "OpenAL32" }  -- Ensure this is pointing to your static OpenAL32.lib
 
    filter "system:linux"
       defines { "GLFW_INCLUDE_NONE" }
-      links { "GL", "GLU", "glfw", "GLEW", "freetype", "pthread" }
+      links { "GL", "GLU", "glfw", "GLEW", "freetype", "pthread", "openal" }
       buildoptions { "-std=c++20" }
 
    filter "system:macosx"
-      architecture "ARM64"  -- Ensure it's set for ARM64 on M1/M2 Macs
+      architecture "ARM64"
       defines { "GLFW_INCLUDE_NONE" }
-      links { "Cocoa.framework", "IOKit.framework", "CoreVideo.framework", "OpenGL.framework", "glfw", "GLEW", "freetype" }
-      buildoptions { "-std=c++20" }  -- Ensure C++20 is used
+      links { "Cocoa.framework", "IOKit.framework", "CoreVideo.framework", "OpenGL.framework", "glfw", "GLEW", "freetype", "OpenAL.framework" }
+      buildoptions { "-std=c++20" }
 
    filter "configurations:Debug"
       defines { "DEBUG" }
@@ -35,4 +35,3 @@ project "AlchemyProject"
    filter "configurations:Release"
       defines { "NDEBUG" }
       optimize "On"
-

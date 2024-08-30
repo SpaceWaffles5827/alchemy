@@ -8,6 +8,7 @@
 #include <fstream>
 #include <alchemy/fpsDisplay.h>
 #include <alchemy/hotbar.h>
+#include <alchemy/audioManager.h>
 
 Game::Game(Mode mode)
     : clientId(std::rand()), tickRate(1.0 / 64.0), currentMode(mode) {
@@ -58,11 +59,17 @@ void Game::init() {
     playerHotbar.setTexture(GraphicsContext::getInstance().getHotbarTextureId(), glm::vec2(0.0f, 1.0f), glm::vec2(1.0f, 0.0f));
     playerHotbar.loadDefaults();
 
-
     world.initTileView(10, 10, 1.0f, GraphicsContext::getInstance().getTextureID2(), GraphicsContext::getInstance().getTextureID2());
 
     std::shared_ptr<Mob> mobPtr = std::make_shared<Mob>();
     world.addMob(mobPtr);
+
+    AudioManager::getInstance().initialize();
+
+    ALuint buffer = AudioManager::getInstance().loadWAV("audio/background.wav");
+    if (buffer != 0) {
+        AudioManager::getInstance().playSound(buffer, true, 1.0f);
+    }
 }
 
 void Game::run() {
@@ -128,7 +135,6 @@ void Game::update(double deltaTime) {
     }
 }
 
-
 Mode Game::getGameMode() {
     return currentMode;
 }
@@ -166,13 +172,14 @@ void Game::render() {
 
     Chat::getInstance().render();
 
-
     if (FPSDisplay::getInstance().isVisable()) {
         FPSDisplay::getInstance().render();
     }
 }
 
 void Game::cleanup() {
+    AudioManager::getInstance().cleanup();
+
     if (GraphicsContext::getInstance().getWindow()) {
         glfwDestroyWindow(GraphicsContext::getInstance().getWindow());
     }

@@ -19,6 +19,7 @@
 #include <alchemy/inventory.h>
 #include <alchemy/graphicsContext.h>
 #include <alchemy/inputManager.h>
+#include <alchemy/audioManager.h>
 
 enum class Mode {
     Game,
