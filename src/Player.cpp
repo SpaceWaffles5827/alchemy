@@ -23,10 +23,8 @@ int Player::getClientId() const {
 }
 
 void Player::attack(glm::vec2 mousePos) {
-    std::cout << "Attack: (" << mousePos.x << ", " << mousePos.y << ")\n";
     int width, height;
     GraphicsContext::getInstance().getWindowSize(width, height);
-    std::cout << "Window size: " << width << "x" << height << std::endl;
 
     // Retrieve the first weapon using a reference
     const std::vector<std::shared_ptr<Soward>> &weapons =
@@ -67,9 +65,6 @@ void Player::attack(glm::vec2 mousePos) {
     if (angle >= 270.0f || angle < 90.0f) {
         std::swap(startRotation.z, endRotation.z);
     }
-
-    std::cout << "Calculated angle (counterclockwise): " << angle
-              << " degrees\n";
 
     // Start the animation with a duration of 0.5 seconds
     playerWeapon->startAnimation(glm::vec3(0.0f, 0.0f, 0.0f), // Start position

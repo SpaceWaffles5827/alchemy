@@ -1,0 +1,96 @@
+{
+  "textures": [
+    {
+      "name": "playerRunning",
+      "file": "textures/player/playerRunning.png",
+      "coordinates": {
+        "x": 0,
+        "y": 0,
+        "cols": 8,
+        "rows": 4,
+        "width": 512,
+        "height": 512
+      },
+      "animations": {
+        "walkUp": {
+          "startFrame": 0,
+          "frameCount": 4,
+          "row": 3,
+          "speed": 0.05
+        },
+        "walkDown": {
+          "startFrame": 0,
+          "frameCount": 4,
+          "row": 0,
+          "speed": 0.05
+        },
+        "walkLeft": {
+          "startFrame": 0,
+          "frameCount": 4,
+          "row": 1,
+          "speed": 0.05
+        },
+        "walkRight": {
+          "startFrame": 0,
+          "frameCount": 4,
+          "row": 2,
+          "speed": 0.05
+        }
+      }
+    },
+    {
+      "name": "playerIdle",
+      "file": "textures/player/playerIdle.png",
+      "coordinates": {
+        "x": 0,
+        "y": 0,
+        "cols": 8,
+        "rows": 4,
+        "width": 512,
+        "height": 512
+      },
+      "animations": {
+        "walkUp": {
+          "startFrame": 0,
+          "frameCount": 4,
+          "row": 3,
+          "speed": 0.05
+        },
+        "walkDown": {
+          "startFrame": 0,
+          "frameCount": 4,
+          "row": 0,
+          "speed": 0.05
+        },
+        "walkLeft": {
+          "startFrame": 0,
+          "frameCount": 4,
+          "row": 2,
+          "speed": 0.05
+        },
+        "walkRight": {
+          "startFrame": 0,
+          "frameCount": 4,
+          "row": 1,
+          "speed": 0.05
+        }
+      }
+    },
+    {
+      "name": "grassSheet",
+      "file": "textures/world/grassSheet.png"
+    },
+    {
+      "name": "hotbar",
+      "file": "textures/ui/hotbar.png",
+      "coordinates": {
+        "x": 0,
+        "y": 1,
+        "cols": 1,
+        "rows": 1,
+        "width": 183,
+        "height": 23
+      }
+    }
+  ]
+}

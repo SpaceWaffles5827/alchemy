@@ -1,15 +1,82 @@
 #include <alchemy/inputManager.h>
 #include <alchemy/global.h>
 #include <alchemy/hotbar.h>
+#include "../include/nlohmann/json.hpp" // Include the JSON library
+#include <fstream>
+#include <iostream>
+#include <unordered_map>
 
-InputManager& InputManager::getInstance() {
+// Structs for storing texture and animation data
+struct AnimationInfo {
+    int startFrame;
+    int frameCount;
+    int row;
+    float speed;
+};
+
+struct TextureInfo {
+    GLuint textureID;
+    std::string file;
+    int x, y, cols, rows, width, height;
+    std::unordered_map<std::string, AnimationInfo> animations;
+};
+
+// Map to store texture information by name
+std::unordered_map<std::string, TextureInfo> textures;
+
+InputManager &InputManager::getInstance() {
     static InputManager instance;
     return instance;
 }
 
 InputManager::InputManager() : isDragging(false) {
+    // Initialize keyReleased array
     for (int i = 0; i < GLFW_KEY_LAST; ++i) {
         keyReleased[i] = true;
+    }
+
+    // Load and parse the textures.json file
+    std::ifstream configFile("textures.json");
+    if (!configFile.is_open()) {
+        std::cerr << "Failed to open textures.json" << std::endl;
+        return;
+    }
+
+    nlohmann::json config;
+    configFile >> config;
+
+    // Store texture information in a map for easy access later
+    for (const auto &texture : config["textures"]) {
+        std::string name = texture["name"];
+        std::string file = texture["file"];
+        TextureInfo texInfo;
+        texInfo.file = file;
+
+        if (texture.contains("coordinates")) {
+            texInfo.x = texture["coordinates"]["x"];
+            texInfo.y = texture["coordinates"]["y"];
+            texInfo.cols = texture["coordinates"]["cols"];
+            texInfo.rows = texture["coordinates"]["rows"];
+            texInfo.width = texture["coordinates"]["width"];
+            texInfo.height = texture["coordinates"]["height"];
+        }
+
+        if (texture.contains("animations")) {
+            for (const auto &[animName, animData] :
+                 texture["animations"].items()) {
+                AnimationInfo animInfo;
+                animInfo.startFrame = animData["startFrame"];
+                animInfo.frameCount = animData["frameCount"];
+                animInfo.row = animData["row"];
+                animInfo.speed = animData["speed"];
+                texInfo.animations[animName] = animInfo;
+            }
+        }
+
+        // Load the texture and store the texture ID
+        texInfo.textureID =
+            GraphicsContext::getInstance().loadTexture(file.c_str());
+        textures[name] = texInfo;
     }
 }
 
@@ -17,20 +84,24 @@ InputManager::~InputManager() {
     // Cleanup if needed
 }
 
-bool InputManager::getIsDragging() {
-    return isDragging;
-}
+bool InputManager::getIsDragging() { return isDragging; }
 
 void InputManager::registerCallbacks() {
     glfwSetWindowUserPointer(GraphicsContext::getInstance().getWindow(), this);
-    glfwSetScrollCallback(GraphicsContext::getInstance().getWindow(), scroll_callback);
-    glfwSetMouseButtonCallback(GraphicsContext::getInstance().getWindow(), mouse_button_callback);
+    glfwSetScrollCallback(GraphicsContext::getInstance().getWindow(),
+                          scroll_callback);
+    glfwSetMouseButtonCallback(GraphicsContext::getInstance().getWindow(),
+                               mouse_button_callback);
 }
 
-void InputManager::scroll_callback(GLFWwindow* window, double xOffset, double yOffset) {
-    GraphicsContext::getInstance().setCameraZoom(GraphicsContext::getInstance().getCameraZoom() + yOffset * -0.1f);
-    if (GraphicsContext::getInstance().getCameraZoom() < 0.1f) GraphicsContext::getInstance().setCameraZoom(0.1f);
-    if (GraphicsContext::getInstance().getCameraZoom() > 99.0f) GraphicsContext::getInstance().setCameraZoom(99.0f);
+void InputManager::scroll_callback(GLFWwindow *window, double xOffset,
+                                   double yOffset) {
+    GraphicsContext::getInstance().setCameraZoom(
+        GraphicsContext::getInstance().getCameraZoom() + yOffset * -0.1f);
+    if (GraphicsContext::getInstance().getCameraZoom() < 0.1f)
+        GraphicsContext::getInstance().setCameraZoom(0.1f);
+    if (GraphicsContext::getInstance().getCameraZoom() > 99.0f)
+        GraphicsContext::getInstance().setCameraZoom(99.0f);
 
     int width, height;
     glfwGetWindowSize(window, &width, &height);
@@ -218,94 +289,125 @@ void InputManager::handleInput() {
         static bool backspaceKeyReleased = true;
 
         // Handle chat-related input
-        if (glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_ENTER) == GLFW_PRESS && enterKeyReleased) {
-            Chat::getInstance().addMessage(Chat::getInstance().getCurrentMessage());
+        if (glfwGetKey(GraphicsContext::getInstance().getWindow(),
+                       GLFW_KEY_ENTER) == GLFW_PRESS &&
+            enterKeyReleased) {
+            Chat::getInstance().addMessage(
+                Chat::getInstance().getCurrentMessage());
             Chat::getInstance().setCurrentMessage("");
             Chat::getInstance().setChatModeActive(false);
             enterKeyReleased = false;
         }
-        if (glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_ENTER) == GLFW_RELEASE) {
+        if (glfwGetKey(GraphicsContext::getInstance().getWindow(),
+                       GLFW_KEY_ENTER) == GLFW_RELEASE) {
             enterKeyReleased = true;
         }
 
-        if (glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_BACKSPACE) == GLFW_PRESS && backspaceKeyReleased) {
-            std::string currentMessage = Chat::getInstance().getCurrentMessage();
+        if (glfwGetKey(GraphicsContext::getInstance().getWindow(),
+                       GLFW_KEY_BACKSPACE) == GLFW_PRESS &&
+            backspaceKeyReleased) {
+            std::string currentMessage =
+                Chat::getInstance().getCurrentMessage();
             if (!currentMessage.empty()) {
                 currentMessage.pop_back();
                 Chat::getInstance().setCurrentMessage(currentMessage);
             }
             backspaceKeyReleased = false;
         }
-        if (glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_BACKSPACE) == GLFW_RELEASE) {
+        if (glfwGetKey(GraphicsContext::getInstance().getWindow(),
+                       GLFW_KEY_BACKSPACE) == GLFW_RELEASE) {
             backspaceKeyReleased = true;
         }
 
-        if (glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_ESCAPE) == GLFW_PRESS && escKeyReleased) {
+        if (glfwGetKey(GraphicsContext::getInstance().getWindow(),
+                       GLFW_KEY_ESCAPE) == GLFW_PRESS &&
+            escKeyReleased) {
             Chat::getInstance().setCurrentMessage("");
             Chat::getInstance().setChatModeActive(false);
             escKeyReleased = false;
         }
-        if (glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_ESCAPE) == GLFW_RELEASE) {
+        if (glfwGetKey(GraphicsContext::getInstance().getWindow(),
+                       GLFW_KEY_ESCAPE) == GLFW_RELEASE) {
             escKeyReleased = true;
         }
 
-        if (glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_TAB) == GLFW_PRESS && tabKeyReleased) {
+        if (glfwGetKey(GraphicsContext::getInstance().getWindow(),
+                       GLFW_KEY_TAB) == GLFW_PRESS &&
+            tabKeyReleased) {
             Chat::getInstance().selectSuggestion();
             tabKeyReleased = false;
         }
-        if (glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_TAB) == GLFW_RELEASE) {
+        if (glfwGetKey(GraphicsContext::getInstance().getWindow(),
+                       GLFW_KEY_TAB) == GLFW_RELEASE) {
             tabKeyReleased = true;
         }
 
         // Handle alphabetic keys (A-Z)
         for (int key = GLFW_KEY_A; key <= GLFW_KEY_Z; ++key) {
-            if (glfwGetKey(GraphicsContext::getInstance().getWindow(), key) == GLFW_PRESS && keyReleased[key]) {
-                bool shiftPressed = glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS || glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS;
+            if (glfwGetKey(GraphicsContext::getInstance().getWindow(), key) ==
+                    GLFW_PRESS &&
+                keyReleased[key]) {
+                bool shiftPressed =
+                    glfwGetKey(GraphicsContext::getInstance().getWindow(),
+                               GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ||
+                    glfwGetKey(GraphicsContext::getInstance().getWindow(),
+                               GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS;
                 char c = static_cast<char>(key);
                 if (!shiftPressed) {
-                    c += 32;  // Convert to lowercase
+                    c += 32; // Convert to lowercase
                 }
-                std::string currentMessage = Chat::getInstance().getCurrentMessage();
+                std::string currentMessage =
+                    Chat::getInstance().getCurrentMessage();
                 currentMessage += c;
                 Chat::getInstance().setCurrentMessage(currentMessage);
                 keyReleased[key] = false;
             }
-            if (glfwGetKey(GraphicsContext::getInstance().getWindow(), key) == GLFW_RELEASE) {
+            if (glfwGetKey(GraphicsContext::getInstance().getWindow(), key) ==
+                GLFW_RELEASE) {
                 keyReleased[key] = true;
             }
         }
 
         // Handle numeric keys (0-9)
         for (int key = GLFW_KEY_0; key <= GLFW_KEY_9; ++key) {
-            if (glfwGetKey(GraphicsContext::getInstance().getWindow(), key) == GLFW_PRESS && keyReleased[key]) {
+            if (glfwGetKey(GraphicsContext::getInstance().getWindow(), key) ==
+                    GLFW_PRESS &&
+                keyReleased[key]) {
                 char c = static_cast<char>(key);
-                std::string currentMessage = Chat::getInstance().getCurrentMessage();
+                std::string currentMessage =
+                    Chat::getInstance().getCurrentMessage();
                 currentMessage += c;
                 Chat::getInstance().setCurrentMessage(currentMessage);
                 keyReleased[key] = false;
             }
-            if (glfwGetKey(GraphicsContext::getInstance().getWindow(), key) == GLFW_RELEASE) {
+            if (glfwGetKey(GraphicsContext::getInstance().getWindow(), key) ==
+                GLFW_RELEASE) {
                 keyReleased[key] = true;
             }
         }
 
         // Handle space key
-        if (glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_SPACE) == GLFW_PRESS && keyReleased[GLFW_KEY_SPACE]) {
-            std::string currentMessage = Chat::getInstance().getCurrentMessage();
+        if (glfwGetKey(GraphicsContext::getInstance().getWindow(),
+                       GLFW_KEY_SPACE) == GLFW_PRESS &&
+            keyReleased[GLFW_KEY_SPACE]) {
+            std::string currentMessage =
+                Chat::getInstance().getCurrentMessage();
             currentMessage += ' ';
             Chat::getInstance().setCurrentMessage(currentMessage);
             keyReleased[GLFW_KEY_SPACE] = false;
         }
-        if (glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_SPACE) == GLFW_RELEASE) {
+        if (glfwGetKey(GraphicsContext::getInstance().getWindow(),
+                       GLFW_KEY_SPACE) == GLFW_RELEASE) {
             keyReleased[GLFW_KEY_SPACE] = true;
         }
-    }
-    else {
+    } else {
         // Player movement and action handling
-        std::shared_ptr<Player> player = World::getInstance().getPlayerById(game.getClientId());
+        std::shared_ptr<Player> player =
+            World::getInstance().getPlayerById(game.getClientId());
         if (player) {
-            static GLuint runningTextureID = GraphicsContext::getInstance().loadTexture("textures/player/playerRunning.png");
-            static GLuint idleTextureID = GraphicsContext::getInstance().loadTexture("textures/player/playerIdle.png");
+            // Use the texture data from the map
+            TextureInfo runningTexture = textures["playerRunning"];
+            TextureInfo idleTexture = textures["playerIdle"];
 
             bool positionUpdated = false;
             bool isMoving = false;
@@ -318,7 +420,9 @@ void InputManager::handleInput() {
             double currentTime = glfwGetTime();
             double frameDuration = 0.075;
 
-            static int lastDirection = 0;
+            static int currentAnimationRow =
+                runningTexture.animations["walkDown"]
+                    .row; // Default to walkDown row
             glm::vec3 direction(0.0f);
 
             if (currentTime - lastTime >= frameDuration) {
@@ -326,30 +430,33 @@ void InputManager::handleInput() {
                 lastTime = currentTime;
             }
 
-            bool moveUp = glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_W) == GLFW_PRESS;
-            bool moveDown = glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_S) == GLFW_PRESS;
-            bool moveLeft = glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_A) == GLFW_PRESS;
-            bool moveRight = glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_D) == GLFW_PRESS;
+            // Retrieve the correct row from the JSON animations
+            int walkUpRow = runningTexture.animations["walkUp"].row;
+            int walkDownRow = runningTexture.animations["walkDown"].row;
+            int walkLeftRow = runningTexture.animations["walkLeft"].row;
+            int walkRightRow = runningTexture.animations["walkRight"].row;
 
-            if (moveUp && !moveDown) {
+            if (glfwGetKey(GraphicsContext::getInstance().getWindow(),
+                           GLFW_KEY_W) == GLFW_PRESS) {
                 direction.y += 1.0f;
-                lastDirection = 3;
+                currentAnimationRow = walkUpRow;
                 isMoving = true;
-            }
-            else if (moveDown && !moveUp) {
+            } else if (glfwGetKey(GraphicsContext::getInstance().getWindow(),
+                                  GLFW_KEY_S) == GLFW_PRESS) {
                 direction.y -= 1.0f;
-                lastDirection = 0;
+                currentAnimationRow = walkDownRow;
                 isMoving = true;
             }
 
-            if (moveLeft && !moveRight) {
+            if (glfwGetKey(GraphicsContext::getInstance().getWindow(),
+                           GLFW_KEY_A) == GLFW_PRESS) {
                 direction.x -= 1.0f;
-                lastDirection = 1;
+                currentAnimationRow = walkLeftRow;
                 isMoving = true;
-            }
-            else if (moveRight && !moveLeft) {
+            } else if (glfwGetKey(GraphicsContext::getInstance().getWindow(),
+                                  GLFW_KEY_D) == GLFW_PRESS) {
                 direction.x += 1.0f;
-                lastDirection = 2;
+                currentAnimationRow = walkRightRow;
                 isMoving = true;
             }
 
@@ -359,112 +466,136 @@ void InputManager::handleInput() {
                     position += direction * speed;
                     positionUpdated = true;
 
-                    player->setTexture(runningTextureID);
-                    player->setTextureTile(frame, lastDirection, 8, 512, 512, 64, 128);
+                    player->setTexture(runningTexture.textureID);
+                    player->setTextureTile(
+                        frame, currentAnimationRow, runningTexture.cols,
+                        runningTexture.width, runningTexture.height, 64, 128);
                 }
-            }
-            else {
-                player->setTexture(idleTextureID);
-                player->setTextureTile(frame, lastDirection, 8, 512, 512, 64, 128);
+            } else {
+                player->setTexture(idleTexture.textureID);
+                player->setTextureTile(frame, currentAnimationRow,
+                                       idleTexture.cols, idleTexture.width,
+                                       idleTexture.height, 64, 128);
             }
 
             if (positionUpdated) {
-                World::getInstance().updatePlayerPosition(game.getClientId(), position);
-                NetworkManager::getInstance().sendPlayerMovement(game.getClientId(), position.x, position.y);
-            }
-            else {
+                World::getInstance().updatePlayerPosition(game.getClientId(),
+                                                          position);
+                NetworkManager::getInstance().sendPlayerMovement(
+                    game.getClientId(), position.x, position.y);
+            } else {
                 NetworkManager::getInstance().sendHeatBeat(game.getClientId());
             }
-        }
-        else {
-            std::cerr << "Player with ID " << game.getClientId() << " not found." << std::endl;
+        } else {
+            std::cerr << "Player with ID " << game.getClientId()
+                      << " not found." << std::endl;
         }
 
         static bool tKeyReleased = true;
         static bool slashKeyReleased = true;
         static bool bKeyReleased = true;
 
-        if (glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_T) == GLFW_PRESS && tKeyReleased) {
+        if (glfwGetKey(GraphicsContext::getInstance().getWindow(),
+                       GLFW_KEY_T) == GLFW_PRESS &&
+            tKeyReleased) {
             Chat::getInstance().setChatModeActive(true);
             tKeyReleased = false;
         }
-        if (glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_T) == GLFW_RELEASE) {
+        if (glfwGetKey(GraphicsContext::getInstance().getWindow(),
+                       GLFW_KEY_T) == GLFW_RELEASE) {
             tKeyReleased = true;
         }
 
-        if (glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_SLASH) == GLFW_PRESS && slashKeyReleased) {
+        if (glfwGetKey(GraphicsContext::getInstance().getWindow(),
+                       GLFW_KEY_SLASH) == GLFW_PRESS &&
+            slashKeyReleased) {
             Chat::getInstance().setChatModeActive(true);
-            std::string currentMessage = Chat::getInstance().getCurrentMessage();
+            std::string currentMessage =
+                Chat::getInstance().getCurrentMessage();
             currentMessage += '/';
             Chat::getInstance().setCurrentMessage(currentMessage);
             slashKeyReleased = false;
         }
-        if (glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_SLASH) == GLFW_RELEASE) {
+        if (glfwGetKey(GraphicsContext::getInstance().getWindow(),
+                       GLFW_KEY_SLASH) == GLFW_RELEASE) {
             slashKeyReleased = true;
         }
 
-        if (glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_B) == GLFW_PRESS && bKeyReleased) {
+        if (glfwGetKey(GraphicsContext::getInstance().getWindow(),
+                       GLFW_KEY_B) == GLFW_PRESS &&
+            bKeyReleased) {
             Inventory::getInstance().setIsVisable(false);
             Chat::getInstance().setChatModeActive(false);
             bKeyReleased = false;
         }
-        if (glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_B) == GLFW_RELEASE) {
+        if (glfwGetKey(GraphicsContext::getInstance().getWindow(),
+                       GLFW_KEY_B) == GLFW_RELEASE) {
             bKeyReleased = true;
         }
 
-        if (glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_TAB) == GLFW_PRESS && tabKeyReleased) {
-            Inventory::getInstance().setIsVisable(!Inventory::getInstance().getIsVisable());
+        if (glfwGetKey(GraphicsContext::getInstance().getWindow(),
+                       GLFW_KEY_TAB) == GLFW_PRESS &&
+            tabKeyReleased) {
+            Inventory::getInstance().setIsVisable(
+                !Inventory::getInstance().getIsVisable());
             Chat::getInstance().setChatModeActive(false);
             tabKeyReleased = false;
         }
-        if (glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_TAB) == GLFW_RELEASE) {
+        if (glfwGetKey(GraphicsContext::getInstance().getWindow(),
+                       GLFW_KEY_TAB) == GLFW_RELEASE) {
             tabKeyReleased = true;
         }
 
-        if (glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_ESCAPE) == GLFW_PRESS && escKeyReleased) {
+        if (glfwGetKey(GraphicsContext::getInstance().getWindow(),
+                       GLFW_KEY_ESCAPE) == GLFW_PRESS &&
+            escKeyReleased) {
             if (Inventory::getInstance().getIsVisable()) {
                 Inventory::getInstance().setIsVisable(false);
-            }
-            else {
+            } else {
                 Chat::getInstance().setChatModeActive(false);
             }
             escKeyReleased = false;
         }
-        if (glfwGetKey(GraphicsContext::getInstance().getWindow(), GLFW_KEY_ESCAPE) == GLFW_RELEASE) {
+        if (glfwGetKey(GraphicsContext::getInstance().getWindow(),
+                       GLFW_KEY_ESCAPE) == GLFW_RELEASE) {
             escKeyReleased = true;
         }
 
         // Handle number keys (1-9) for selecting hotbar slots
         for (int key = GLFW_KEY_1; key <= GLFW_KEY_9; ++key) {
-            if (glfwGetKey(GraphicsContext::getInstance().getWindow(), key) == GLFW_PRESS && keyReleased[key]) {
+            if (glfwGetKey(GraphicsContext::getInstance().getWindow(), key) ==
+                    GLFW_PRESS &&
+                keyReleased[key]) {
                 int slotIndex = key - GLFW_KEY_1;
                 HotBar::getInstance().setSelectedSlotIndex(slotIndex);
                 keyReleased[key] = false;
             }
-            if (glfwGetKey(GraphicsContext::getInstance().getWindow(), key) == GLFW_RELEASE) {
+            if (glfwGetKey(GraphicsContext::getInstance().getWindow(), key) ==
+                GLFW_RELEASE) {
                 keyReleased[key] = true;
             }
         }
     }
 }
 
-void InputManager::handleWorldInteraction(double xpos, double ypos, int width, int height) {
+void InputManager::handleWorldInteraction(double xpos, double ypos, int width,
+                                          int height) {
     if (game.getGameMode() == Mode::LevelEdit) {
         float xNDC = static_cast<float>((2.0 * xpos) / width - 1.0);
         float yNDC = static_cast<float>(1.0 - (2.0 * ypos) / height);
 
         glm::vec4 ndcCoords = glm::vec4(xNDC, yNDC, 0.0f, 1.0f);
-        glm::vec4 worldCoords = glm::inverse(GraphicsContext::getInstance().getProjection()) * ndcCoords;
+        glm::vec4 worldCoords =
+            glm::inverse(GraphicsContext::getInstance().getProjection()) *
+            ndcCoords;
 
         float snappedX = std::round(worldCoords.x);
         float snappedY = std::round(worldCoords.y);
 
-        std::shared_ptr<GameObject> gameObjectAdding = std::make_shared<GameObject>(
-            glm::vec3(snappedX, snappedY, 0.0f),
-            glm::vec3(0.0f),
-            1.0f,
-            1.0f,
-            GraphicsContext::getInstance().getTextureID2());
+        std::shared_ptr<GameObject> gameObjectAdding =
+            std::make_shared<GameObject>(
+                glm::vec3(snappedX, snappedY, 0.0f), glm::vec3(0.0f), 1.0f,
+                1.0f, GraphicsContext::getInstance().getTextureID2());
 
         gameObjectAdding->setTextureTile(0, 0, 8, 256, 256, 32, 32);
         World::getInstance().addObject(gameObjectAdding);
