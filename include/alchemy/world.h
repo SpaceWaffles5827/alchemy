@@ -6,6 +6,7 @@
 #include <algorithm>
 #include "gameObject.h"
 #include "../alchemy/player.h"
+#include "../alchemy/soward.h"
 #include "../glm/glm.hpp"
 #include "../alchemy/mob.h"
 
@@ -21,6 +22,7 @@ public:
 
   void addObject(std::shared_ptr<GameObject> object);
   void addPlayer(std::shared_ptr<Player> object);
+  void addWeapon(std::shared_ptr<Soward> object);
   void addMob(std::shared_ptr<Mob> object);
 
   void updatePlayerPosition(int clientId, const glm::vec3 &newPosition);
@@ -32,6 +34,7 @@ public:
 
   const std::vector<std::shared_ptr<GameObject>> &getObjects() const;
   const std::vector<std::shared_ptr<Player>> &getPlayers() const;
+  const std::vector<std::shared_ptr<Soward>> &getWeapons() const;
   const std::vector<std::shared_ptr<Mob>> &getMobs() const;
   std::shared_ptr<Player> getPlayerById(int clientId) const;
   void eraseObject(const glm::vec3 &position);
@@ -43,6 +46,7 @@ private:
   std::vector<std::shared_ptr<Mob>> mobs;
   std::vector<std::shared_ptr<GameObject>> objects;
   std::vector<std::shared_ptr<Player>> players;
+  std::vector<std::shared_ptr<Soward>> weapons;
 };
 
 #endif // WORLD_H

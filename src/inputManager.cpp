@@ -38,8 +38,10 @@ void InputManager::scroll_callback(GLFWwindow* window, double xOffset, double yO
     GraphicsContext::getInstance().updateProjectionMatrix(width, height);
 }
 
-void InputManager::mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
-    InputManager* inputManager = static_cast<InputManager*>(glfwGetWindowUserPointer(window));
+void InputManager::mouse_button_callback(GLFWwindow *window, int button,
+                                         int action, int mods) {
+    InputManager *inputManager =
+        static_cast<InputManager *>(glfwGetWindowUserPointer(window));
 
     double xpos, ypos;
     glfwGetCursorPos(window, &xpos, &ypos);
@@ -52,113 +54,157 @@ void InputManager::mouse_button_callback(GLFWwindow* window, int button, int act
 
     static GLuint originalTextureID = 0;
     static std::string originalItemName;
-    static int originalSlotIndex = -1;
+    static int originalSlotIndex = -1; // Move the declaration here
 
-    if (button == GLFW_MOUSE_BUTTON_LEFT) {
-        if (action == GLFW_PRESS) {
-            if (Inventory::getInstance().getIsVisable() || HotBar::getInstance().getIsVisable()) {
-                int slotIndex = Inventory::getInstance().getSlotIndexAt(worldX, worldY);
+    // If left mouse button is pressed
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+        std::shared_ptr<Player> player =
+            World::getInstance().getPlayerById(game.getClientId());
+        if (player) {
+            player->attack(glm::vec2(xpos, ypos)); // Call the attack method
+        }
+
+        // Handling inventory and hotbar interactions
+        if (Inventory::getInstance().getIsVisable() ||
+            HotBar::getInstance().getIsVisable()) {
+            int slotIndex =
+                Inventory::getInstance().getSlotIndexAt(worldX, worldY);
+            if (slotIndex != -1) {
+                inputManager->setDraggingFromHotbar(false);
+            } else {
+                slotIndex =
+                    HotBar::getInstance().getSlotIndexAt(worldX, worldY);
                 if (slotIndex != -1) {
-                    inputManager->setDraggingFromHotbar(false);
+                    inputManager->setDraggingFromHotbar(true);
                 }
-                else {
-                    slotIndex = HotBar::getInstance().getSlotIndexAt(worldX, worldY);
-                    if (slotIndex != -1) {
-                        inputManager->setDraggingFromHotbar(true);
-                    }
-                }
+            }
 
-                if (slotIndex != -1 && !inputManager->isDragging) {
-                    originalSlotIndex = slotIndex;
-                    originalTextureID = inputManager->isDraggingFromHotbar() ? HotBar::getInstance().getHotBarSlots()[slotIndex].getTextureID()
-                        : Inventory::getInstance().getInventorySlots()[slotIndex].getTextureID();
-                    originalItemName = inputManager->isDraggingFromHotbar() ? HotBar::getInstance().getItemInSlot(slotIndex)
+            if (slotIndex != -1 && !inputManager->isDragging) {
+                originalSlotIndex = slotIndex;
+                originalTextureID = inputManager->isDraggingFromHotbar()
+                                        ? HotBar::getInstance()
+                                              .getHotBarSlots()[slotIndex]
+                                              .getTextureID()
+                                        : Inventory::getInstance()
+                                              .getInventorySlots()[slotIndex]
+                                              .getTextureID();
+                originalItemName =
+                    inputManager->isDraggingFromHotbar()
+                        ? HotBar::getInstance().getItemInSlot(slotIndex)
                         : Inventory::getInstance().getItemInSlot(slotIndex);
 
-                    if (inputManager->isDraggingFromHotbar()) {
-                        HotBar::getInstance().getHotBarSlots()[slotIndex].setTexture(0);
-                        HotBar::getInstance().getHotBarSlots()[slotIndex].setItem("");
-                    }
-                    else {
-                        Inventory::getInstance().getInventorySlots()[slotIndex].setTexture(0);
-                        Inventory::getInstance().getInventorySlots()[slotIndex].setItem("");
-                    }
-
-                    InputManager::getInstance().setSelectedSlotIndex(slotIndex);
-                    InputManager::getInstance().setDraggingTextureId(originalTextureID);
-                    InputManager::getInstance().setDraggingItemName(originalItemName);
-                    InputManager::getInstance().setIsDraggingItemVisable(true);
-
-                    inputManager->isDragging = true;
-                    InputManager::getInstance().setDraggingStartPos(glm::vec2(worldX, worldY));
-                }
-            }
-        }
-        else if (action == GLFW_RELEASE && inputManager->isDragging) {
-            int targetSlotIndex = Inventory::getInstance().getSlotIndexAt(worldX, worldY);
-            bool targetIsHotbar = false;
-
-            if (targetSlotIndex == -1) {
-                targetSlotIndex = HotBar::getInstance().getSlotIndexAt(worldX, worldY);
-                targetIsHotbar = true;
-            }
-
-            if (targetSlotIndex != -1 && targetSlotIndex != originalSlotIndex) {
-                auto& originalSlot = inputManager->isDraggingFromHotbar() ? HotBar::getInstance().getHotBarSlots()[originalSlotIndex]
-                    : Inventory::getInstance().getInventorySlots()[originalSlotIndex];
-                auto& targetSlot = targetIsHotbar ? HotBar::getInstance().getHotBarSlots()[targetSlotIndex]
-                    : Inventory::getInstance().getInventorySlots()[targetSlotIndex];
-
-                GLuint targetTextureID = targetSlot.getTextureID();
-                std::string targetItemName = targetSlot.getItem();
-                bool targetIsVisable = targetSlot.getIsVisable();
-
-                // Swap the items
-                targetSlot.setTexture(InputManager::getInstance().getDragTextureId());
-                targetSlot.setItem(InputManager::getInstance().getDraggingItemName());
-
-                targetSlot.setIsVisable(true);
-
-                originalSlot.setTexture(targetTextureID);
-                originalSlot.setItem(targetItemName);
-                originalSlot.setIsVisable(targetIsVisable);
-            }
-            else {
-                auto& originalSlot = inputManager->isDraggingFromHotbar() ? HotBar::getInstance().getHotBarSlots()[originalSlotIndex]
-                    : Inventory::getInstance().getInventorySlots()[originalSlotIndex];
-                originalSlot.setTexture(originalTextureID);
-                originalSlot.setItem(originalItemName);
-
                 if (inputManager->isDraggingFromHotbar()) {
-                    originalSlot.setIsVisable(true);
+                    HotBar::getInstance()
+                        .getHotBarSlots()[slotIndex]
+                        .setTexture(0);
+                    HotBar::getInstance().getHotBarSlots()[slotIndex].setItem(
+                        "");
+                } else {
+                    Inventory::getInstance()
+                        .getInventorySlots()[slotIndex]
+                        .setTexture(0);
+                    Inventory::getInstance()
+                        .getInventorySlots()[slotIndex]
+                        .setItem("");
                 }
-            }
 
-            inputManager->isDragging = false;
-            InputManager::getInstance().setSelectedSlotIndex(-1);
-            InputManager::getInstance().setDraggingTextureId(0);
-            InputManager::getInstance().setDraggingItemName("");
-            InputManager::getInstance().setIsDraggingItemVisable(true);
+                InputManager::getInstance().setSelectedSlotIndex(slotIndex);
+                InputManager::getInstance().setDraggingTextureId(
+                    originalTextureID);
+                InputManager::getInstance().setDraggingItemName(
+                    originalItemName);
+                InputManager::getInstance().setIsDraggingItemVisable(true);
+
+                inputManager->isDragging = true;
+                InputManager::getInstance().setDraggingStartPos(
+                    glm::vec2(worldX, worldY));
+            }
         }
     }
+    // Handle left mouse button release
+    else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE &&
+             inputManager->isDragging) {
+        int targetSlotIndex =
+            Inventory::getInstance().getSlotIndexAt(worldX, worldY);
+        bool targetIsHotbar = false;
+
+        if (targetSlotIndex == -1) {
+            targetSlotIndex =
+                HotBar::getInstance().getSlotIndexAt(worldX, worldY);
+            targetIsHotbar = true;
+        }
+
+        if (targetSlotIndex != -1 && targetSlotIndex != originalSlotIndex) {
+            auto &originalSlot =
+                inputManager->isDraggingFromHotbar()
+                    ? HotBar::getInstance().getHotBarSlots()[originalSlotIndex]
+                    : Inventory::getInstance()
+                          .getInventorySlots()[originalSlotIndex];
+            auto &targetSlot =
+                targetIsHotbar
+                    ? HotBar::getInstance().getHotBarSlots()[targetSlotIndex]
+                    : Inventory::getInstance()
+                          .getInventorySlots()[targetSlotIndex];
+
+            GLuint targetTextureID = targetSlot.getTextureID();
+            std::string targetItemName = targetSlot.getItem();
+            bool targetIsVisable = targetSlot.getIsVisable();
+
+            // Swap the items
+            targetSlot.setTexture(
+                InputManager::getInstance().getDragTextureId());
+            targetSlot.setItem(
+                InputManager::getInstance().getDraggingItemName());
+
+            targetSlot.setIsVisable(true);
+
+            originalSlot.setTexture(targetTextureID);
+            originalSlot.setItem(targetItemName);
+            originalSlot.setIsVisable(targetIsVisable);
+        } else {
+            auto &originalSlot =
+                inputManager->isDraggingFromHotbar()
+                    ? HotBar::getInstance().getHotBarSlots()[originalSlotIndex]
+                    : Inventory::getInstance()
+                          .getInventorySlots()[originalSlotIndex];
+            originalSlot.setTexture(originalTextureID);
+            originalSlot.setItem(originalItemName);
+
+            if (inputManager->isDraggingFromHotbar()) {
+                originalSlot.setIsVisable(true);
+            }
+        }
+
+        inputManager->isDragging = false;
+        InputManager::getInstance().setSelectedSlotIndex(-1);
+        InputManager::getInstance().setDraggingTextureId(0);
+        InputManager::getInstance().setDraggingItemName("");
+        InputManager::getInstance().setIsDraggingItemVisable(true);
+    }
+    // Handle right mouse button actions for level editing
     else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
         if (game.getGameMode() == Mode::LevelEdit) {
             double xpos, ypos;
-            glfwGetCursorPos(GraphicsContext::getInstance().getWindow(), &xpos, &ypos);
+            glfwGetCursorPos(GraphicsContext::getInstance().getWindow(), &xpos,
+                             &ypos);
 
             int width, height;
-            glfwGetWindowSize(GraphicsContext::getInstance().getWindow(), &width, &height);
+            glfwGetWindowSize(GraphicsContext::getInstance().getWindow(),
+                              &width, &height);
 
             float xNDC = static_cast<float>((2.0 * xpos) / width - 1.0);
             float yNDC = static_cast<float>(1.0 - (2.0 * ypos) / height);
 
             glm::vec4 ndcCoords = glm::vec4(xNDC, yNDC, 0.0f, 1.0f);
-            glm::vec4 worldCoords = glm::inverse(GraphicsContext::getInstance().getProjection()) * ndcCoords;
+            glm::vec4 worldCoords =
+                glm::inverse(GraphicsContext::getInstance().getProjection()) *
+                ndcCoords;
 
             float snappedX = std::round(worldCoords.x);
             float snappedY = std::round(worldCoords.y);
 
-            World::getInstance().eraseObject(glm::vec3(snappedX, snappedY, 0.0f));
+            World::getInstance().eraseObject(
+                glm::vec3(snappedX, snappedY, 0.0f));
         }
     }
 }

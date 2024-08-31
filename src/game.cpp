@@ -1,4 +1,5 @@
 #include "../include/alchemy/game.h"
+#include "../include/alchemy/soward.h"
 #include <iostream>
 #include <cstdlib>
 #include <ctime>
@@ -40,6 +41,9 @@ void Game::init() {
     clientPlayer->setTextureTile(0, 0, 8, 512, 512, 64, 128);
     World &world = World::getInstance();
     world.addPlayer(clientPlayer);
+
+    std::shared_ptr<Soward> playerSoward = std::make_shared<Soward>();
+    world.addWeapon(playerSoward);
 
     GraphicsContext::getInstance().setTextureID2(
         GraphicsContext::getInstance().loadTexture(
@@ -142,6 +146,11 @@ void Game::update(double deltaTime) {
             mobPtr->update(static_cast<float>(deltaTime));
         }
     }
+
+    auto &weapons = World::getInstance().getWeapons();
+    for (auto &weapon : weapons) {
+        weapon->updateAnimation(static_cast<float>(deltaTime));
+    }
 }
 
 Mode Game::getGameMode() { return currentMode; }
@@ -179,6 +188,14 @@ void Game::render() {
     {
         std::vector<std::shared_ptr<Renderable>> renderables(
             world.getMobs().begin(), world.getMobs().end());
+        renderer.batchRenderGameObjects(
+            renderables, GraphicsContext::getInstance().getProjection());
+    }
+
+    // Render weapons
+    {
+        std::vector<std::shared_ptr<Renderable>> renderables(
+            world.getWeapons().begin(), world.getWeapons().end());
         renderer.batchRenderGameObjects(
             renderables, GraphicsContext::getInstance().getProjection());
     }

@@ -23,7 +23,7 @@ public:
 
   int getClientId() const;
 
-  void attack();
+  void attack(glm::vec2 mousePos);
 
 private:
   int clientId;

@@ -11,6 +11,10 @@ void World::addPlayer(std::shared_ptr<Player> object) {
     players.push_back(object);
 }
 
+void World::addWeapon(std::shared_ptr<Soward> object) {
+    weapons.push_back(object);
+}
+
 void World::addMob(std::shared_ptr<Mob> object) {
     mobs.push_back(object);
 }
@@ -70,6 +74,10 @@ const std::vector<std::shared_ptr<GameObject>>& World::getObjects() const {
 
 const std::vector<std::shared_ptr<Player>>& World::getPlayers() const {
     return players;
+}
+
+const std::vector<std::shared_ptr<Soward>> &World::getWeapons() const {
+    return weapons;
 }
 
 const std::vector<std::shared_ptr<Mob>>& World::getMobs() const {

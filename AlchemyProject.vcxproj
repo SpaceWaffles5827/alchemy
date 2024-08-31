@@ -279,6 +279,7 @@
     <ClInclude Include="include\stb\stb_image.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="include\alchemy\soward.h" />
     <ClCompile Include="src\audioManager.cpp" />
     <ClCompile Include="src\Inventory.cpp" />
     <ClCompile Include="src\InventorySlot.cpp" />
@@ -296,9 +297,13 @@
     <ClCompile Include="src\render.cpp" />
     <ClCompile Include="src\renderable.cpp" />
     <ClCompile Include="src\server.cpp" />
+    <ClCompile Include="src\soward.cpp" />
     <ClCompile Include="src\stb.cpp" />
     <ClCompile Include="src\textRenderer.cpp" />
     <ClCompile Include="src\world.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="textures\weapon\Cobalt_Sword.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

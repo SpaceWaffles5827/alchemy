@@ -130,6 +130,15 @@ void GraphicsContext::setCameraZoom(float zoom) {
     cameraZoom = zoom;
 }
 
+void GraphicsContext::getWindowSize(int &width, int &height) {
+    if (window) {
+        glfwGetWindowSize(window, &width, &height);
+    } else {
+        width = 0;
+        height = 0;
+    }
+}
+
 void GraphicsContext::updateUiProjectionMatrix(int width, int height) {
     float aspectRatio = static_cast<float>(width) / height;
     float viewWidth = 20.0f * cameraZoom;

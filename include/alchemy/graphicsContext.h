@@ -29,6 +29,8 @@ public:
 
     void updateUiProjectionMatrix(int width, int height);
 
+    void getWindowSize(int &width, int &height);
+
     GLuint getTextureID1() {
         return textureID1;
     }

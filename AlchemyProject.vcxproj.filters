@@ -397,5 +397,10 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\audioManager.cpp" />
+    <ClCompile Include="include\alchemy\soward.h" />
+    <ClCompile Include="src\soward.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="textures\weapon\Cobalt_Sword.png" />
   </ItemGroup>
 </Project>
