@@ -39,6 +39,8 @@ define PREBUILDCMDS
 endef
 define PRELINKCMDS
 endef
+define POSTBUILDCMDS
+endef
 
 ifeq ($(config),debug_x64)
 TARGETDIR = bin/Debug
@@ -47,12 +49,6 @@ OBJDIR = obj/x64/Debug
 DEFINES += -DGLFW_INCLUDE_NONE -DDEBUG
 ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -g -std=c++20
 ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -g -std=c++20 -std=c++20
-define POSTBUILDCMDS
-	@echo Running postbuild commands
-	cp -rf ../audio bin/Debug
-	cp -rf ../textures bin/Debug
-	cp -rf ../fonts bin/Debug
-endef
 
 else ifeq ($(config),debug_arm64)
 TARGETDIR = bin/Debug
@@ -61,12 +57,6 @@ OBJDIR = obj/ARM64/Debug
 DEFINES += -DGLFW_INCLUDE_NONE -DDEBUG
 ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -g -std=c++20
 ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -g -std=c++20 -std=c++20
-define POSTBUILDCMDS
-	@echo Running postbuild commands
-	cp -rf ../audio bin/Debug
-	cp -rf ../textures bin/Debug
-	cp -rf ../fonts bin/Debug
-endef
 
 else ifeq ($(config),release_x64)
 TARGETDIR = bin/Release
@@ -75,12 +65,6 @@ OBJDIR = obj/x64/Release
 DEFINES += -DGLFW_INCLUDE_NONE -DNDEBUG
 ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -O2 -std=c++20
 ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -O2 -std=c++20 -std=c++20
-define POSTBUILDCMDS
-	@echo Running postbuild commands
-	cp -rf ../audio bin/Release
-	cp -rf ../textures bin/Release
-	cp -rf ../fonts bin/Release
-endef
 
 else ifeq ($(config),release_arm64)
 TARGETDIR = bin/Release
@@ -89,12 +73,6 @@ OBJDIR = obj/ARM64/Release
 DEFINES += -DGLFW_INCLUDE_NONE -DNDEBUG
 ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -O2 -std=c++20
 ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -O2 -std=c++20 -std=c++20
-define POSTBUILDCMDS
-	@echo Running postbuild commands
-	cp -rf ../audio bin/Release
-	cp -rf ../textures bin/Release
-	cp -rf ../fonts bin/Release
-endef
 
 endif
 
@@ -108,6 +86,7 @@ endif
 GENERATED :=
 OBJECTS :=
 
+GENERATED += $(OBJDIR)/Player.o
 GENERATED += $(OBJDIR)/audioManager.o
 GENERATED += $(OBJDIR)/chat.o
 GENERATED += $(OBJDIR)/fpsDisplay.o
@@ -121,13 +100,14 @@ GENERATED += $(OBJDIR)/inventorySlot.o
 GENERATED += $(OBJDIR)/main.o
 GENERATED += $(OBJDIR)/mob.o
 GENERATED += $(OBJDIR)/networkManager.o
-GENERATED += $(OBJDIR)/player.o
 GENERATED += $(OBJDIR)/render.o
 GENERATED += $(OBJDIR)/renderable.o
 GENERATED += $(OBJDIR)/server.o
+GENERATED += $(OBJDIR)/soward.o
 GENERATED += $(OBJDIR)/stb.o
 GENERATED += $(OBJDIR)/textRenderer.o
 GENERATED += $(OBJDIR)/world.o
+OBJECTS += $(OBJDIR)/Player.o
 OBJECTS += $(OBJDIR)/audioManager.o
 OBJECTS += $(OBJDIR)/chat.o
 OBJECTS += $(OBJDIR)/fpsDisplay.o
@@ -141,10 +121,10 @@ OBJECTS += $(OBJDIR)/inventorySlot.o
 OBJECTS += $(OBJDIR)/main.o
 OBJECTS += $(OBJDIR)/mob.o
 OBJECTS += $(OBJDIR)/networkManager.o
-OBJECTS += $(OBJDIR)/player.o
 OBJECTS += $(OBJDIR)/render.o
 OBJECTS += $(OBJDIR)/renderable.o
 OBJECTS += $(OBJDIR)/server.o
+OBJECTS += $(OBJDIR)/soward.o
 OBJECTS += $(OBJDIR)/stb.o
 OBJECTS += $(OBJDIR)/textRenderer.o
 OBJECTS += $(OBJDIR)/world.o
@@ -211,6 +191,9 @@ endif
 # File Rules
 # #############################################
 
+$(OBJDIR)/Player.o: src/Player.cpp
+	@echo "$(notdir $<)"
+	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/audioManager.o: src/audioManager.cpp
 	@echo "$(notdir $<)"
 	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
@@ -250,9 +233,6 @@ $(OBJDIR)/mob.o: src/mob.cpp
 $(OBJDIR)/networkManager.o: src/networkManager.cpp
 	@echo "$(notdir $<)"
 	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
-$(OBJDIR)/player.o: src/player.cpp
-	@echo "$(notdir $<)"
-	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/render.o: src/render.cpp
 	@echo "$(notdir $<)"
 	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
@@ -260,6 +240,9 @@ $(OBJDIR)/renderable.o: src/renderable.cpp
 	@echo "$(notdir $<)"
 	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/server.o: src/server.cpp
+	@echo "$(notdir $<)"
+	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
+$(OBJDIR)/soward.o: src/soward.cpp
 	@echo "$(notdir $<)"
 	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/stb.o: src/stb.cpp

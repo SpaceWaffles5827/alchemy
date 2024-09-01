@@ -3,24 +3,24 @@
 
 #include <string>
 #include <iostream>
-#include <GLEW/glew.h>
-#include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
+#include "../GLEW/glew.h"
+#include "../GLFW/glfw3.h"
+#include "../glm/glm.hpp"
 
 class GraphicsContext {
-public:
-    static GraphicsContext& getInstance();
+  public:
+    static GraphicsContext &getInstance();
 
     // Deleted functions to ensure only one instance
-    GraphicsContext(const GraphicsContext&) = delete;
-    GraphicsContext& operator=(const GraphicsContext&) = delete;
+    GraphicsContext(const GraphicsContext &) = delete;
+    GraphicsContext &operator=(const GraphicsContext &) = delete;
 
     void registerCallbacks();
 
     void initialize();
-    GLFWwindow*& getWindow();
+    GLFWwindow *&getWindow();
 
-    GLuint loadTexture(const char* path);
+    GLuint loadTexture(const char *path);
 
     void updateProjectionMatrix(int width, int height);
 
@@ -31,53 +31,34 @@ public:
 
     void getWindowSize(int &width, int &height);
 
-    GLuint getTextureID1() {
-        return textureID1;
-    }
+    GLuint getTextureID1() { return textureID1; }
 
-    GLuint getTextureID2() {
-        return textureID2;
-    }
+    GLuint getTextureID2() { return textureID2; }
 
-    GLuint getInventoryTextureID() {
-        return inventoryTextureID;
-    }
+    GLuint getInventoryTextureID() { return inventoryTextureID; }
 
-    GLuint getHotbarTextureId() {
-        return hotbarTextureId;
-    }
+    GLuint getHotbarTextureId() { return hotbarTextureId; }
 
-    void setTextureID1(GLuint texture) {
-         textureID1 = texture;
-    }
+    void setTextureID1(GLuint texture) { textureID1 = texture; }
 
-    void setTextureID2(GLuint texture) {
-         textureID2 = texture;
-    }
+    void setTextureID2(GLuint texture) { textureID2 = texture; }
 
-    void setInventoryTextureID(GLuint texture) {
-         inventoryTextureID = texture;
-    }
+    void setInventoryTextureID(GLuint texture) { inventoryTextureID = texture; }
 
-    void setHotbarTextureId(GLuint texture) {
-         hotbarTextureId = texture;
-    }
+    void setHotbarTextureId(GLuint texture) { hotbarTextureId = texture; }
 
     void setProjectionMatrix(glm::mat4 projectionMatrix) {
         projection = projectionMatrix;
     }
 
-    glm::mat4 getProjection() {
-        return projection;
-    }
+    glm::mat4 getProjection() { return projection; }
 
-    GLuint getDefaultShader() {
-        return 0;
-    }
+    GLuint getDefaultShader() { return 0; }
 
-    static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+    static void framebuffer_size_callback(GLFWwindow *window, int width,
+                                          int height);
 
-private:
+  private:
     GraphicsContext();  // Private constructor
     ~GraphicsContext(); // Private destructor
 
@@ -86,7 +67,7 @@ private:
 
     float cameraZoom;
 
-    GLFWwindow* window;
+    GLFWwindow *window;
     std::string title;
 
     GLuint textureID1;

@@ -28,12 +28,6 @@ project "AlchemyProject"
       links { "Cocoa.framework", "IOKit.framework", "CoreVideo.framework", "OpenGL.framework", "glfw", "GLEW", "freetype", "OpenAL.framework" }
       buildoptions { "-std=c++20" }
 
-      postbuildcommands {
-         "{COPY} ../audio %{cfg.targetdir}/",
-         "{COPY} ../textures %{cfg.targetdir}/",
-         "{COPY} ../fonts %{cfg.targetdir}/"
-      }
-
    filter "configurations:Debug"
       defines { "DEBUG" }
       symbols "On"

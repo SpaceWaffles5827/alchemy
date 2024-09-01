@@ -7,5 +7,5 @@ premake5 gmake2
 make -j$(sysctl -n hw.ncpu)
 
 # Run the application
-./bin/Debug/AlchemyProject  # Or ./bin/Release/AlchemyProject
+./bin/Debug/AlchemyProject  # Or ./bin/Debug/AlchemyProject
 

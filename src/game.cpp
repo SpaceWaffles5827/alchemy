@@ -38,7 +38,7 @@ void Game::init() {
     std::shared_ptr<Player> clientPlayer = std::make_shared<Player>(
         clientId, glm::vec3(1.0f, 0.5f, 0.2f), 0.0f, 0.0f, 1.0f, 2.0f,
         GraphicsContext::getInstance().getTextureID1());
-    clientPlayer->setTextureTile(0, 0, 8, 512, 512, 64, 128);
+    // clientPlayer->setTextureTile(0, 0, 8, 512, 512, 64, 128);
     World &world = World::getInstance();
     world.addPlayer(clientPlayer);
 
@@ -72,7 +72,7 @@ void Game::init() {
                             glm::vec2(0.0f, 1.0f), glm::vec2(1.0f, 0.0f));
     playerHotbar.loadDefaults();
 
-    world.initTileView(10, 10, 1.0f,
+    world.initTileView(20, 20, 1.0f,
                        GraphicsContext::getInstance().getTextureID2(),
                        GraphicsContext::getInstance().getTextureID2());
 
@@ -162,48 +162,45 @@ void Game::render() {
     glfwGetWindowSize(GraphicsContext::getInstance().getWindow(), &width,
                       &height);
 
-    // Move this so that its only called when it needs to be called such as
-    // player movement etc...
+    // Move this so that it's only called when it needs to be called such as
+    // player movement, window resize, etc.
     GraphicsContext::getInstance().updateProjectionMatrix(width, height);
+
     World &world = World::getInstance();
     Render &renderer = Render::getInstance();
 
-    // Render game world objects
-    {
-        std::vector<std::shared_ptr<Renderable>> renderables(
-            world.getObjects().begin(), world.getObjects().end());
-        renderer.batchRenderGameObjects(
-            renderables, GraphicsContext::getInstance().getProjection());
-    }
+    // Group all renderables into a single list
+    std::vector<std::shared_ptr<Renderable>> renderables;
 
-    // Render player objects
-    {
-        std::vector<std::shared_ptr<Renderable>> renderables(
-            world.getPlayers().begin(), world.getPlayers().end());
-        renderer.batchRenderGameObjects(
-            renderables, GraphicsContext::getInstance().getProjection());
-    }
+    // Add game world objects
+    renderables.insert(renderables.end(), world.getObjects().begin(),
+                       world.getObjects().end());
 
-    // Render mobs
-    {
-        std::vector<std::shared_ptr<Renderable>> renderables(
-            world.getMobs().begin(), world.getMobs().end());
-        renderer.batchRenderGameObjects(
-            renderables, GraphicsContext::getInstance().getProjection());
-    }
+    // Add player objects
+    renderables.insert(renderables.end(), world.getPlayers().begin(),
+                       world.getPlayers().end());
 
-    // Render weapons
-    {
-        std::vector<std::shared_ptr<Renderable>> renderables(
-            world.getWeapons().begin(), world.getWeapons().end());
-        renderer.batchRenderGameObjects(
-            renderables, GraphicsContext::getInstance().getProjection());
-    }
+    // Add mobs
+    renderables.insert(renderables.end(), world.getMobs().begin(),
+                       world.getMobs().end());
 
+    // Add weapons
+    renderables.insert(renderables.end(), world.getWeapons().begin(),
+                       world.getWeapons().end());
+
+    // Pass the grouped renderables to batch render
+    renderer.batchRenderGameObjects(
+        renderables, GraphicsContext::getInstance().getProjection());
+
+    std::cout << "New +++++++++++++++++++++ \n";
+
+    // Render the UI
     renderer.renderUI(width, height);
 
+    // Render the chat
     Chat::getInstance().render();
 
+    // Render the FPS display if visible
     if (FPSDisplay::getInstance().isVisable()) {
         FPSDisplay::getInstance().render();
     }

@@ -1,93 +1,83 @@
-#include <alchemy/renderable.h>
+#include "../include/alchemy/renderable.h"
+#include "../include/alchemy/graphicsContext.h"
 #include <cmath>
 #include <iostream>
 
 // Default constructor
 Renderable::Renderable()
     : width(1.0f), height(1.0f), textureID(0),
-    textureTopLeft(glm::vec2(0.0f, 1.0f)), textureBottomRight(glm::vec2(1.0f, 0.0f)),
-    isVisable(true),
-    scale(glm::vec3(1.0f, 1.0f, 1.0f)), position(glm::vec3(0.0f)), rotation(glm::vec3(0.0f)) {
+      textureTopLeft(glm::vec2(0.0f, 1.0f)),
+      textureBottomRight(glm::vec2(1.0f, 0.0f)), isVisable(true),
+      scale(glm::vec3(1.0f, 1.0f, 1.0f)), position(glm::vec3(0.0f)),
+      rotation(glm::vec3(0.0f)) {
     updateBoundingRadius();
 }
 
 // Parameterized constructor
 Renderable::Renderable(float width, float height, GLuint textureID,
-    const glm::vec2& texTopLeft,
-    const glm::vec2& texBottomRight,
-    const glm::vec3& initialPosition,
-    const glm::vec3& initialRotation)
+                       const glm::vec2 &texTopLeft,
+                       const glm::vec2 &texBottomRight,
+                       const glm::vec3 &initialPosition,
+                       const glm::vec3 &initialRotation)
     : width(width), height(height), textureID(textureID),
-    textureTopLeft(texTopLeft), textureBottomRight(texBottomRight),
-    isVisable(true),
-    scale(glm::vec3(width, height, 1.0f)), position(initialPosition), rotation(initialRotation) {
+      textureTopLeft(texTopLeft), textureBottomRight(texBottomRight),
+      isVisable(true), scale(glm::vec3(width, height, 1.0f)),
+      position(initialPosition), rotation(initialRotation) {
     updateBoundingRadius();
 }
 
 // Destructor
 Renderable::~Renderable() = default;
 
-const glm::vec3& Renderable::getPosition() const {
-    return position;
-}
+const glm::vec3 &Renderable::getPosition() const { return position; }
 
-const glm::vec3& Renderable::getRotation() const {
-    return rotation;
-}
+const glm::vec3 &Renderable::getRotation() const { return rotation; }
 
-const glm::vec3& Renderable::getScale() const {
-    return scale;
-}
+const glm::vec3 &Renderable::getScale() const { return scale; }
 
-GLuint Renderable::getTextureID() const {
-    return textureID;
-}
+GLuint Renderable::getTextureID() const { return textureID; }
 
-const glm::vec2& Renderable::getTextureTopLeft() const {
+const glm::vec2 &Renderable::getTextureTopLeft() const {
     return textureTopLeft;
 }
 
-const glm::vec2& Renderable::getTextureBottomRight() const {
+const glm::vec2 &Renderable::getTextureBottomRight() const {
     return textureBottomRight;
 }
 
-float Renderable::getWidth() const {
-    return width;
-}
+float Renderable::getWidth() const { return width; }
 
-float Renderable::getHeight() const {
-    return height;
-}
+float Renderable::getHeight() const { return height; }
 
-bool Renderable::getIsVisable() const {
-    return isVisable;
-}
+bool Renderable::getIsVisable() const { return isVisable; }
 
 // Setters
-void Renderable::setIsVisable(bool visable) {
-    isVisable = visable;
-}
+void Renderable::setIsVisable(bool visable) { isVisable = visable; }
 
-void Renderable::setPosition(const glm::vec3& newPosition) {
+void Renderable::setPosition(const glm::vec3 &newPosition) {
     position = newPosition;
 }
 
-void Renderable::setRotation(const glm::vec3& newRotation) {
+void Renderable::setRotation(const glm::vec3 &newRotation) {
     rotation = newRotation;
 }
 
-void Renderable::setScale(const glm::vec3& newScale) {
+void Renderable::setScale(const glm::vec3 &newScale) {
     scale = newScale;
     width = scale.x;
     height = scale.y;
     updateScale();
 }
 
-void Renderable::setTexture(GLuint newTextureID) {
-    textureID = newTextureID;
-}
+void Renderable::setTexture(GLuint newTextureID) { textureID = newTextureID; }
 
-void Renderable::setTextureTile(int tileX, int tileY, int tilesPerRow, int textureWidth, int textureHeight, int tileWidth, int tileHeight) {
+void Renderable::setTextureTile(int tileX, int tileY, int tilesPerRow,
+                                int textureWidth, int textureHeight,
+                                int tileWidth, int tileHeight) {
+    if (GraphicsContext::getInstance().getTextureID2() ||
+        GraphicsContext::getInstance().getTextureID2() == textureID) {
+        std::cout << "123\n";
+    }
     float normTileWidth = static_cast<float>(tileWidth) / textureWidth;
     float normTileHeight = static_cast<float>(tileHeight) / textureHeight;
 
@@ -99,22 +89,27 @@ void Renderable::setTextureTile(int tileX, int tileY, int tilesPerRow, int textu
     float invertedTop = 1.0f - top;
     float invertedBottom = 1.0f - bottom;
 
-    setTextureCoords(glm::vec2(left, invertedTop), glm::vec2(right, invertedBottom));
+    if (textureID == GraphicsContext::getInstance().getTextureID2()) {
+        std::cout << "Tile (" << tileX << ", " << tileY << ") "
+                  << "Texture Coords: TopLeft (" << left << ", " << invertedTop
+                  << ") " << "BottomRight (" << right << ", " << invertedBottom
+                  << ")" << std::endl;
+    }
+
+    setTextureCoords(glm::vec2(left, invertedTop),
+                     glm::vec2(right, invertedBottom));
 }
 
-void Renderable::setTextureCoords(const glm::vec2& topLeft, const glm::vec2& bottomRight) {
+void Renderable::setTextureCoords(const glm::vec2 &topLeft,
+                                  const glm::vec2 &bottomRight) {
     textureTopLeft = topLeft;
     textureBottomRight = bottomRight;
 }
 
-void Renderable::updateScale() {
-    scale = glm::vec3(width, height, 1.0f);
-}
+void Renderable::updateScale() { scale = glm::vec3(width, height, 1.0f); }
 
 void Renderable::updateBoundingRadius() {
     boundingRadius = std::sqrt(width * width + height * height) / 2.0f;
 }
 
-float Renderable::getBoundingRadius() const {
-    return boundingRadius;
-}
+float Renderable::getBoundingRadius() const { return boundingRadius; }

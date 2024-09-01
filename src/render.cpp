@@ -1,12 +1,14 @@
-#include <alchemy/render.h>
+#include "../include/alchemy/render.h"
 #include <iostream>
 #include <tuple>
-#include <alchemy/frustum.h>
-#include <alchemy/global.h>
-#include <alchemy/hotbar.h>
+#include "../include/alchemy/frustum.h"
+#include "../include/alchemy/hotbar.h"
+#include "../include/alchemy/inventory.h"
+#include "../include/alchemy/inputManager.h"
+#include "../include/alchemy/graphicsContext.h"
 
 // Default shaders
-const char* Render::defaultVertexShaderSource = R"(
+const char *Render::defaultVertexShaderSource = R"(
 #version 330 core
 layout(location = 0) in vec3 aPos;
 layout(location = 1) in vec2 aTexCoord; // Add texture coordinates as an input
@@ -21,8 +23,7 @@ void main()
 }
 )";
 
-
-const char* Render::defaultFragmentShaderSource = R"(
+const char *Render::defaultFragmentShaderSource = R"(
 #version 330 core
 out vec4 FragColor;
 
@@ -36,7 +37,9 @@ void main()
 }
 )";
 
-Render::Render() : shaderProgram(0), VAO(0), VBO(0), instanceVBO(0), EBO(0), maxVerticesPerBatch(10000) {}
+Render::Render()
+    : shaderProgram(0), VAO(0), VBO(0), instanceVBO(0), EBO(0),
+      maxVerticesPerBatch(10000) {}
 
 Render::~Render() {
     glDeleteVertexArrays(1, &VAO);
@@ -47,7 +50,8 @@ Render::~Render() {
 }
 
 void Render::initialize() {
-    shaderProgram = loadShader(defaultVertexShaderSource, defaultFragmentShaderSource);
+    shaderProgram =
+        loadShader(defaultVertexShaderSource, defaultFragmentShaderSource);
 
     // Disable VSync (no frame rate cap)
     // Add a comand for this later in the text chat
@@ -63,16 +67,13 @@ void Render::setupBuffers() {
     // Define vertices for a quad (two triangles forming a square)
     GLfloat vertices[] = {
         // Positions        // Texture Coords
-        -0.5f, -0.5f, 0.0f,  0.0f, 0.0f,  // Bottom-left
-         0.5f, -0.5f, 0.0f,  1.0f, 0.0f,  // Bottom-right
-         0.5f,  0.5f, 0.0f,  1.0f, 1.0f,  // Top-right
-        -0.5f,  0.5f, 0.0f,  0.0f, 1.0f   // Top-left
+        -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, // Bottom-left
+        0.5f,  -0.5f, 0.0f, 1.0f, 0.0f, // Bottom-right
+        0.5f,  0.5f,  0.0f, 1.0f, 1.0f, // Top-right
+        -0.5f, 0.5f,  0.0f, 0.0f, 1.0f  // Top-left
     };
 
-    GLuint indices[] = {
-        0, 1, 2,
-        2, 3, 0
-    };
+    GLuint indices[] = {0, 1, 2, 2, 3, 0};
 
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
@@ -85,27 +86,36 @@ void Render::setupBuffers() {
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
+                 GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
+                          (void *)0);
     glEnableVertexAttribArray(0);
 
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
+                          (void *)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
     // Instance VBO setup for transformation matrices
     glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-    glBufferData(GL_ARRAY_BUFFER, maxVerticesPerBatch * sizeof(glm::mat4), nullptr, GL_DYNAMIC_DRAW); // Initial size, adjust as needed
-    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)0);
+    glBufferData(GL_ARRAY_BUFFER, maxVerticesPerBatch * sizeof(glm::mat4),
+                 nullptr, GL_DYNAMIC_DRAW); // Initial size, adjust as needed
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4),
+                          (void *)0);
     glEnableVertexAttribArray(2);
-    glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(sizeof(glm::vec4)));
+    glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4),
+                          (void *)(sizeof(glm::vec4)));
     glEnableVertexAttribArray(3);
-    glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(2 * sizeof(glm::vec4)));
+    glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4),
+                          (void *)(2 * sizeof(glm::vec4)));
     glEnableVertexAttribArray(4);
-    glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(3 * sizeof(glm::vec4)));
+    glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4),
+                          (void *)(3 * sizeof(glm::vec4)));
     glEnableVertexAttribArray(5);
 
-    glVertexAttribDivisor(2, 1); // Tell OpenGL this is an instanced vertex attribute
+    glVertexAttribDivisor(
+        2, 1); // Tell OpenGL this is an instanced vertex attribute
     glVertexAttribDivisor(3, 1);
     glVertexAttribDivisor(4, 1);
     glVertexAttribDivisor(5, 1);
@@ -114,14 +124,18 @@ void Render::setupBuffers() {
     glBindVertexArray(0);
 }
 
-void Render::renderGameObject(const GameObject& gameObject, const glm::mat4& projection) {
+void Render::renderGameObject(const GameObject &gameObject,
+                              const glm::mat4 &projection) {
     glUseProgram(shaderProgram);
 
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, gameObject.getPosition());
-    model = glm::rotate(model, glm::radians(gameObject.getRotation().x), glm::vec3(1.0f, 0.0f, 0.0f));
-    model = glm::rotate(model, glm::radians(gameObject.getRotation().y), glm::vec3(0.0f, 1.0f, 0.0f));
-    model = glm::rotate(model, glm::radians(gameObject.getRotation().z), glm::vec3(0.0f, 0.0f, 1.0f));
+    model = glm::rotate(model, glm::radians(gameObject.getRotation().x),
+                        glm::vec3(1.0f, 0.0f, 0.0f));
+    model = glm::rotate(model, glm::radians(gameObject.getRotation().y),
+                        glm::vec3(0.0f, 1.0f, 0.0f));
+    model = glm::rotate(model, glm::radians(gameObject.getRotation().z),
+                        glm::vec3(0.0f, 0.0f, 1.0f));
     model = glm::scale(model, gameObject.getScale());
 
     glm::mat4 combined = projection * model;
@@ -135,36 +149,37 @@ void Render::renderGameObject(const GameObject& gameObject, const glm::mat4& pro
 }
 
 void Render::renderUI(int width, int height) {
-    glm::mat4 projectionUI = glm::ortho(
-        0.0f, static_cast<float>(width),
-        static_cast<float>(height), 0.0f,
-        -1.0f, 1.0f
-    );
+    glm::mat4 projectionUI =
+        glm::ortho(0.0f, static_cast<float>(width), static_cast<float>(height),
+                   0.0f, -1.0f, 1.0f);
 
     std::vector<std::shared_ptr<Renderable>> renderables;
 
-    HotBar& playerHotbar = HotBar::getInstance();
+    HotBar &playerHotbar = HotBar::getInstance();
 
     // Add HotBar to renderables
     {
-        std::shared_ptr<Renderable> hotbarPtr = std::make_shared<Renderable>(playerHotbar);
+        std::shared_ptr<Renderable> hotbarPtr =
+            std::make_shared<Renderable>(playerHotbar);
         renderables.push_back(hotbarPtr);
-        auto selectedSlotObject = std::make_shared<Renderable>(playerHotbar.getSelectedSlotObject());
+        auto selectedSlotObject =
+            std::make_shared<Renderable>(playerHotbar.getSelectedSlotObject());
         renderables.push_back(selectedSlotObject);
 
-        for (auto& slot : playerHotbar.getHotBarSlots()) {
+        for (auto &slot : playerHotbar.getHotBarSlots()) {
             renderables.push_back(std::make_shared<Renderable>(slot));
         }
     }
 
     // Add Inventory to renderables if it's visible
     if (Inventory::getInstance().getIsVisable()) {
-        Inventory& playerInventory = Inventory::getInstance();
+        Inventory &playerInventory = Inventory::getInstance();
 
-        std::shared_ptr<Renderable> inventoryPtr = std::make_shared<Renderable>(playerInventory);
+        std::shared_ptr<Renderable> inventoryPtr =
+            std::make_shared<Renderable>(playerInventory);
         renderables.push_back(inventoryPtr);
 
-        for (auto& slot : playerInventory.getInventorySlots()) {
+        for (auto &slot : playerInventory.getInventorySlots()) {
             renderables.push_back(std::make_shared<Renderable>(slot));
         }
     }
@@ -172,33 +187,41 @@ void Render::renderUI(int width, int height) {
     // Batch render all UI elements
     batchRenderGameObjects(renderables, projectionUI);
 
-    // Render dragged slot if the inventory is visible and the user is dragging an item
-    if (Inventory::getInstance().getIsVisable() && InputManager::getInstance().getIsDragging()) {
-        auto& draggedSlot = Inventory::getInstance().getInventorySlots()[InputManager::getInstance().getSelectedSlotIndex()];
+    // Render dragged slot if the inventory is visible and the user is dragging
+    // an item
+    if (Inventory::getInstance().getIsVisable() &&
+        InputManager::getInstance().getIsDragging()) {
+        auto &draggedSlot =
+            Inventory::getInstance().getInventorySlots()
+                [InputManager::getInstance().getSelectedSlotIndex()];
 
         if (draggedSlot.getIsVisable()) {
             double xpos, ypos;
-            glfwGetCursorPos(GraphicsContext::getInstance().getWindow(), &xpos, &ypos);
+            glfwGetCursorPos(GraphicsContext::getInstance().getWindow(), &xpos,
+                             &ypos);
 
-            glm::vec2 correctedTopLeft = glm::vec2(draggedSlot.getTextureTopLeft().x, 1.0f - draggedSlot.getTextureTopLeft().y);
-            glm::vec2 correctedBottomRight = glm::vec2(draggedSlot.getTextureBottomRight().x, 1.0f - draggedSlot.getTextureBottomRight().y);
+            glm::vec2 correctedTopLeft =
+                glm::vec2(draggedSlot.getTextureTopLeft().x,
+                          1.0f - draggedSlot.getTextureTopLeft().y);
+            glm::vec2 correctedBottomRight =
+                glm::vec2(draggedSlot.getTextureBottomRight().x,
+                          1.0f - draggedSlot.getTextureBottomRight().y);
 
             auto draggedItemRenderable = std::make_shared<InventorySlot>(
-                glm::vec3(static_cast<float>(xpos), static_cast<float>(ypos), 0.0f),
-                glm::vec3(0.0f),
-                draggedSlot.getScale().x,
+                glm::vec3(static_cast<float>(xpos), static_cast<float>(ypos),
+                          0.0f),
+                glm::vec3(0.0f), draggedSlot.getScale().x,
                 draggedSlot.getScale().y,
                 InputManager::getInstance().getDragTextureId(),
-                correctedTopLeft,
-                correctedBottomRight
-            );
+                correctedTopLeft, correctedBottomRight);
 
-            batchRenderGameObjects({ draggedItemRenderable }, projectionUI);
+            batchRenderGameObjects({draggedItemRenderable}, projectionUI);
         }
     }
 }
 
-GLuint Render::loadShader(const char* vertexShaderSource, const char* fragmentShaderSource) {
+GLuint Render::loadShader(const char *vertexShaderSource,
+                          const char *fragmentShaderSource) {
     GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
     glCompileShader(vertexShader);
@@ -222,7 +245,8 @@ GLuint Render::loadShader(const char* vertexShaderSource, const char* fragmentSh
 }
 
 struct TextureGroupComparator {
-    bool operator()(const std::tuple<GLuint, glm::vec2, glm::vec2>& lhs, const std::tuple<GLuint, glm::vec2, glm::vec2>& rhs) const {
+    bool operator()(const std::tuple<GLuint, glm::vec2, glm::vec2> &lhs,
+                    const std::tuple<GLuint, glm::vec2, glm::vec2> &rhs) const {
         if (std::get<0>(lhs) != std::get<0>(rhs))
             return std::get<0>(lhs) < std::get<0>(rhs);
 
@@ -237,113 +261,222 @@ struct TextureGroupComparator {
     }
 };
 
-void Render::batchRenderGameObjects(const std::vector<std::shared_ptr<Renderable>>& renderables, const glm::mat4& projection) {
-    if (renderables.empty()) return;
+void Render::batchRenderGameObjects(
+    const std::vector<std::shared_ptr<Renderable>> &renderables,
+    const glm::mat4 &projection) {
+    if (renderables.empty())
+        return;
 
     Frustum frustum;
     frustum.update(projection);
 
-    // Group renderable objects by texture ID and texture coordinates using std::tuple with a custom comparator
-    std::map<std::tuple<GLuint, glm::vec2, glm::vec2>, std::vector<std::shared_ptr<Renderable>>, TextureGroupComparator> textureGroups;
+    // Sort all objects by Y-coordinate
+    std::vector<std::shared_ptr<Renderable>> sortedRenderables = renderables;
+    std::sort(sortedRenderables.begin(), sortedRenderables.end(),
+              [](const std::shared_ptr<Renderable> &a,
+                 const std::shared_ptr<Renderable> &b) {
+                  return a->getPosition().y < b->getPosition().y;
+              });
 
-    for (const auto& renderable : renderables) {
-        // Check if the renderable object is within the camera's view
-        // commenting this out for now because there
-        // is something wrong with implementation
-        // if (frustum.isInFrustum(renderable->getPosition(), renderable->getBoundingRadius())) {} 
+    GLuint currentTextureID = 0;
+    int drawCalls = 0; // Counter for the number of draw calls
+
+    // Bind the VAO and use the shader program once at the start
+    glBindVertexArray(VAO);
+    glUseProgram(shaderProgram);
+
+    std::vector<glm::mat4> instanceTransforms;
+    std::vector<GLfloat> vertexBufferData;
+
+    for (size_t i = 0; i < sortedRenderables.size();) {
+        const auto &renderable = sortedRenderables[i];
+
         if (!renderable->getIsVisable()) {
+            ++i;
             continue;
         }
-        auto groupKey = std::make_tuple(renderable->getTextureID(), renderable->getTextureTopLeft(), renderable->getTextureBottomRight());
-        textureGroups[groupKey].push_back(renderable);
-    }
 
-    // Render each group of objects with the same texture and texture coordinates
-    for (const auto& group : textureGroups) {
-        GLuint textureID = std::get<0>(group.first);
-        const glm::vec2& texTopLeft = std::get<1>(group.first);
-        const glm::vec2& texBottomRight = std::get<2>(group.first);
-        const auto& objects = group.second;
+        GLuint textureID = renderable->getTextureID();
+        if (textureID != currentTextureID) {
+            // Render the current batch before switching textures
+            if (!instanceTransforms.empty()) {
+                // Upload the accumulated vertex data to the GPU
+                glBindBuffer(GL_ARRAY_BUFFER, VBO);
+                glBufferSubData(GL_ARRAY_BUFFER, 0,
+                                vertexBufferData.size() * sizeof(GLfloat),
+                                vertexBufferData.data());
 
-        if (objects.empty()) continue;
+                // Upload instance transforms to the GPU
+                glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+                glBufferSubData(GL_ARRAY_BUFFER, 0,
+                                instanceTransforms.size() * sizeof(glm::mat4),
+                                instanceTransforms.data());
 
-        size_t totalObjects = objects.size();
-        size_t maxInstances = maxVerticesPerBatch / 6;
-        size_t numBatches = (totalObjects + maxInstances - 1) / maxInstances;
-
-        glUseProgram(shaderProgram);
-        glBindVertexArray(VAO);
-
-        glBindTexture(GL_TEXTURE_2D, textureID);
-
-        // Set texture filtering parameters
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glGenerateMipmap(GL_TEXTURE_2D);
-
-        std::vector<glm::mat4> instanceTransforms;
-        instanceTransforms.reserve(maxInstances);
-
-        // Update vertices with specific texture coordinates for this batch
-        GLfloat vertices[] = {
-            // Positions        // Texture Coords (dynamic)
-            -0.5f, -0.5f, 0.0f,  texTopLeft.x, texBottomRight.y,  // Bottom-left
-             0.5f, -0.5f, 0.0f,  texBottomRight.x, texBottomRight.y,  // Bottom-right
-             0.5f,  0.5f, 0.0f,  texBottomRight.x, texTopLeft.y,  // Top-right
-            -0.5f,  0.5f, 0.0f,  texTopLeft.x, texTopLeft.y   // Top-left
-        };
-
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
-
-        for (size_t batchIndex = 0; batchIndex < numBatches; ++batchIndex) {
-            size_t startIdx = batchIndex * maxInstances;
-            size_t endIdx = (std::min)(startIdx + maxInstances, totalObjects);
-
-            instanceTransforms.clear();
-            for (size_t i = startIdx; i < endIdx; ++i) {
-                const auto& renderable = objects[i];
-                glm::mat4 model = glm::mat4(1.0f);
-                model = glm::translate(model, renderable->getPosition());
-                model = glm::rotate(model, glm::radians(renderable->getRotation().x), glm::vec3(1.0f, 0.0f, 0.0f));
-                model = glm::rotate(model, glm::radians(renderable->getRotation().y), glm::vec3(0.0f, 1.0f, 0.0f));
-                model = glm::rotate(model, glm::radians(renderable->getRotation().z), glm::vec3(0.0f, 0.0f, 1.0f));
-                model = glm::scale(model, renderable->getScale());
-
-                glm::mat4 combined = projection * model;
-                instanceTransforms.push_back(combined);
+                // Perform the draw call for this batch
+                glDrawElementsInstanced(
+                    GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0,
+                    static_cast<GLsizei>(instanceTransforms.size()));
+                drawCalls++;
+                instanceTransforms.clear();
+                vertexBufferData.clear();
             }
 
-            glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+            currentTextureID = textureID;
+            glBindTexture(GL_TEXTURE_2D, textureID);
 
-            void* bufferData = glMapBufferRange(GL_ARRAY_BUFFER, 0, instanceTransforms.size() * sizeof(glm::mat4), GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
-            if (bufferData) {
-                std::memcpy(bufferData, instanceTransforms.data(), instanceTransforms.size() * sizeof(glm::mat4));
-                glUnmapBuffer(GL_ARRAY_BUFFER);
-            }
-
-            glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0, static_cast<GLsizei>(endIdx - startIdx));
+            // Set texture filtering parameters
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                            GL_LINEAR_MIPMAP_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         }
 
-        glBindVertexArray(0);
+        // Calculate the model matrix for the current renderable
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, renderable->getPosition());
+        model = glm::rotate(model, glm::radians(renderable->getRotation().x),
+                            glm::vec3(1.0f, 0.0f, 0.0f));
+        model = glm::rotate(model, glm::radians(renderable->getRotation().y),
+                            glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::rotate(model, glm::radians(renderable->getRotation().z),
+                            glm::vec3(0.0f, 0.0f, 1.0f));
+        model = glm::scale(model, renderable->getScale());
+
+        glm::mat4 combined = projection * model;
+        instanceTransforms.push_back(combined);
+
+        // Correctly calculate and set texture coordinates for the renderable
+        glm::vec2 texTopLeft = renderable->getTextureTopLeft();
+        glm::vec2 texBottomRight = renderable->getTextureBottomRight();
+
+        if (renderable->getTextureID() ==
+            GraphicsContext::getInstance().getTextureID2()) {
+            // Print the original texture coordinates for debugging
+            // std::cout << "OG Texture: ID: (" << renderable->getTextureID()
+            //           << ") " << "Top Left (" << texTopLeft.x << ", "
+            //           << texTopLeft.y << "), " << "Bottom Right ("
+            //           << texBottomRight.x << ", " << texBottomRight.y << ")"
+            //           << std::endl;
+        }
+
+        GLfloat vertices[] = {
+            // Positions        // Texture Coords
+            -0.5f,
+            -0.5f,
+            0.0f,
+            texTopLeft.x,
+            texBottomRight.y, // Bottom-left
+            0.5f,
+            -0.5f,
+            0.0f,
+            texBottomRight.x,
+            texBottomRight.y, // Bottom-right
+            0.5f,
+            0.5f,
+            0.0f,
+            texBottomRight.x,
+            texTopLeft.y, // Top-right
+            -0.5f,
+            0.5f,
+            0.0f,
+            texTopLeft.x,
+            texTopLeft.y // Top-left
+        };
+
+        if (renderable->getTextureID() ==
+            GraphicsContext::getInstance().getTextureID2()) {
+            // Print the vertex buffer data for debugging
+            // std::cout << "Vertex buffer data for renderable:" << std::endl;
+            for (size_t j = 0; j < sizeof(vertices) / sizeof(GLfloat); j += 5) {
+                // std::cout << "Position: (" << vertices[j] << ", "
+                //          << vertices[j + 1] << ", " << vertices[j + 2]
+                //          << "), TexCoord: (" << vertices[j + 3] << ", "
+                //          << vertices[j + 4] << ")" << std::endl;
+            }
+        }
+
+        // Accumulate the vertices for the current renderable
+        vertexBufferData.insert(vertexBufferData.end(), std::begin(vertices),
+                                std::end(vertices));
+
+        // If we reached the last renderable or the next one has a different
+        // texture, render the batch
+        if (i + 1 == sortedRenderables.size() ||
+            sortedRenderables[i + 1]->getTextureID() != currentTextureID) {
+            if (!instanceTransforms.empty()) {
+                // Upload the accumulated vertex data to the GPU
+                glBindBuffer(GL_ARRAY_BUFFER, VBO);
+                glBufferSubData(GL_ARRAY_BUFFER, 0,
+                                vertexBufferData.size() * sizeof(GLfloat),
+                                vertexBufferData.data());
+
+                // Upload instance transforms to the GPU
+                glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+                glBufferSubData(GL_ARRAY_BUFFER, 0,
+                                instanceTransforms.size() * sizeof(glm::mat4),
+                                instanceTransforms.data());
+
+                // Perform the draw call for this batch
+                glDrawElementsInstanced(
+                    GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0,
+                    static_cast<GLsizei>(instanceTransforms.size()));
+                drawCalls++;
+                instanceTransforms.clear();
+                vertexBufferData.clear();
+            }
+        }
+
+        ++i;
     }
+
+    // If there's any remaining batch, render it
+    if (!instanceTransforms.empty()) {
+        // Upload the accumulated vertex data to the GPU
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        glBufferSubData(GL_ARRAY_BUFFER, 0,
+                        vertexBufferData.size() * sizeof(GLfloat),
+                        vertexBufferData.data());
+
+        // Upload instance transforms to the GPU
+        glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+        glBufferSubData(GL_ARRAY_BUFFER, 0,
+                        instanceTransforms.size() * sizeof(glm::mat4),
+                        instanceTransforms.data());
+
+        // Perform the draw call for this batch
+        glDrawElementsInstanced(
+            GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0,
+            static_cast<GLsizei>(instanceTransforms.size()));
+        drawCalls++;
+    }
+
+    // Unbind the VAO
+    glBindVertexArray(0);
+
+    // Unbind the shader program
+    glUseProgram(0);
+
+    // Print the number of draw calls made
+    std::cout << "Number of draw calls: " << drawCalls << std::endl;
 }
 
-void Render::checkCompileErrors(GLuint shader, const std::string& type) {
+void Render::checkCompileErrors(GLuint shader, const std::string &type) {
     GLint success;
     GLchar infoLog[1024];
     if (type != "PROGRAM") {
         glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
         if (!success) {
             glGetShaderInfoLog(shader, 1024, NULL, infoLog);
-            std::cerr << "ERROR::SHADER_COMPILATION_ERROR of type: " << type << "\n" << infoLog << "\n";
+            std::cerr << "ERROR::SHADER_COMPILATION_ERROR of type: " << type
+                      << "\n"
+                      << infoLog << "\n";
         }
-    }
-    else {
+    } else {
         glGetProgramiv(shader, GL_LINK_STATUS, &success);
         if (!success) {
             glGetProgramInfoLog(shader, 1024, NULL, infoLog);
-            std::cerr << "ERROR::PROGRAM_LINKING_ERROR of type: " << type << "\n" << infoLog << "\n";
+            std::cerr << "ERROR::PROGRAM_LINKING_ERROR of type: " << type
+                      << "\n"
+                      << infoLog << "\n";
         }
     }
 }
