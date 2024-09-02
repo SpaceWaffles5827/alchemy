@@ -33,8 +33,7 @@ void World::update(float deltaTime) {
     }
 }
 
-void World::initTileView(int width, int height, float tileSize,
-                         GLuint textureID1, GLuint textureID2) {
+void World::initTileView(int width, int height, float tileSize, GLuint textureID1) {
     srand(time(NULL));
 
     for (int x = 0; x < width; x++) {
@@ -42,16 +41,11 @@ void World::initTileView(int width, int height, float tileSize,
             int randomTileX = rand() % 8; // Random x between 0 and 7
             int randomTileY = rand() % 3; // Random y between 0 and 7
 
-            GLuint selectedTexture = (x + y) % 2 == 0 ? textureID1 : textureID2;
-
             auto tile = std::make_shared<GameObject>(
                 glm::vec3(x * tileSize, y * tileSize, 0.0f), glm::vec3(0.0f),
-                tileSize, tileSize, selectedTexture);
+                tileSize, tileSize, textureID1);
 
-            std::cout << "tile: " << tile << "\n";
-
-            // tile->setTextureTile(randomTileX, randomTileY, 8, 256, 256, 32,
-            // 32);
+            tile->setTextureTile(randomTileX, randomTileY, 8, 256, 256, 32, 32);
 
             addObject(tile);
         }

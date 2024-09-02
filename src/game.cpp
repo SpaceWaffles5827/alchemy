@@ -38,7 +38,7 @@ void Game::init() {
     std::shared_ptr<Player> clientPlayer = std::make_shared<Player>(
         clientId, glm::vec3(1.0f, 0.5f, 0.2f), 0.0f, 0.0f, 1.0f, 2.0f,
         GraphicsContext::getInstance().getTextureID1());
-    // clientPlayer->setTextureTile(0, 0, 8, 512, 512, 64, 128);
+    clientPlayer->setTextureTile(0, 0, 8, 512, 512, 64, 128);
     World &world = World::getInstance();
     world.addPlayer(clientPlayer);
 
@@ -72,9 +72,7 @@ void Game::init() {
                             glm::vec2(0.0f, 1.0f), glm::vec2(1.0f, 0.0f));
     playerHotbar.loadDefaults();
 
-    world.initTileView(20, 20, 1.0f,
-                       GraphicsContext::getInstance().getTextureID2(),
-                       GraphicsContext::getInstance().getTextureID2());
+    world.initTileView(10, 10, 1.0f, GraphicsContext::getInstance().getTextureID2());
 
     std::shared_ptr<Mob> mobPtr = std::make_shared<Mob>();
     world.addMob(mobPtr);
@@ -181,24 +179,22 @@ void Game::render() {
                        world.getPlayers().end());
 
     // Add mobs
-    renderables.insert(renderables.end(), world.getMobs().begin(),
-                       world.getMobs().end());
+    // renderables.insert(renderables.end(), world.getMobs().begin(),
+    //                    world.getMobs().end());
 
     // Add weapons
-    renderables.insert(renderables.end(), world.getWeapons().begin(),
-                       world.getWeapons().end());
+    // renderables.insert(renderables.end(), world.getWeapons().begin(),
+    //                    world.getWeapons().end());
 
     // Pass the grouped renderables to batch render
     renderer.batchRenderGameObjects(
         renderables, GraphicsContext::getInstance().getProjection());
 
-    std::cout << "New +++++++++++++++++++++ \n";
-
     // Render the UI
-    renderer.renderUI(width, height);
+    // renderer.renderUI(width, height);
 
     // Render the chat
-    Chat::getInstance().render();
+    // Chat::getInstance().render();
 
     // Render the FPS display if visible
     if (FPSDisplay::getInstance().isVisable()) {

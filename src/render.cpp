@@ -1,5 +1,6 @@
 #include "../include/alchemy/render.h"
 #include <iostream>
+#include <algorithm>
 #include <tuple>
 #include "../include/alchemy/frustum.h"
 #include "../include/alchemy/hotbar.h"
@@ -270,7 +271,7 @@ void Render::batchRenderGameObjects(
     Frustum frustum;
     frustum.update(projection);
 
-    // Sort all objects by Y-coordinate
+    // Sort renderables by Y position first, regardless of texture
     std::vector<std::shared_ptr<Renderable>> sortedRenderables = renderables;
     std::sort(sortedRenderables.begin(), sortedRenderables.end(),
               [](const std::shared_ptr<Renderable> &a,
@@ -278,88 +279,29 @@ void Render::batchRenderGameObjects(
                   return a->getPosition().y < b->getPosition().y;
               });
 
-    GLuint currentTextureID = 0;
-    int drawCalls = 0; // Counter for the number of draw calls
-
-    // Bind the VAO and use the shader program once at the start
-    glBindVertexArray(VAO);
     glUseProgram(shaderProgram);
+    glBindVertexArray(VAO);
 
-    std::vector<glm::mat4> instanceTransforms;
-    std::vector<GLfloat> vertexBufferData;
-
-    for (size_t i = 0; i < sortedRenderables.size();) {
-        const auto &renderable = sortedRenderables[i];
-
+    for (const auto &renderable : sortedRenderables) {
         if (!renderable->getIsVisable()) {
-            ++i;
             continue;
         }
 
         GLuint textureID = renderable->getTextureID();
-        if (textureID != currentTextureID) {
-            // Render the current batch before switching textures
-            if (!instanceTransforms.empty()) {
-                // Upload the accumulated vertex data to the GPU
-                glBindBuffer(GL_ARRAY_BUFFER, VBO);
-                glBufferSubData(GL_ARRAY_BUFFER, 0,
-                                vertexBufferData.size() * sizeof(GLfloat),
-                                vertexBufferData.data());
+        glBindTexture(GL_TEXTURE_2D, textureID);
 
-                // Upload instance transforms to the GPU
-                glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-                glBufferSubData(GL_ARRAY_BUFFER, 0,
-                                instanceTransforms.size() * sizeof(glm::mat4),
-                                instanceTransforms.data());
+        // Set texture filtering parameters
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                        GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glGenerateMipmap(GL_TEXTURE_2D);
 
-                // Perform the draw call for this batch
-                glDrawElementsInstanced(
-                    GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0,
-                    static_cast<GLsizei>(instanceTransforms.size()));
-                drawCalls++;
-                instanceTransforms.clear();
-                vertexBufferData.clear();
-            }
-
-            currentTextureID = textureID;
-            glBindTexture(GL_TEXTURE_2D, textureID);
-
-            // Set texture filtering parameters
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                            GL_LINEAR_MIPMAP_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        }
-
-        // Calculate the model matrix for the current renderable
-        glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, renderable->getPosition());
-        model = glm::rotate(model, glm::radians(renderable->getRotation().x),
-                            glm::vec3(1.0f, 0.0f, 0.0f));
-        model = glm::rotate(model, glm::radians(renderable->getRotation().y),
-                            glm::vec3(0.0f, 1.0f, 0.0f));
-        model = glm::rotate(model, glm::radians(renderable->getRotation().z),
-                            glm::vec3(0.0f, 0.0f, 1.0f));
-        model = glm::scale(model, renderable->getScale());
-
-        glm::mat4 combined = projection * model;
-        instanceTransforms.push_back(combined);
-
-        // Correctly calculate and set texture coordinates for the renderable
         glm::vec2 texTopLeft = renderable->getTextureTopLeft();
         glm::vec2 texBottomRight = renderable->getTextureBottomRight();
 
-        if (renderable->getTextureID() ==
-            GraphicsContext::getInstance().getTextureID2()) {
-            // Print the original texture coordinates for debugging
-            // std::cout << "OG Texture: ID: (" << renderable->getTextureID()
-            //           << ") " << "Top Left (" << texTopLeft.x << ", "
-            //           << texTopLeft.y << "), " << "Bottom Right ("
-            //           << texBottomRight.x << ", " << texBottomRight.y << ")"
-            //           << std::endl;
-        }
-
+        // Update vertices with specific texture coordinates for this renderable
         GLfloat vertices[] = {
-            // Positions        // Texture Coords
+            // Positions        // Texture Coords (dynamic)
             -0.5f,
             -0.5f,
             0.0f,
@@ -382,81 +324,36 @@ void Render::batchRenderGameObjects(
             texTopLeft.y // Top-left
         };
 
-        if (renderable->getTextureID() ==
-            GraphicsContext::getInstance().getTextureID2()) {
-            // Print the vertex buffer data for debugging
-            // std::cout << "Vertex buffer data for renderable:" << std::endl;
-            for (size_t j = 0; j < sizeof(vertices) / sizeof(GLfloat); j += 5) {
-                // std::cout << "Position: (" << vertices[j] << ", "
-                //          << vertices[j + 1] << ", " << vertices[j + 2]
-                //          << "), TexCoord: (" << vertices[j + 3] << ", "
-                //          << vertices[j + 4] << ")" << std::endl;
-            }
-        }
-
-        // Accumulate the vertices for the current renderable
-        vertexBufferData.insert(vertexBufferData.end(), std::begin(vertices),
-                                std::end(vertices));
-
-        // If we reached the last renderable or the next one has a different
-        // texture, render the batch
-        if (i + 1 == sortedRenderables.size() ||
-            sortedRenderables[i + 1]->getTextureID() != currentTextureID) {
-            if (!instanceTransforms.empty()) {
-                // Upload the accumulated vertex data to the GPU
-                glBindBuffer(GL_ARRAY_BUFFER, VBO);
-                glBufferSubData(GL_ARRAY_BUFFER, 0,
-                                vertexBufferData.size() * sizeof(GLfloat),
-                                vertexBufferData.data());
-
-                // Upload instance transforms to the GPU
-                glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-                glBufferSubData(GL_ARRAY_BUFFER, 0,
-                                instanceTransforms.size() * sizeof(glm::mat4),
-                                instanceTransforms.data());
-
-                // Perform the draw call for this batch
-                glDrawElementsInstanced(
-                    GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0,
-                    static_cast<GLsizei>(instanceTransforms.size()));
-                drawCalls++;
-                instanceTransforms.clear();
-                vertexBufferData.clear();
-            }
-        }
-
-        ++i;
-    }
-
-    // If there's any remaining batch, render it
-    if (!instanceTransforms.empty()) {
-        // Upload the accumulated vertex data to the GPU
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBufferSubData(GL_ARRAY_BUFFER, 0,
-                        vertexBufferData.size() * sizeof(GLfloat),
-                        vertexBufferData.data());
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
 
-        // Upload instance transforms to the GPU
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, renderable->getPosition());
+        model = glm::rotate(model, glm::radians(renderable->getRotation().x),
+                            glm::vec3(1.0f, 0.0f, 0.0f));
+        model = glm::rotate(model, glm::radians(renderable->getRotation().y),
+                            glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::rotate(model, glm::radians(renderable->getRotation().z),
+                            glm::vec3(0.0f, 0.0f, 1.0f));
+        model = glm::scale(model, renderable->getScale());
+
+        glm::mat4 combined = projection * model;
+
+        // Update instance transform for this renderable
         glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-        glBufferSubData(GL_ARRAY_BUFFER, 0,
-                        instanceTransforms.size() * sizeof(glm::mat4),
-                        instanceTransforms.data());
 
-        // Perform the draw call for this batch
-        glDrawElementsInstanced(
-            GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0,
-            static_cast<GLsizei>(instanceTransforms.size()));
-        drawCalls++;
+        void *bufferData =
+            glMapBufferRange(GL_ARRAY_BUFFER, 0, sizeof(glm::mat4),
+                             GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
+        if (bufferData) {
+            std::memcpy(bufferData, &combined, sizeof(glm::mat4));
+            glUnmapBuffer(GL_ARRAY_BUFFER);
+        }
+
+        glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0, 1);
     }
 
-    // Unbind the VAO
     glBindVertexArray(0);
-
-    // Unbind the shader program
-    glUseProgram(0);
-
-    // Print the number of draw calls made
-    std::cout << "Number of draw calls: " << drawCalls << std::endl;
 }
 
 void Render::checkCompileErrors(GLuint shader, const std::string &type) {

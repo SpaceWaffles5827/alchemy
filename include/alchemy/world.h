@@ -27,8 +27,7 @@ public:
 
   void updatePlayerPosition(int clientId, const glm::vec3 &newPosition);
   void update(float deltaTime);
-  void initTileView(int width, int height, float tileSize, GLuint textureID1,
-                    GLuint textureID2);
+  void initTileView(int width, int height, float tileSize, GLuint textureID1);
   void clearObjects();
   void clearPlayers();
 

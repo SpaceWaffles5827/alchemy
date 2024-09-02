@@ -74,8 +74,7 @@ void Renderable::setTexture(GLuint newTextureID) { textureID = newTextureID; }
 void Renderable::setTextureTile(int tileX, int tileY, int tilesPerRow,
                                 int textureWidth, int textureHeight,
                                 int tileWidth, int tileHeight) {
-    if (GraphicsContext::getInstance().getTextureID2() ||
-        GraphicsContext::getInstance().getTextureID2() == textureID) {
+    if (GraphicsContext::getInstance().getTextureID2() == textureID) {
         std::cout << "123\n";
     }
     float normTileWidth = static_cast<float>(tileWidth) / textureWidth;
