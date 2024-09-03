@@ -1,4 +1,5 @@
 #include "../include/alchemy/world.h"
+#include "../include/alchemy/graphicsContext.h"
 #include <cstdlib>
 #include <ctime>
 
@@ -39,17 +40,30 @@ void World::initTileView(int width, int height, float tileSize, GLuint textureID
     for (int x = 0; x < width; x++) {
         for (int y = 0; y < height; y++) {
             int randomTileX = rand() % 8; // Random x between 0 and 7
-            int randomTileY = rand() % 3; // Random y between 0 and 7
+            int randomTileY = rand() % 3; // Random y between 0 and 2
 
             auto tile = std::make_shared<GameObject>(
-                glm::vec3(x * tileSize, y * tileSize, 0.0f), glm::vec3(0.0f),
+                glm::vec3(x * tileSize, y * tileSize, 0), glm::vec3(0.0f),
                 tileSize, tileSize, textureID1);
 
             tile->setTextureTile(randomTileX, randomTileY, 8, 256, 256, 32, 32);
+            tile->setYSorting(false);
 
             addObject(tile);
         }
     }
+
+    GLuint treeTexture = GraphicsContext::getInstance().loadTexture(
+        "textures/world/48x48Trees.png");
+
+    auto tree = std::make_shared<GameObject>(glm::vec3(2 * 2, 2 * 2, 1),
+                                             glm::vec3(0.0f), 3,
+                                             3, treeTexture);
+
+    tree->setTextureTile(0, 0, 1, 192, 48, 48, 48);
+    tree->setYSorting(true);
+
+    addObject(tree);
 }
 
 void World::clearObjects() { objects.clear(); }

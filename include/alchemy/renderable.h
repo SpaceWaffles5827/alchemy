@@ -48,6 +48,10 @@ public:
 
   float getBoundingRadius() const;
 
+  bool getIsYSorted();
+
+  void setYSorting(bool status);
+
 protected:
   float width;
   float height;
@@ -59,6 +63,7 @@ protected:
   glm::vec3 rotation;
   float boundingRadius;
   bool isVisable;
+  bool ySort;
 };
 
 #endif // RENDERABLE_H

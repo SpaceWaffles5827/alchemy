@@ -271,12 +271,17 @@ void Render::batchRenderGameObjects(
     Frustum frustum;
     frustum.update(projection);
 
-    // Sort renderables by Y position first, regardless of texture
+    // Sort renderables by Z position first, then by Y position within the same
+    // Z
     std::vector<std::shared_ptr<Renderable>> sortedRenderables = renderables;
     std::sort(sortedRenderables.begin(), sortedRenderables.end(),
               [](const std::shared_ptr<Renderable> &a,
                  const std::shared_ptr<Renderable> &b) {
-                  return a->getPosition().y < b->getPosition().y;
+                  if (a->getPosition().z == b->getPosition().z) {
+                      return a->getPosition().y >
+                             b->getPosition().y;
+                  }
+                  return a->getPosition().z < b->getPosition().z;
               });
 
     glUseProgram(shaderProgram);

@@ -38,6 +38,7 @@ void Game::init() {
     std::shared_ptr<Player> clientPlayer = std::make_shared<Player>(
         clientId, glm::vec3(1.0f, 0.5f, 0.2f), 0.0f, 0.0f, 1.0f, 2.0f,
         GraphicsContext::getInstance().getTextureID1());
+    clientPlayer->setPosition(glm::vec3(0.0f, 0.0f, 1.0f));
     clientPlayer->setTextureTile(0, 0, 8, 512, 512, 64, 128);
     World &world = World::getInstance();
     world.addPlayer(clientPlayer);
@@ -81,7 +82,8 @@ void Game::init() {
 
     ALuint buffer = AudioManager::getInstance().loadWAV("audio/background.wav");
     if (buffer != 0) {
-        AudioManager::getInstance().playSound(buffer, true, 1.0f);
+        // Comented out because music is annoying when debugging
+        // AudioManager::getInstance().playSound(buffer, true, 1.0f);
     }
 }
 
@@ -170,13 +172,15 @@ void Game::render() {
     // Group all renderables into a single list
     std::vector<std::shared_ptr<Renderable>> renderables;
 
+        // Add player objects
+    renderables.insert(renderables.end(), world.getPlayers().begin(),
+                       world.getPlayers().end());
+
     // Add game world objects
     renderables.insert(renderables.end(), world.getObjects().begin(),
                        world.getObjects().end());
 
-    // Add player objects
-    renderables.insert(renderables.end(), world.getPlayers().begin(),
-                       world.getPlayers().end());
+
 
     // Add mobs
     // renderables.insert(renderables.end(), world.getMobs().begin(),

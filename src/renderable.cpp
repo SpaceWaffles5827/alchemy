@@ -9,6 +9,7 @@ Renderable::Renderable()
       textureTopLeft(glm::vec2(0.0f, 1.0f)),
       textureBottomRight(glm::vec2(1.0f, 0.0f)), isVisable(true),
       scale(glm::vec3(1.0f, 1.0f, 1.0f)), position(glm::vec3(0.0f)),
+      ySort(false),
       rotation(glm::vec3(0.0f)) {
     updateBoundingRadius();
 }
@@ -19,7 +20,7 @@ Renderable::Renderable(float width, float height, GLuint textureID,
                        const glm::vec2 &texBottomRight,
                        const glm::vec3 &initialPosition,
                        const glm::vec3 &initialRotation)
-    : width(width), height(height), textureID(textureID),
+    : width(width), height(height), textureID(textureID), ySort(false),
       textureTopLeft(texTopLeft), textureBottomRight(texBottomRight),
       isVisable(true), scale(glm::vec3(width, height, 1.0f)),
       position(initialPosition), rotation(initialRotation) {
@@ -74,9 +75,6 @@ void Renderable::setTexture(GLuint newTextureID) { textureID = newTextureID; }
 void Renderable::setTextureTile(int tileX, int tileY, int tilesPerRow,
                                 int textureWidth, int textureHeight,
                                 int tileWidth, int tileHeight) {
-    if (GraphicsContext::getInstance().getTextureID2() == textureID) {
-        std::cout << "123\n";
-    }
     float normTileWidth = static_cast<float>(tileWidth) / textureWidth;
     float normTileHeight = static_cast<float>(tileHeight) / textureHeight;
 
@@ -87,13 +85,6 @@ void Renderable::setTextureTile(int tileX, int tileY, int tilesPerRow,
 
     float invertedTop = 1.0f - top;
     float invertedBottom = 1.0f - bottom;
-
-    if (textureID == GraphicsContext::getInstance().getTextureID2()) {
-        std::cout << "Tile (" << tileX << ", " << tileY << ") "
-                  << "Texture Coords: TopLeft (" << left << ", " << invertedTop
-                  << ") " << "BottomRight (" << right << ", " << invertedBottom
-                  << ")" << std::endl;
-    }
 
     setTextureCoords(glm::vec2(left, invertedTop),
                      glm::vec2(right, invertedBottom));
@@ -112,3 +103,7 @@ void Renderable::updateBoundingRadius() {
 }
 
 float Renderable::getBoundingRadius() const { return boundingRadius; }
+
+bool Renderable::getIsYSorted() { return ySort; }
+
+void Renderable::setYSorting(bool status) { ySort = status; }
