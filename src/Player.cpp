@@ -6,21 +6,21 @@
 #define M_PI 3.14159265358979323846
 #endif
 
-Player::Player(int clientId, const glm::vec3& color, float x, float y, float width, float height, GLuint textureID, int health)
-    : GameObject(glm::vec3(x, y, 0.0f), glm::vec3(0.0f), width, height, textureID), clientId(clientId),
-    currentState(PlayerState::Idle), currentDirection(PlayerDirection::South) {
+Player::Player(int clientId, const glm::vec3 &color, float x, float y,
+               float width, float height, GLuint textureID, int health)
+    : GameObject(glm::vec3(x, y, 0.0f), glm::vec3(0.0f), width, height,
+                 textureID),
+      clientId(clientId), currentState(PlayerState::Idle),
+      currentDirection(PlayerDirection::South) {
 
     for (int i = 0; i < GLFW_KEY_LAST; ++i) {
         keyReleased[i] = true;
     }
 }
 
-Player::~Player() {
-}
+Player::~Player() {}
 
-int Player::getClientId() const {
-    return clientId;
-}
+int Player::getClientId() const { return clientId; }
 
 void Player::attack(glm::vec2 mousePos) {
     int width, height;
@@ -79,7 +79,9 @@ void Player::attack(glm::vec2 mousePos) {
     // mouse direction**
 
     // Define attack hit radius or range
-    float attackRange = 2.0f; // Example range for detecting nearby mobs
+    float attackRange = 2.0f;       // Example range for detecting nearby mobs
+    float knockbackStrength = 0.5f; // Strength of the knockback
+    float knockbackDuration = 0.2f; // Duration of the knockback animation
 
     // Get all mobs in the world
     const std::vector<std::shared_ptr<Mob>> &mobs =
@@ -122,14 +124,21 @@ void Player::attack(glm::vec2 mousePos) {
             mobHealth -= 10; // Deduct health
             mob->setHealth(mobHealth);
 
+            // Apply knockback to the mob in the correct direction (towards the
+            // opposite of the attack)
+            glm::vec2 knockbackDirection =
+                -attackDirection; // Flip the direction
+            mob->applyKnockback(knockbackDirection, knockbackStrength,
+                                knockbackDuration);
+
             // Print out for debug purposes
             std::cout << "Mob hit! New health: " << mobHealth << std::endl;
 
             // Optionally, handle mob death if health is <= 0
             if (mobHealth <= 0) {
                 std::cout << "Mob has been defeated!" << std::endl;
-                // need to make it remove from the mob list eventaully
-                mob->setIsVisable(false);
+                mob->setIsVisable(
+                    false); // Make the mob invisible when defeated
             }
         }
     }
