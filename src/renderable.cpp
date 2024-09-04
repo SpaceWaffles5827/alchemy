@@ -9,8 +9,7 @@ Renderable::Renderable()
       textureTopLeft(glm::vec2(0.0f, 1.0f)),
       textureBottomRight(glm::vec2(1.0f, 0.0f)), isVisable(true),
       scale(glm::vec3(1.0f, 1.0f, 1.0f)), position(glm::vec3(0.0f)),
-      ySort(false),
-      rotation(glm::vec3(0.0f)) {
+      ySort(false), rotation(glm::vec3(0.0f)), ySortOffset(0.0f) {
     updateBoundingRadius();
 }
 
@@ -19,11 +18,13 @@ Renderable::Renderable(float width, float height, GLuint textureID,
                        const glm::vec2 &texTopLeft,
                        const glm::vec2 &texBottomRight,
                        const glm::vec3 &initialPosition,
-                       const glm::vec3 &initialRotation)
+                       const glm::vec3 &initialRotation,
+                       float initialYSortOffset)
     : width(width), height(height), textureID(textureID), ySort(false),
       textureTopLeft(texTopLeft), textureBottomRight(texBottomRight),
       isVisable(true), scale(glm::vec3(width, height, 1.0f)),
-      position(initialPosition), rotation(initialRotation) {
+      position(initialPosition), rotation(initialRotation),
+      ySortOffset(initialYSortOffset) {
     updateBoundingRadius();
 }
 
@@ -51,6 +52,8 @@ float Renderable::getWidth() const { return width; }
 float Renderable::getHeight() const { return height; }
 
 bool Renderable::getIsVisable() const { return isVisable; }
+
+float Renderable::getYSortOffset() const { return ySortOffset; }
 
 // Setters
 void Renderable::setIsVisable(bool visable) { isVisable = visable; }
@@ -96,6 +99,8 @@ void Renderable::setTextureCoords(const glm::vec2 &topLeft,
     textureBottomRight = bottomRight;
 }
 
+void Renderable::setYSortOffset(float offset) { ySortOffset = offset; }
+
 void Renderable::updateScale() { scale = glm::vec3(width, height, 1.0f); }
 
 void Renderable::updateBoundingRadius() {
@@ -104,6 +109,18 @@ void Renderable::updateBoundingRadius() {
 
 float Renderable::getBoundingRadius() const { return boundingRadius; }
 
-bool Renderable::getIsYSorted() { return ySort; }
+bool Renderable::getIsYSorted() const { return ySort; }
 
 void Renderable::setYSorting(bool status) { ySort = status; }
+
+glm::vec3 Renderable::getYSortPosition() const {
+    return glm::vec3(position.x, position.y - (height * 0.5f) + ySortOffset,
+                     position.z);
+}
+
+// New method to calculate base Y position
+float Renderable::calculateBaseYPosition() const {
+    // Calculate the Y position based on the bottom of the object and the Y-sort
+    // offset
+    return position.y - (height * 0.5f) + ySortOffset;
+}

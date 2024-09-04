@@ -41,6 +41,7 @@ void Game::init() {
     clientPlayer->setPosition(glm::vec3(0.0f, 0.0f, 1.0f));
     clientPlayer->setTextureTile(0, 0, 8, 512, 512, 64, 128);
     World &world = World::getInstance();
+    clientPlayer->setYSortOffset(0.37f);
     world.addPlayer(clientPlayer);
 
     std::shared_ptr<Soward> playerSoward = std::make_shared<Soward>();
@@ -156,14 +157,12 @@ void Game::update(double deltaTime) {
 Mode Game::getGameMode() { return currentMode; }
 
 void Game::render() {
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     int width, height;
     glfwGetWindowSize(GraphicsContext::getInstance().getWindow(), &width,
                       &height);
 
-    // Move this so that it's only called when it needs to be called such as
-    // player movement, window resize, etc.
     GraphicsContext::getInstance().updateProjectionMatrix(width, height);
 
     World &world = World::getInstance();
@@ -172,7 +171,7 @@ void Game::render() {
     // Group all renderables into a single list
     std::vector<std::shared_ptr<Renderable>> renderables;
 
-        // Add player objects
+    // Add player objects
     renderables.insert(renderables.end(), world.getPlayers().begin(),
                        world.getPlayers().end());
 
@@ -180,25 +179,15 @@ void Game::render() {
     renderables.insert(renderables.end(), world.getObjects().begin(),
                        world.getObjects().end());
 
-
-
-    // Add mobs
-    // renderables.insert(renderables.end(), world.getMobs().begin(),
-    //                    world.getMobs().end());
-
-    // Add weapons
-    // renderables.insert(renderables.end(), world.getWeapons().begin(),
-    //                    world.getWeapons().end());
-
     // Pass the grouped renderables to batch render
     renderer.batchRenderGameObjects(
         renderables, GraphicsContext::getInstance().getProjection());
 
     // Render the UI
-    // renderer.renderUI(width, height);
+    renderer.renderUI(width, height);
 
     // Render the chat
-    // Chat::getInstance().render();
+    Chat::getInstance().render();
 
     // Render the FPS display if visible
     if (FPSDisplay::getInstance().isVisable()) {

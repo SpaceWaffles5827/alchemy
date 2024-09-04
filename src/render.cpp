@@ -12,15 +12,15 @@
 const char *Render::defaultVertexShaderSource = R"(
 #version 330 core
 layout(location = 0) in vec3 aPos;
-layout(location = 1) in vec2 aTexCoord; // Add texture coordinates as an input
+layout(location = 1) in vec2 aTexCoord;
 layout(location = 2) in mat4 instanceTransform;
 
-out vec2 TexCoord; // Pass texture coordinates to the fragment shader
+out vec2 TexCoord;
 
 void main()
 {
     gl_Position = instanceTransform * vec4(aPos, 1.0);
-    TexCoord = aTexCoord; // Pass texture coordinates to fragment shader
+    TexCoord = aTexCoord;
 }
 )";
 
@@ -38,9 +38,32 @@ void main()
 }
 )";
 
+const char *Render::blueVertexShaderSource = R"(
+#version 330 core
+layout(location = 0) in vec3 aPos;
+
+uniform mat4 transform;
+
+void main()
+{
+    gl_Position = transform * vec4(aPos, 1.0);
+}
+)";
+
+// Fragment shader for coloring the hexagon blue
+const char *Render::blueFragmentShaderSource = R"(
+#version 330 core
+out vec4 FragColor;
+
+void main()
+{
+    FragColor = vec4(0.0, 0.0, 1.0, 1.0); // Blue color
+}
+)";
+
 Render::Render()
-    : shaderProgram(0), VAO(0), VBO(0), instanceVBO(0), EBO(0),
-      maxVerticesPerBatch(10000) {}
+    : shaderProgram(0), blueShaderProgram(0), VAO(0), VBO(0), instanceVBO(0),
+      EBO(0), maxVerticesPerBatch(10000) {}
 
 Render::~Render() {
     glDeleteVertexArrays(1, &VAO);
@@ -48,14 +71,17 @@ Render::~Render() {
     glDeleteBuffers(1, &instanceVBO);
     glDeleteBuffers(1, &EBO);
     glDeleteProgram(shaderProgram);
+    glDeleteProgram(blueShaderProgram);
 }
 
 void Render::initialize() {
     shaderProgram =
         loadShader(defaultVertexShaderSource, defaultFragmentShaderSource);
 
+    blueShaderProgram =
+        loadShader(blueVertexShaderSource, blueFragmentShaderSource);
+
     // Disable VSync (no frame rate cap)
-    // Add a comand for this later in the text chat
     glfwSwapInterval(0);
     setupBuffers();
 }
@@ -65,7 +91,6 @@ void Render::setShaderProgram(GLuint shaderProgram) {
 }
 
 void Render::setupBuffers() {
-    // Define vertices for a quad (two triangles forming a square)
     GLfloat vertices[] = {
         // Positions        // Texture Coords
         -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, // Bottom-left
@@ -245,23 +270,6 @@ GLuint Render::loadShader(const char *vertexShaderSource,
     return program;
 }
 
-struct TextureGroupComparator {
-    bool operator()(const std::tuple<GLuint, glm::vec2, glm::vec2> &lhs,
-                    const std::tuple<GLuint, glm::vec2, glm::vec2> &rhs) const {
-        if (std::get<0>(lhs) != std::get<0>(rhs))
-            return std::get<0>(lhs) < std::get<0>(rhs);
-
-        if (std::get<1>(lhs).x != std::get<1>(rhs).x)
-            return std::get<1>(lhs).x < std::get<1>(rhs).x;
-        if (std::get<1>(lhs).y != std::get<1>(rhs).y)
-            return std::get<1>(lhs).y < std::get<1>(rhs).y;
-
-        if (std::get<2>(lhs).x != std::get<2>(rhs).x)
-            return std::get<2>(lhs).x < std::get<2>(rhs).x;
-        return std::get<2>(lhs).y < std::get<2>(rhs).y;
-    }
-};
-
 void Render::batchRenderGameObjects(
     const std::vector<std::shared_ptr<Renderable>> &renderables,
     const glm::mat4 &projection) {
@@ -271,15 +279,14 @@ void Render::batchRenderGameObjects(
     Frustum frustum;
     frustum.update(projection);
 
-    // Sort renderables by Z position first, then by Y position within the same
-    // Z
+    // Sort renderables by Z position first, then by base Y position
     std::vector<std::shared_ptr<Renderable>> sortedRenderables = renderables;
     std::sort(sortedRenderables.begin(), sortedRenderables.end(),
               [](const std::shared_ptr<Renderable> &a,
                  const std::shared_ptr<Renderable> &b) {
                   if (a->getPosition().z == b->getPosition().z) {
-                      return a->getPosition().y >
-                             b->getPosition().y;
+                      return a->calculateBaseYPosition() >
+                             b->calculateBaseYPosition();
                   }
                   return a->getPosition().z < b->getPosition().z;
               });
@@ -381,4 +388,76 @@ void Render::checkCompileErrors(GLuint shader, const std::string &type) {
                       << infoLog << "\n";
         }
     }
+}
+
+void Render::renderHexagon(const glm::vec3 &position, float radius,
+                           const glm::mat4 &projection) {
+    const int numSegments = 6; // Hexagon has 6 sides
+    std::vector<GLfloat> vertices;
+
+    // Generate vertices for the hexagon
+    for (int i = 0; i <= numSegments; ++i) {
+        float theta = 2.0f * 3.1415926f * float(i) / float(numSegments);
+        float dx = radius * cosf(theta);
+        float dy = radius * sinf(theta);
+
+        vertices.push_back(dx);
+        vertices.push_back(dy);
+        vertices.push_back(0.0f); // Z coordinate
+    }
+
+    GLuint VAO, VBO;
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+
+    glBindVertexArray(VAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(GLfloat),
+                 vertices.data(), GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
+                          (void *)0);
+    glEnableVertexAttribArray(0);
+
+    // Use the blue shader program
+    glUseProgram(blueShaderProgram);
+
+    // Debug: Check if the shader program is bound correctly
+    GLint currentProgram = 0;
+    glGetIntegerv(GL_CURRENT_PROGRAM, &currentProgram);
+
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, position);
+    glm::mat4 combined = projection * model;
+
+    // Set the transform uniform in the vertex shader
+    GLuint transformLoc = glGetUniformLocation(blueShaderProgram, "transform");
+    if (transformLoc == -1) {
+        std::cerr << "Failed to find the 'transform' uniform location!"
+                  << std::endl;
+        return;
+    }
+
+    glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(combined));
+
+    // Disable depth testing for 2D elements
+    glDisable(GL_DEPTH_TEST);
+
+    // Draw the hexagon
+    glBindVertexArray(VAO);
+    glDrawArrays(GL_TRIANGLE_FAN, 0, numSegments + 1);
+
+    // Debug: Check for OpenGL errors
+    GLenum err;
+    while ((err = glGetError()) != GL_NO_ERROR) {
+        std::cerr << "OpenGL error: " << err << std::endl;
+    }
+
+    // Re-enable depth testing
+    glEnable(GL_DEPTH_TEST);
+
+    glBindVertexArray(0);
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
 }
