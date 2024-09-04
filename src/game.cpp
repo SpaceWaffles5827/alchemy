@@ -179,6 +179,14 @@ void Game::render() {
     renderables.insert(renderables.end(), world.getObjects().begin(),
                        world.getObjects().end());
 
+    // Add game mob objects
+    renderables.insert(renderables.end(), world.getMobs().begin(),
+                       world.getMobs().end());
+
+    // Add game weapons objects
+    renderables.insert(renderables.end(), world.getWeapons().begin(),
+                       world.getWeapons().end());
+
     // Pass the grouped renderables to batch render
     renderer.batchRenderGameObjects(
         renderables, GraphicsContext::getInstance().getProjection());

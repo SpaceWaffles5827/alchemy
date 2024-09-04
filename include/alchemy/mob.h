@@ -23,11 +23,15 @@ public:
 
   void update(float deltaTime);
 
+  int getHealth();
+  void setHealth(int healthValue);
+
 private:
   MobState state;
   Direction direction;
-  const float speed = 2.0f; // Speed at which the mob moves, in units per second
-  glm::vec3 velocity;       // Velocity vector for the mob's movement
+  const float speed = 2.0f;
+  glm::vec3 velocity;       
+  int health;
 };
 
 #endif // MOB_H

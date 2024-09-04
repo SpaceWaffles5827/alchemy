@@ -1,4 +1,4 @@
-#include <alchemy/player.h>
+﻿#include <alchemy/player.h>
 #include <alchemy/global.h>
 #include <cmath>
 
@@ -6,7 +6,7 @@
 #define M_PI 3.14159265358979323846
 #endif
 
-Player::Player(int clientId, const glm::vec3& color, float x, float y, float width, float height, GLuint textureID)
+Player::Player(int clientId, const glm::vec3& color, float x, float y, float width, float height, GLuint textureID, int health)
     : GameObject(glm::vec3(x, y, 0.0f), glm::vec3(0.0f), width, height, textureID), clientId(clientId),
     currentState(PlayerState::Idle), currentDirection(PlayerDirection::South) {
 
@@ -36,11 +36,11 @@ void Player::attack(glm::vec2 mousePos) {
     auto &playerWeapon = weapons[0];
 
     // Calculate the center of the window (player's position)
-    glm::vec2 playerPos(width / 2.0f, height / 2.0f);
+    glm::vec2 playerScreenPos(width / 2.0f, height / 2.0f);
 
     // Calculate direction from player position to mouse position, in screen
     // coordinates
-    glm::vec2 direction = mousePos - playerPos;
+    glm::vec2 direction = mousePos - playerScreenPos;
 
     // Invert the y-component to switch from clockwise to counterclockwise
     direction.y = -direction.y;
@@ -75,15 +75,66 @@ void Player::attack(glm::vec2 mousePos) {
                                  true // Hide after animation
     );
 
-    // Output direction in human-readable format
-    std::cout << "Attack direction: "
-              << (angle >= 337.5f || angle < 22.5f ? "Right"
-                  : angle < 67.5f                  ? "Bottom Right"
-                  : angle < 112.5f                 ? "Bottom"
-                  : angle < 157.5f                 ? "Bottom Left"
-                  : angle < 202.5f                 ? "Left"
-                  : angle < 247.5f                 ? "Top Left"
-                  : angle < 292.5f                 ? "Top"
-                                                   : "Top Right")
-              << std::endl;
+    // **New: Check if attack hit any mobs within a 180-degree cone based on
+    // mouse direction**
+
+    // Define attack hit radius or range
+    float attackRange = 2.0f; // Example range for detecting nearby mobs
+
+    // Get all mobs in the world
+    const std::vector<std::shared_ptr<Mob>> &mobs =
+        World::getInstance().getMobs();
+
+    // Use the click direction as the attack direction (normalized)
+    glm::vec2 attackDirection = direction;
+
+    // Loop through all mobs to check for collision with the attack
+    for (const auto &mob : mobs) {
+        // Calculate mob position relative to player
+        glm::vec3 mobPos = mob->getPosition();
+        glm::vec2 mobDirection =
+            glm::vec2(mobPos.x - position.x, mobPos.y - position.y);
+
+        // Check if the mob is within the attack range
+        float distance = glm::length(mobDirection);
+        if (distance > attackRange) {
+            continue; // Mob is too far away, skip
+        }
+
+        // Normalize mob direction vector
+        if (glm::length(mobDirection) > 0) {
+            mobDirection = glm::normalize(mobDirection);
+        }
+
+        // Calculate the angle between the attack direction (from click) and the
+        // mob's direction
+        float dotProduct = glm::dot(attackDirection, mobDirection);
+        float angleBetween =
+            acos(dotProduct) * 180.0f / M_PI; // Convert from radians to degrees
+
+        std::cout << "Angle between attack direction and mob: " << angleBetween
+                  << " degrees\n";
+
+        // Check if the mob is within the 180-degree cone (angle ≤ 90 degrees)
+        if (angleBetween <= 90.0f) {
+            // Mob is hit by the attack, deduct 10 HP
+            int mobHealth = mob->getHealth();
+            mobHealth -= 10; // Deduct health
+            mob->setHealth(mobHealth);
+
+            // Print out for debug purposes
+            std::cout << "Mob hit! New health: " << mobHealth << std::endl;
+
+            // Optionally, handle mob death if health is <= 0
+            if (mobHealth <= 0) {
+                std::cout << "Mob has been defeated!" << std::endl;
+                // need to make it remove from the mob list eventaully
+                mob->setIsVisable(false);
+            }
+        }
+    }
 }
+
+int Player::getHealth() { return health; }
+
+void Player::setHealth(int healthValue) { health = healthValue; }

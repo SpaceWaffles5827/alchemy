@@ -10,6 +10,7 @@ Mob::Mob() {
     state = MobState::WALKING;  // Set initial state to walking
     direction = Direction::EAST; // Set initial direction to east
     velocity = glm::vec3(0.0f);  // Initial velocity is zero
+    health = 100;
 }
 
 Mob::~Mob() {
@@ -88,3 +89,7 @@ void Mob::update(float deltaTime) {
         currentFrame = 0;
     }
 }
+
+int Mob::getHealth() { return health; }
+
+void Mob::setHealth(int healthValue) { health = healthValue; }
