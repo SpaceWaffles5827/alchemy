@@ -120,7 +120,5 @@ glm::vec3 Renderable::getYSortPosition() const {
 
 // New method to calculate base Y position
 float Renderable::calculateBaseYPosition() const {
-    // Calculate the Y position based on the bottom of the object and the Y-sort
-    // offset
     return position.y - (height * 0.5f) + ySortOffset;
 }

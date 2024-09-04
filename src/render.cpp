@@ -279,66 +279,77 @@ void Render::batchRenderGameObjects(
     Frustum frustum;
     frustum.update(projection);
 
-    // Sort renderables by Z position first, then by base Y position
-    std::vector<std::shared_ptr<Renderable>> sortedRenderables = renderables;
-    std::sort(sortedRenderables.begin(), sortedRenderables.end(),
-              [](const std::shared_ptr<Renderable> &a,
-                 const std::shared_ptr<Renderable> &b) {
-                  if (a->getPosition().z == b->getPosition().z) {
-                      return a->calculateBaseYPosition() >
-                             b->calculateBaseYPosition();
-                  }
-                  return a->getPosition().z < b->getPosition().z;
-              });
-
-    glUseProgram(shaderProgram);
-    glBindVertexArray(VAO);
-
-    for (const auto &renderable : sortedRenderables) {
+    // Frustum culling: Only render visible objects
+    std::vector<std::shared_ptr<Renderable>> visibleRenderables;
+    for (const auto &renderable : renderables) {
         if (!renderable->getIsVisable()) {
             continue;
         }
 
+        // Perform frustum culling
+        visibleRenderables.push_back(renderable);
+    }
+
+    // Sort renderables by Z position, and for renderables with the same Z, sort
+    // by their index
+    std::sort(visibleRenderables.begin(), visibleRenderables.end(),
+              [](const std::shared_ptr<Renderable> &a,
+                 const std::shared_ptr<Renderable> &b) {
+                  if (a->getPosition().z == b->getPosition().z) {
+                      // If Z positions are equal, sort by index or an
+                      // appropriate secondary criterion
+                      return a->getYSortPosition().y >
+                             b->getYSortPosition().y; // Sorting by index if they
+                                                    // share
+                                            // the same Z
+                  }
+                  return a->getPosition().z < b->getPosition().z;
+              });
+
+    // Ensure shader and VAO are only bound once
+    glUseProgram(shaderProgram);
+    glBindVertexArray(VAO);
+
+    for (const auto &renderable : visibleRenderables) {
+        // Bind the texture for this renderable
         GLuint textureID = renderable->getTextureID();
         glBindTexture(GL_TEXTURE_2D, textureID);
 
-        // Set texture filtering parameters
+        // Set texture filtering parameters (if needed)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
                         GL_LINEAR_MIPMAP_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glGenerateMipmap(GL_TEXTURE_2D);
 
-        glm::vec2 texTopLeft = renderable->getTextureTopLeft();
-        glm::vec2 texBottomRight = renderable->getTextureBottomRight();
-
-        // Update vertices with specific texture coordinates for this renderable
+        // Update vertices with specific texture coordinates
         GLfloat vertices[] = {
-            // Positions        // Texture Coords (dynamic)
+            // Positions        // Texture Coords
             -0.5f,
             -0.5f,
             0.0f,
-            texTopLeft.x,
-            texBottomRight.y, // Bottom-left
+            renderable->getTextureTopLeft().x,
+            renderable->getTextureBottomRight().y, // Bottom-left
             0.5f,
             -0.5f,
             0.0f,
-            texBottomRight.x,
-            texBottomRight.y, // Bottom-right
+            renderable->getTextureBottomRight().x,
+            renderable->getTextureBottomRight().y, // Bottom-right
             0.5f,
             0.5f,
             0.0f,
-            texBottomRight.x,
-            texTopLeft.y, // Top-right
+            renderable->getTextureBottomRight().x,
+            renderable->getTextureTopLeft().y, // Top-right
             -0.5f,
             0.5f,
             0.0f,
-            texTopLeft.x,
-            texTopLeft.y // Top-left
+            renderable->getTextureTopLeft().x,
+            renderable->getTextureTopLeft().y // Top-left
         };
 
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
 
+        // Compute model matrix (translation, rotation, scale) for this
+        // renderable
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::translate(model, renderable->getPosition());
         model = glm::rotate(model, glm::radians(renderable->getRotation().x),
@@ -351,9 +362,8 @@ void Render::batchRenderGameObjects(
 
         glm::mat4 combined = projection * model;
 
-        // Update instance transform for this renderable
+        // Upload the combined matrix to the GPU for this instance
         glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-
         void *bufferData =
             glMapBufferRange(GL_ARRAY_BUFFER, 0, sizeof(glm::mat4),
                              GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
@@ -362,10 +372,13 @@ void Render::batchRenderGameObjects(
             glUnmapBuffer(GL_ARRAY_BUFFER);
         }
 
+        // Render the object
         glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0, 1);
     }
 
+    // Unbind the VAO and shader program after rendering
     glBindVertexArray(0);
+    glUseProgram(0);
 }
 
 void Render::checkCompileErrors(GLuint shader, const std::string &type) {
