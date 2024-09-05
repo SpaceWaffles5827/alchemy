@@ -46,6 +46,7 @@ class Mob : public Renderable {
 
     // Easing functions
     float easeOutCubic(float t);
+    float easeOutQuint(float t); // New easing function for sharper knockback
     float easeInCubic(float t);
 };
 

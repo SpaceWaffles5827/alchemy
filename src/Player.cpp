@@ -114,9 +114,6 @@ void Player::attack(glm::vec2 mousePos) {
         float angleBetween =
             acos(dotProduct) * 180.0f / M_PI; // Convert from radians to degrees
 
-        std::cout << "Angle between attack direction and mob: " << angleBetween
-                  << " degrees\n";
-
         // Check if the mob is within the 180-degree cone (angle ≤ 90 degrees)
         if (angleBetween <= 90.0f) {
             // Mob is hit by the attack, deduct 10 HP
@@ -131,12 +128,8 @@ void Player::attack(glm::vec2 mousePos) {
             mob->applyKnockback(knockbackDirection, knockbackStrength,
                                 knockbackDuration);
 
-            // Print out for debug purposes
-            std::cout << "Mob hit! New health: " << mobHealth << std::endl;
-
             // Optionally, handle mob death if health is <= 0
             if (mobHealth <= 0) {
-                std::cout << "Mob has been defeated!" << std::endl;
                 mob->setIsVisable(
                     false); // Make the mob invisible when defeated
             }

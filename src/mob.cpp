@@ -26,6 +26,8 @@ Mob::~Mob() {
 
 float Mob::easeOutCubic(float t) { return 1 - pow(1 - t, 3); }
 
+float Mob::easeOutQuint(float t) { return 1 - pow(1 - t, 5); }
+
 float Mob::easeInCubic(float t) { return t * t * t; }
 
 void Mob::update(float deltaTime) {
@@ -41,16 +43,18 @@ void Mob::update(float deltaTime) {
             isBeingKnockedBack = false;
         }
 
-        // Apply easing for smoother knockback effect
+        // Apply sharper easing for smoother knockback effect
         float t = knockbackTime / knockbackDuration;
-        float easedT = easeOutCubic(t);
+        float easedT = easeOutQuint(t);
         glm::vec3 newPos = glm::mix(knockbackStartPos, knockbackEndPos, easedT);
         setPosition(newPos);
 
-        // Dynamic scaling for punchier effect
-        float scale =
-            1.0f - (0.1f * (1.0f - easedT)); // Scale down during knockback
-        setScale(glm::vec3(scale));
+        // Dynamic scaling and slight rotation for punchier effect
+        float knockbackScale =
+            1.0f + (0.2f * (1.0f - easedT)); // Scale up slightly
+        setScale(glm::vec3(knockbackScale));
+
+        float rotationAngle = 5.0f * (1.0f - easedT); // Slight rotation effect
     }
 
     if (state == MobState::WALKING || state == MobState::IDLE) {
@@ -60,14 +64,13 @@ void Mob::update(float deltaTime) {
         // Update the current frame every 0.1 seconds (adjust as needed)
         if (animationTime >= 0.1f) {
             currentFrame =
-                (currentFrame + 1) %
-                8; // There are 8 frames in total for walking animation
+                (currentFrame + 1) % 8; // 8 frames for walking animation
             animationTime = 0.0f;
         }
 
         int spriteRow = 0;
 
-        // Determine the correct sprite row based on the direction and state
+        // Determine the correct sprite row based on direction and state
         if (state == MobState::IDLE) {
             switch (direction) {
             case Direction::SOUTH:
@@ -156,8 +159,15 @@ void Mob::applyKnockback(const glm::vec2 &knockbackDirection,
 
     // Set knockback duration and start the animation
     knockbackTime = 0.0f;
-    knockbackDuration = duration;
+    knockbackDuration =
+        glm::clamp(duration * 0.5f, 0.1f, 0.5f); // Snappier duration
     isBeingKnockedBack = true;
+
+    // Optional: Trigger particle effect or camera shake here
+    // GraphicsContext::getInstance().spawnParticles(getPosition(),
+    //                                               "dust_particle");
+    // GraphicsContext::getInstance().applyCameraShake(
+    //     0.05f); // Subtle camera shake
 }
 
 int Mob::getHealth() { return health; }
