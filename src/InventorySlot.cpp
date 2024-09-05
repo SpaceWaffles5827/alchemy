@@ -3,7 +3,7 @@
 // Parameterized constructor definition with four parameters
 InventorySlot::InventorySlot(float x, float y, float width, float height, GLuint textureID)
     : Renderable(width, height, textureID) {
-    setPosition(glm::vec3(x, y, 0.0f)); // Set the position based on x, y coordinates
+    setPosition(glm::vec3(x, y, 1.0f)); // Set the position based on x, y coordinates
 
     // Flip the texture vertically
     setTextureCoords(glm::vec2(1.0f, 1.0f), glm::vec2(0.0f, 0.0f));

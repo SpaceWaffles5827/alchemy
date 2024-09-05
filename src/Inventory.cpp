@@ -39,7 +39,7 @@ void Inventory::initializeSlots() {
             int index = row * cols + col;
             float x = position.x + xOffset + col * (slotWidth + horizontalGap);
             float y = position.y + yOffset + row * (slotHeight + verticalGap);
-            slots[index] = InventorySlot(glm::vec3(x, y, 0.0f), glm::vec3(0.0f), slotWidth, slotHeight, 0, glm::vec2(0.0f, 1.0f), glm::vec2(1.0f, 0.0f));
+            slots[index] = InventorySlot(glm::vec3(x, y, 1.0f), glm::vec3(0.0f), slotWidth, slotHeight, 0, glm::vec2(0.0f, 1.0f), glm::vec2(1.0f, 0.0f));
         }
     }
 }
@@ -54,7 +54,6 @@ void Inventory::loadDefaults() {
     slots[2].setItem("Stone");
     slots[3].setTexture(specialTextureID);
     slots[3].setItem("Stone");
-    slots[15].setIsVisable(false);
 }
 
 void Inventory::addItemToSlot(int slotIndex, const std::string& itemName) {
@@ -82,7 +81,7 @@ void Inventory::setSlotPosition(int slotIndex, float x, float y) {
     if (slotIndex < 0 || slotIndex >= slots.size()) {
         throw std::out_of_range("Invalid slot index");
     }
-    slots[slotIndex].setPosition(glm::vec3(x, y, 0));
+    slots[slotIndex].setPosition(glm::vec3(x, y, 1.0));
 }
 
 void Inventory::setSlotTexture(int slotIndex, GLuint newTextureID) {
@@ -121,7 +120,7 @@ void Inventory::setPosition(const glm::vec3& pos) {
             int index = row * cols + col;
             float x = position.x + xOffset + col * (slotWidth + horizontalGap);
             float y = position.y + yOffset + row * (slotHeight + verticalGap);
-            slots[index].setPosition(glm::vec3(x, y, 0.0f));
+            slots[index].setPosition(glm::vec3(x, y, 1.0f));
         }
     }
 }

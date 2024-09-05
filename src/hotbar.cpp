@@ -39,7 +39,7 @@ void HotBar::initializeSlots() {
   for (int i = 0; i < slots.size(); ++i) {
     float x = position.x + xOffset + i * (slotWidth + horizontalGap);
     float y = position.y;
-    slots[i] = InventorySlot(glm::vec3(x, y, 0.0f), glm::vec3(0.0f), slotWidth,
+    slots[i] = InventorySlot(glm::vec3(x, y, 1.0f), glm::vec3(0.0f), slotWidth,
                              slotHeight, textureID, glm::vec2(0.0f, 1.0f),
                              glm::vec2(1.0f, 0.0f));
   }
@@ -79,7 +79,7 @@ void HotBar::setSlotPosition(int slotIndex, float x, float y) {
   if (slotIndex < 0 || slotIndex >= slots.size()) {
     throw std::out_of_range("Invalid slot index");
   }
-  slots[slotIndex].setPosition(glm::vec3(x, y, 0));
+  slots[slotIndex].setPosition(glm::vec3(x, y, 1.0f));
 }
 
 void HotBar::setSlotTexture(int slotIndex, GLuint newTextureID) {
@@ -111,13 +111,12 @@ void HotBar::setPosition(const glm::vec3 &pos) {
   for (int i = 0; i < slots.size(); ++i) {
     float x = position.x + xOffset + i * (slotWidth + horizontalGap);
     float y = position.y;
-    slots[i].setPosition(glm::vec3(x, y, 0.0f));
+    slots[i].setPosition(glm::vec3(x, y, 1.0f));
   }
 
-  // Update the position of the selected slot object
-  float offset = slotWidth + horizontalGap; // slotWidth + horizontalGap
+  float offset = slotWidth + horizontalGap;
   selectedSlotObject.setPosition(glm::vec3(
-      position.x + xOffset + (selectedSlotIndex * offset), position.y, 0.0f));
+      position.x + xOffset + (selectedSlotIndex * offset), position.y, 1.0f));
 }
 
 void HotBar::setDimensions(float newWidth, float newHeight) {
@@ -151,7 +150,7 @@ void HotBar::setSelectedSlotIndex(int index) {
   // Update the position of the selected slot object based on the selected slot
   // index
   selectedSlotObject.setPosition(
-      glm::vec3(position.x + xOffset + (index * offset), position.y, 0));
+      glm::vec3(position.x + xOffset + (index * offset), position.y, 1.0));
 }
 
 int HotBar::getSelectedSlotIndex() const { return selectedSlotIndex; }

@@ -282,7 +282,7 @@ void Render::batchRenderGameObjects(
     // Frustum culling: Only render visible objects
     std::vector<std::shared_ptr<Renderable>> visibleRenderables;
     for (const auto &renderable : renderables) {
-        if (!renderable->getIsVisable()) {
+        if (!renderable->getIsVisable() || renderable->getTextureID() == 0) {
             continue;
         }
 
