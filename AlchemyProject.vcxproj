@@ -177,6 +177,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="include\alchemy\audioManager.h" />
+    <ClInclude Include="include\alchemy\Collider.h" />
+    <ClInclude Include="include\alchemy\SATCollision.h" />
     <ClInclude Include="include\AL\al.h" />
     <ClInclude Include="include\AL\alc.h" />
     <ClInclude Include="include\AL\alext.h" />
@@ -281,6 +283,7 @@
   <ItemGroup>
     <ClCompile Include="include\alchemy\soward.h" />
     <ClCompile Include="src\audioManager.cpp" />
+    <ClCompile Include="src\Collider.cpp" />
     <ClCompile Include="src\Inventory.cpp" />
     <ClCompile Include="src\InventorySlot.cpp" />
     <ClCompile Include="src\NetworkManager.cpp" />
@@ -296,6 +299,7 @@
     <ClCompile Include="src\mob.cpp" />
     <ClCompile Include="src\render.cpp" />
     <ClCompile Include="src\renderable.cpp" />
+    <ClCompile Include="src\SATCollision.cpp" />
     <ClCompile Include="src\server.cpp" />
     <ClCompile Include="src\soward.cpp" />
     <ClCompile Include="src\stb.cpp" />

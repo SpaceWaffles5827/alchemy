@@ -337,6 +337,8 @@
       <Filter>include\stb</Filter>
     </ClInclude>
     <ClInclude Include="include\alchemy\audioManager.h" />
+    <ClInclude Include="include\alchemy\Collider.h" />
+    <ClInclude Include="include\alchemy\SATCollision.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Inventory.cpp">
@@ -399,6 +401,8 @@
     <ClCompile Include="src\audioManager.cpp" />
     <ClCompile Include="include\alchemy\soward.h" />
     <ClCompile Include="src\soward.cpp" />
+    <ClCompile Include="src\Collider.cpp" />
+    <ClCompile Include="src\SATCollision.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="textures\weapon\Cobalt_Sword.png" />

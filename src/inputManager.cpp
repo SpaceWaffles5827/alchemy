@@ -5,6 +5,8 @@
 #include <fstream>
 #include <iostream>
 #include <unordered_map>
+#include "../alchemy/Collider.h"
+#include "../alchemy/SATCollision.h"
 
 // Structs for storing texture and animation data
 struct AnimationInfo {
@@ -125,7 +127,7 @@ void InputManager::mouse_button_callback(GLFWwindow *window, int button,
 
     static GLuint originalTextureID = 0;
     static std::string originalItemName;
-    static int originalSlotIndex = -1; // Move the declaration here
+    static int originalSlotIndex = -1;
 
     // If left mouse button is pressed
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
@@ -413,6 +415,7 @@ void InputManager::handleInput() {
             bool isMoving = false;
 
             glm::vec3 position = player->getPosition();
+            glm::vec3 originalPosition = position;
             float speed = 0.12f;
 
             static int frame = 0;
@@ -436,41 +439,76 @@ void InputManager::handleInput() {
             int walkLeftRow = runningTexture.animations["walkLeft"].row;
             int walkRightRow = runningTexture.animations["walkRight"].row;
 
+            bool canMoveHorizontally = true;
+            bool canMoveVertically = true;
+
+            Collider playerCollider(
+                {{-0.5f, -0.5f}, {0.5f, -0.5f}, {0.5f, 0.5f}, {-0.5f, 0.5f}});
+            Collider worldBoxCollider(
+                {{0.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, 1.0f}});
+
+            // Handle vertical movement
             if (glfwGetKey(GraphicsContext::getInstance().getWindow(),
                            GLFW_KEY_W) == GLFW_PRESS) {
                 direction.y += 1.0f;
-                currentAnimationRow = walkUpRow;
                 isMoving = true;
             } else if (glfwGetKey(GraphicsContext::getInstance().getWindow(),
                                   GLFW_KEY_S) == GLFW_PRESS) {
                 direction.y -= 1.0f;
-                currentAnimationRow = walkDownRow;
                 isMoving = true;
             }
 
+            // Check for vertical collision
+            glm::vec3 testVerticalPosition =
+                position + glm::vec3(0.0f, direction.y * speed, 0.0f);
+            if (SATCollision(
+                    playerCollider,
+                    glm::vec2(testVerticalPosition.x, testVerticalPosition.y),
+                    worldBoxCollider, glm::vec2(3.0f, 3.0f))) {
+                canMoveVertically = false;
+            }
+
+            // Handle horizontal movement
             if (glfwGetKey(GraphicsContext::getInstance().getWindow(),
                            GLFW_KEY_A) == GLFW_PRESS) {
                 direction.x -= 1.0f;
-                currentAnimationRow = walkLeftRow;
                 isMoving = true;
             } else if (glfwGetKey(GraphicsContext::getInstance().getWindow(),
                                   GLFW_KEY_D) == GLFW_PRESS) {
                 direction.x += 1.0f;
-                currentAnimationRow = walkRightRow;
                 isMoving = true;
             }
 
-            if (isMoving) {
-                if (direction.x != 0 || direction.y != 0) {
-                    direction = glm::normalize(direction);
-                    position += direction * speed;
-                    positionUpdated = true;
+            // Check for horizontal collision
+            glm::vec3 testHorizontalPosition =
+                position + glm::vec3(direction.x * speed, 0.0f, 0.0f);
+            if (SATCollision(playerCollider,
+                             glm::vec2(testHorizontalPosition.x,
+                                       testHorizontalPosition.y),
+                             worldBoxCollider, glm::vec2(3.0f, 3.0f))) {
+                canMoveHorizontally = false;
+            }
 
-                    player->setTexture(runningTexture.textureID);
-                    player->setTextureTile(
-                        frame, currentAnimationRow, runningTexture.cols,
-                        runningTexture.width, runningTexture.height, 64, 128);
+            // Apply movement
+            if (isMoving) {
+                // Adjust animation based on direction, but prioritize vertical
+                // if both are pressed
+                if (direction.y != 0 && canMoveVertically) {
+                    currentAnimationRow =
+                        direction.y > 0 ? walkUpRow : walkDownRow;
+                    position.y += direction.y * speed;
+                    positionUpdated = true;
+                } else if (direction.x != 0 && canMoveHorizontally) {
+                    currentAnimationRow =
+                        direction.x > 0 ? walkRightRow : walkLeftRow;
+                    position.x += direction.x * speed;
+                    positionUpdated = true;
                 }
+
+                player->setTexture(runningTexture.textureID);
+                player->setTextureTile(
+                    frame, currentAnimationRow, runningTexture.cols,
+                    runningTexture.width, runningTexture.height, 64, 128);
             } else {
                 player->setTexture(idleTexture.textureID);
                 player->setTextureTile(frame, currentAnimationRow,
